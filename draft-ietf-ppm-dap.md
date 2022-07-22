@@ -1113,9 +1113,21 @@ then we need to ensure that collect job URIs are resistant to enumeration
 attacks.]
 
 ~~~
+enum {
+   reserved(0),
+   time(1),  // Use case #1
+   group(2), // Use case #2
+   chunk(3), // Use case #3
+} QueryType;
+
 struct {
   TaskID task_id;
-  Interval batch_interval;
+  QueryType query_type;
+  select (query_type) {
+    case time:  Interval batch_interval;
+    case group: opaque group<0..2^8-1>;
+    case chunk: uint64 chunk_number;
+  };
   opaque agg_param<0..2^16-1>; // VDAF aggregation parameter
 } CollectReq;
 ~~~
