@@ -132,7 +132,7 @@ Table of Contents
      8.1.  Protocol Message Media Types
        8.1.1.  "application/dap-hpke-config" media type
        8.1.2.  "application/dap-report" media type
-       8.1.3.  "application/dap-aggregate-continue-req" media type
+       8.1.3.  "application/dap-aggregate-initialize-req" media type
        8.1.4.  "application/dap-aggregate-initialize-resp" media type
        8.1.5.  "application/dap-aggregate-continue-req" media type
        8.1.6.  "application/dap-aggregate-continue-resp" media type
@@ -2213,7 +2213,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Change controller:  IESG
 
-8.1.3.  "application/dap-aggregate-continue-req" media type
+8.1.3.  "application/dap-aggregate-initialize-req" media type
 
    Type name:  application
 
