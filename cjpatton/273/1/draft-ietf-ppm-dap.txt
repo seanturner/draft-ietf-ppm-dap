@@ -693,6 +693,15 @@ struct {
    which can be used to query the same chunk later on.  This is done
    using the by-chunk-id chunk query type.
 
+   Implementation note: The goal for the Aggregators is to aggregate
+   precisely min_batch_size measurements per chunk.  Doing so, however,
+   is challenging for Leader deployments in which multiple, independent
+   nodes running the aggregate sub-protocol (see Section 4.4) need to be
+   coordinated.  The maximum batch lifetime is intended to allow room
+   for error.  Typically the difference between the minimum and maximum
+   batch size will be a small fraction of the target batch size for each
+   chunk.
+
 4.2.  Task Configuration
 
    Prior to the start of execution of the protocol, each participant
@@ -1252,15 +1261,17 @@ struct {
        input share as invalid with the error report-dropped under the
        conditions prescribed in Section 4.5.6.
 
-   3.  Additional checks may be applicable based on the query type for
-       the task:
+   3.  Depending on the query type for the task, additional checks may
+       be applicable:
 
-       *  For fixed-chunk tasks, the Aggregator need to ensure that each
-          batch is roughly the same size.  If the number of reports
+       *  For fixed-chunk tasks, the Aggregators need to ensure that
+          each batch is roughly the same size.  If the number of reports
           aggregated for the current chunk exceeds the maximum batch
           size (per the task configuration), the Aggregator MAY mark the
-          input share as invalid with the error "batch-saturated".  If
-          both checks succeed, the input share is not marked as invalid.
+          input share as invalid with the error "batch-saturated".  Note
+          that this behasvior is not strictly enforced here but during
+          the collect sub-protocol.  (See Section 4.5.5.)  If both
+          checks succeed, the input share is not marked as invalid.
 
 4.4.1.5.  Input Share Preparation
 
