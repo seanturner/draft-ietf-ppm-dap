@@ -661,29 +661,41 @@ struct {
    intervals (1659544000, 1000), (1659545000, 1000), (1659545000, 1000),
    (1659546000, 1000) satisfies these conditions.  (The first element of
    the pair denotes the start of the batch interval and the second
-   denotes the duration.)
+   denotes the duration.)  There are execptions to this standard
+   operating procedure:
 
-   The Collecotry MAY extend a batch interval forward in time if the
-   interval has elabsed and an insufficient number of measurements have
-   been uploaded.  For example, instead of (1659546000, 1000), the
-   Collector might an issue a query for (1659546000, 2000).
+   *  The Collecotry may need to extend a batch interval forward in time
+      if the interval has elabsed and an insufficient number of
+      measurements have been uploaded.  For example, instead of
+      (1659546000, 1000), the Collector might an issue a query for
+      (1659546000, 2000).
+
+   *  Batch intervals may appear out-of-order if, for example, the
+      Collector needs to query a previous batch with a new aggregation
+      parameter.  This is permitted for certain VDAFs.
 
 4.1.2.  Fixed-size Chunks
 
    The fixed-chunk query type is used to support applications in which
    the Collector needs the ability to strictly control the sample size.
-   This is especially important for controlling the amount of noise
+   This is particularly important for controlling the amount of noise
    added to measurements by Clients (or added to aggregate shares by
    Aggregators) in order to achieve differential privacy.
 
    For this query type, the Aggregators batch measuremnet into arbitrary
-   "chunks" such that each chunk has the same size.
+   "chunks" such that each chunk has roughly the same size.  The
+   configuration includes parameters min_batch_size and max_batch_size
+   that determine, respectively, the minumum and maximum number of
+   measurements per chunk.
 
-   XXX * define batch size range * Say in agg flow section that the
-   Helper SHOULD reject reports for chunk after min chunk_size is met. -
-   For fixed-chunk tasks do we need a sequence of (contiguous) chunk
-   numbers?  IF so, we'll need to update batch validation. * Leader MUST
-   pick monotonic, continuous chunk IDs
+   To get the aggregate of the next chunk, the Colector issues a "chunk
+   query" of type next-chunk.  (See ChunkQuery in Section 4.1.)  The
+   response to this query ((see Section 4.5)) includes a "chunk ID",
+   which can be used to query the same chunk later on.  This is done
+   using the by-chunk-id chunk query type.
+
+   XXX * Say in agg flow section that the Helper SHOULD reject reports
+   for chunk after min chunk_size is met.
 
 4.2.  Task Configuration
 
