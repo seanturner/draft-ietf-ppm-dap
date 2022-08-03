@@ -2890,16 +2890,22 @@ struct {
     time-series: Empty;
     fixed-chunk: Id chunk_id;
   }
+  uint64 report_count;
   HpkeCiphertext encrypted_agg_shares&lt;1..2^32-1&gt;;
 } CollectResp;
 </pre><a href="#section-4.5.1-11" class="pilcrow">¶</a>
 </div>
-<p id="section-4.5.1-12">This structure includes information used to bind the aggregate result to the
-query. For fixed-chunk tasks, this includes the chunk ID assigned to the batch
-by the Leader.<a href="#section-4.5.1-12" class="pilcrow">¶</a></p>
-<p id="section-4.5.1-13">The <code>encrypted_agg_shares</code> field is the vector of encrypted aggregate shares.
-They <span class="bcp14">MUST</span> appear in the same order as the aggregator endpoints list of the task
-parameters.<a href="#section-4.5.1-13" class="pilcrow">¶</a></p>
+<p id="section-4.5.1-12">This structure includes the following:<a href="#section-4.5.1-12" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.5.1-13.1">information used to bind the aggregate result to the query. For fixed-chunk
+tasks, this includes the chunk ID assigned to the batch by the Leader.<a href="#section-4.5.1-13.1" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-4.5.1-13.2">The number of reports included in the batch.<a href="#section-4.5.1-13.2" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-4.5.1-13.3">The vector of encrypted aggregate shares. They <span class="bcp14">MUST</span> appear in the same order
+as the aggregator endpoints list of the task parameters.<a href="#section-4.5.1-13.3" class="pilcrow">¶</a>
+</li>
+          </ul>
 <p id="section-4.5.1-14">If obtaining aggregate shares fails, then the leader responds to subsequent HTTP
 GET requests to the collect job URI with an HTTP error status and a problem
 document as described in <a href="#errors" class="xref">Section 3.1</a>.<a href="#section-4.5.1-14" class="pilcrow">¶</a></p>

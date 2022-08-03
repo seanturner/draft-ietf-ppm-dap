@@ -1510,16 +1510,21 @@ out = VDAF.prep_next(prep_state, inbound)
        time-series: Empty;
        fixed-chunk: Id chunk_id;
      }
+     uint64 report_count;
      HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
    } CollectResp;
 
-   This structure includes information used to bind the aggregate result
-   to the query.  For fixed-chunk tasks, this includes the chunk ID
-   assigned to the batch by the Leader.
+   This structure includes the following:
 
-   The encrypted_agg_shares field is the vector of encrypted aggregate
-   shares.  They MUST appear in the same order as the aggregator
-   endpoints list of the task parameters.
+   *  information used to bind the aggregate result to the query.  For
+      fixed-chunk tasks, this includes the chunk ID assigned to the
+      batch by the Leader.
+
+   *  The number of reports included in the batch.
+
+   *  The vector of encrypted aggregate shares.  They MUST appear in the
+      same order as the aggregator endpoints list of the task
+      parameters.
 
    If obtaining aggregate shares fails, then the leader responds to
    subsequent HTTP GET requests to the collect job URI with an HTTP
