@@ -576,11 +576,11 @@ struct {
 
    DAP is designed to give the Collector control over which measurements
    are included in a batch for aggregation.  Howveer, since reports are
-   uploaded to the Leader, it cannot not choose the batch directly.
+   uploaded to the Leader, it cannot choose the batch directly.
    Instead, it issues a "query" used by the Aggregators to guide batch
    selection.
 
-   The following query types are defined:
+   This document defines the following query types:
 
    enum {
       reserved(0), // Reserved for testing purposes
@@ -589,20 +589,35 @@ struct {
       (65535)
    } QueryType;
 
-   A query includes parameters used by the Aggregators to select a given
-   batch of measurements specific to the given query type:
+   Additional query types can be defined as needed.  A query includes
+   parameters used by the Aggregators to select a given batch of
+   measurements specific to the given query type:
 
-   select (query_type) {
-       case time-series: Interval batch_interval;
-       case fixed-chunk: uint64 chunk_number;
+   enum {
+       next-chunk(0),
+       by-chunk-num(1),
+   } ChunkQueryType;
+
+   struct {
+       ChunkQueryType chunk_query_type;
+       select (hunk_query_type) {
+           next-chunk:   Empty;
+           by-chunk-num: uint64 chunk_num;
+       }
+   } ChunkQuery;
+
+   struct {
+       QueryType query_type;
+       select (query_type) {
+           case time-series: Interval batch_interval;
+           case fixed-chunk: ChunkQuery chunk_query;
+       }
    } Query;
 
-   XXX Is this valid TLS syntax?
-
    The query is issued in-band as part of the collect sub-protocol
-   (Section 4.5).  For each query type, the particpants in the protocol
-   agree out-of-band on a "query configuration".  The query
-   configuration determines properties that every batch must satisfy:
+   (Section 4.5).  In addition, the particpants must negotiate out-of-
+   band a "query configuration", which determines properties that all
+   batches must satisfy:
 
    struct {
        QueryType query_type;
@@ -620,11 +635,19 @@ struct {
 
    The first query type, time-series, is designed to support
    applications in which some process is observed over a long period of
-   time.  For this query type, the Collector specifes a "batch interval"
-   that determines the time range for measurements included in the
-   batch.  In other words: For each measurement in the batch, the time
-   at which that measurement was generated must fall within the batch
-   interval specified by the Collector.
+   time.  The Collector specifes a "batch interval" that determines the
+   time range for measurements included in the batch: For each
+   measurement in the batch, the time at which that measurement was
+   generated (see Section 4.3) must fall within the batch interval
+   specified by the Collector.
+
+   The configuration of this query type specifies two paramters:
+
+   *  min_batch_size - Is the smallest number of measurements the batch
+      is allowed to include.
+
+   *  min_batch_duration - The duration of the smallest permitted batch
+      interval.
 
    XXX Things to note * define min_batch_duration * define
    min_batch_size * Collector SHOULD specify a sequence of contiguous
