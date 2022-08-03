@@ -644,22 +644,29 @@ struct {
    The configuration of this query type specifies two paramters:
 
    *  min_batch_size - Is the smallest number of measurements the batch
-      is allowed to include.
+      is allowed to include.  In a sense, this parameter controls the
+      degree of privacy that will be obtained: The larger the minimum
+      batch size, the higher degree of privacy.  However, this
+      ultimately depends on the application and the nature of the
+      measurements and aggregation function.
 
    *  min_batch_duration - The duration of the smallest permitted batch
-      interval.
+      interval.  Additional restrictions apply; see Section 4.5.5.
 
-   XXX Things to note * define min_batch_duration * define
-   min_batch_size * Collector SHOULD specify a sequence of contiguous
-   batch intervals.  They also SHOOULD have the same size, but the
-   Colletor MAY extend a batch interval forward in time if time interval
-   has elapsed and an inssufficinet number of measurements have been
-   uploaded. * Batch intervals MUST NOT overlap.
+   The Collector is free to choose any sqeuence batch intervals it
+   wishes, subject to the restrctions prescribed in Section 4.5.5.
+   However, it is RECOMMENDED that the sequence of batch intervals
+   requested by the Collector all have the same duration, are continous,
+   and increases monotonically.  For example, the sequence of batch
+   intervals (1659544000, 1000), (1659545000, 1000), (1659545000, 1000),
+   (1659546000, 1000) satisfies these conditions.  (The first element of
+   the pair denotes the start of the batch interval and the second
+   denotes the duration.)
 
-   XXX Copy-pasted * min_batch_duration: The minimum time difference
-   between the oldest and newest report in a batch.  This defines the
-   boundaries with which the batch interval of each collect request must
-   be aligned.  (See Section 4.5.5.)
+   The Collecotry MAY extend a batch interval forward in time if the
+   interval has elabsed and an insufficient number of measurements have
+   been uploaded.  For example, instead of (1659546000, 1000), the
+   Collector might an issue a query for (1659546000, 2000).
 
 4.1.2.  Fixed-size Chunks
 
