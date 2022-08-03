@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 3 February 2023                                      Cloudflare
+Expires: 4 February 2023                                      Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                           2 August 2022
+                                                           3 August 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -41,6 +41,7 @@ About This Document
    Discussion of this document takes place on the Privacy Preserving
    Measurement Working Group mailing list (mailto:ppm@ietf.org), which
    is archived at https://mailarchive.ietf.org/arch/browse/ppm/.
+   Subscribe at https://www.ietf.org/mailman/listinfo/ppm/.
 
    Source for this draft and an issue tracker can be found at
    https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap.
@@ -60,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 3 February 2023.
+   This Internet-Draft will expire on 4 February 2023.
 
 Copyright Notice
 
@@ -1325,12 +1326,15 @@ out = VDAF.prep_next(prep_state, inbound)
    body consisting of a CollectResp:
 
    struct {
+     uint64 report_count;
      HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
    } CollectResp;
 
-   The encrypted_agg_shares field is the vector of encrypted aggregate
-   shares.  They MUST appear in the same order as the aggregator
-   endpoints list of the task parameters.
+   *  report_count is the number of reports included in the aggregation.
+
+   *  encrypted_agg_shares is the vector of encrypted aggregate shares.
+      They MUST appear in the same order as the aggregator endpoints
+      list of the task parameters.
 
    If obtaining aggregate shares fails, then the leader responds to
    subsequent HTTP GET requests to the collect job URI with an HTTP
