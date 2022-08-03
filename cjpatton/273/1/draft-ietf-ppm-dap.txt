@@ -595,14 +595,14 @@ struct {
 
    enum {
        next-chunk(0),
-       by-chunk-num(1),
+       by-chunk-id(1),
    } ChunkQueryType;
 
    struct {
        ChunkQueryType chunk_query_type;
        select (hunk_query_type) {
-           next-chunk:   Empty;
-           by-chunk-num: uint64 chunk_num;
+           next-chunk:  Empty;
+           by-chunk-id: Id chunk_id;
        }
    } ChunkQuery;
 
