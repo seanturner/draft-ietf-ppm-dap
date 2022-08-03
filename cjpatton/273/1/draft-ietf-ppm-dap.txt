@@ -445,9 +445,6 @@ Table of Contents
       |                            | with an unknown aggregation    |
       |                            | job ID.                        |
       +----------------------------+--------------------------------+
-      | unrecognizedQuery          | A query was issued with an     |
-      |                            | invalid or unreocgnized type.  |
-      +----------------------------+--------------------------------+
       | outdatedConfig             | The message was generated      |
       |                            | using an outdated              |
       |                            | configuration.                 |
@@ -603,24 +600,23 @@ struct {
 
    struct {
        ChunkQueryType chunk_query_type;
-       select (hunk_query_type) {
+       select (chunk_query_type) {
            next-chunk:  Empty;
            by-chunk-id: Id chunk_id;
        }
    } ChunkQuery;
 
    struct {
-       QueryType query_type;
-       select (query_type) {
+       select (query_type) { // determined by query configuration
            case time-series: Interval batch_interval;
            case fixed-chunk: ChunkQuery chunk_query;
        }
    } Query;
 
    The query is issued in-band as part of the collect sub-protocol
-   (Section 4.5).  In addition, the particpants must negotiate out-of-
-   band a "query configuration", which determines properties that all
-   batches must satisfy:
+   (Section 4.5).  Its content is determined by the "query type", which
+   in turn is encoded by the "query configuration" configured out-of-
+   band:
 
    struct {
        QueryType query_type;
@@ -696,9 +692,6 @@ struct {
    response to this query ((see Section 4.5)) includes a "chunk ID",
    which can be used to query the same chunk later on.  This is done
    using the by-chunk-id chunk query type.
-
-   XXX * Say in agg flow section that the Helper SHOULD reject reports
-   for chunk after min chunk_size is met.
 
 4.2.  Task Configuration
 
@@ -1045,6 +1038,7 @@ struct {
      hpke-unknown-config-id(3),
      hpke-decrypt-error(4),
      vdaf-prep-error(5),
+     batch-saturated(6),
    } ReportShareError;
 
    The leader and helper initialization behavior is detailed below.
@@ -1083,7 +1077,7 @@ struct {
      TaskID task_id;
      AggregationJobID job_id;
      opaque agg_param<0..2^16-1>;
-     select (query_type) { // Determined by task configuration
+     select (query_type) { // determined by task configuration
        time-series: Empty;
        fixed-chunk: Id chunk_id;
      }
@@ -1107,8 +1101,8 @@ struct {
       [[OPEN ISSUE: Check that this handling of agg_param is appropriate
       when the definition of Poplar is done.]]
 
-   *  Information used by the Aggregators to determine whether the
-      reports satisfy a given query.
+   *  Information used by the Aggregators to determine how to aggregate
+      each report:
 
       -  For fixed-chunks tasks, the Leader specifies a "chunk ID" that
          determines the chunk to which each report for this aggregation
@@ -1246,19 +1240,27 @@ struct {
 
    1.  Check if the report has never been aggregated but is contained by
        a batch that has been collected.  If this check fails, the input
-       share is marked as invalid with the error batch-collected.  This
-       prevents additional reports from being aggregated after its batch
-       has already been collected.
+       share MUST be marked as invalid with the error batch-collected.
+       This prevents additional reports from being aggregated after its
+       batch has already been collected.
 
    2.  Check if the report has already been aggregated with this
-       aggregation parameter.  If this check fails, the input share is
-       marked as invalid with the error report-replayed.  This is the
+       aggregation parameter.  If this check fails, the input share MUST
+       be marked as invalid with the error report-replayed.  This is the
        case if the report was used in a previous aggregate request and
        is therefore a replay.  An aggregator may also choose to mark an
        input share as invalid with the error report-dropped under the
        conditions prescribed in Section 4.5.6.
 
-   If both checks succeed, the input share is not marked as invalid.
+   3.  Additional checks may be applicable based on the query type for
+       the task:
+
+       *  For fixed-chunk tasks, the Aggregator need to ensure that each
+          batch is roughly the same size.  If the number of reports
+          aggregated for the current chunk exceeds the maximum batch
+          size (per the task configuration), the Aggregator MAY mark the
+          input share as invalid with the error "batch-saturated".  If
+          both checks succeed, the input share is not marked as invalid.
 
 4.4.1.5.  Input Share Preparation
 
@@ -1453,9 +1455,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    *  task_id, the DAP task ID.
 
-   *  query, the Collector's query.  The query type MUST match that of
-      the task.  Otherwwise, the Leader MUST abort with
-      "unrecognizedQuery".
+   *  query, the Collector's query.
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregateInitializeReq (see
@@ -1541,11 +1541,8 @@ out = VDAF.prep_next(prep_state, inbound)
    the leader sends a POST request to [aggregator]/aggregate_share with
    the following message:
 
-   XXX Put the query type byte in every mesesage, for future-proofing.
-
    struct {
-     QueryType query_type;
-     select (query_type) {
+     select (query_type) { // determined by task configuration
        time-series: Interval batch_interval;
        fixed-chunk: Id chunk_id;
      }
@@ -1564,10 +1561,8 @@ out = VDAF.prep_next(prep_state, inbound)
    *  The task ID.
 
    *  The "batch seletor", which encodes parameters used to determine
-      the batch being aggregated.  The query type MUST match the task
-      configuration.  Otherwise, the Helper MUST abort with
-      "unrecognizedQuery".  The value depends on the query type for the
-      task:
+      the batch being aggregated.  The value depends on the query type
+      for the task:
 
       -  For time-series tasks, the request specifies the batch
          interval.
@@ -1707,9 +1702,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    error "batchInvalid".
 
    Next, the Aggregator checks that batch contains a valid number of
-   reports.  Let X denote the set of reports for which the aggregator
-   has recovered a valid output share and which fall in the batch
-   interval of the request:
+   reports.  Let X denote the set of reports in the batch:
 
    *  For time-series tasks, the query configuration specifies the
       minimum batch size, min_batch_size.  The Aggregator checks that
@@ -1738,7 +1731,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    intersections may be prohibitively expensive for some deployments.
    The following is sufficient (but not necessary):
 
-   *  For time-series tasks, the Aggregator might check that the batch
+   *  For time-series tasks, the Aggregator checks that the batch
       interval does not overlap with the batch interval of any previous
       query.  If this batch interval check fails, then the Aggregator
       MAY abort with error "batchOverlap".
