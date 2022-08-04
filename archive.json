@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-07-31T01:45:58.781546+00:00",
+  "timestamp": "2022-08-04T01:34:42.690074+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -5073,16 +5073,20 @@
     {
       "number": 278,
       "id": "I_kwDOFEJYQs5Mc-nN",
-      "title": "Conveying task and job IDs",
+      "title": "Resource oriented HTTP API (was: Conveying task and job IDs)",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/278",
       "state": "OPEN",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
-      "labels": [],
+      "assignees": [
+        "tgeoghegan"
+      ],
+      "labels": [
+        "draft-02"
+      ],
       "body": "Issue #261 touched on how task and job parameters are conveyed between aggregators across request and response messages. This issue tracks the more general question of how we convey these parameters. They could be conveyed in application messages as they are now, in URLs as query parameters, or even headers. \r\n\r\n@mnot, if you have cycles, I'd be very interested to hear what you think.\r\n\r\n_Originally posted by @BranLwyd in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/261#issuecomment-1132242994_",
       "createdAt": "2022-06-23T16:28:54Z",
-      "updatedAt": "2022-06-29T20:00:17Z",
+      "updatedAt": "2022-08-03T18:26:23Z",
       "closedAt": null,
       "comments": [
         {
@@ -5133,6 +5137,13 @@
           "body": "Agreed \ud83d\udc4d Let's use this issue to hash that initial out idea a bit further.",
           "createdAt": "2022-06-29T20:00:17Z",
           "updatedAt": "2022-06-29T20:00:17Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "At IETF 114's PPM session, we discussed rewriting the HTTP API to be more resource oriented and align with the relevant BCPs ([slides 8-9](https://datatracker.ietf.org/meeting/114/materials/slides-114-ppm-whats-new-for-dap-00)). As I noted above, I'd like to get that done for the next draft, so I've retitled this issue to focus it on the work I plan to do.",
+          "createdAt": "2022-08-03T18:26:23Z",
+          "updatedAt": "2022-08-03T18:26:23Z"
         }
       ]
     },
@@ -5164,7 +5175,7 @@
       "labels": [],
       "body": "When the Collector issues a collect request to the Leader, the Leader responds with a URI the Collector can poll later on to get the (encrypted) aggregate result. This is done via an HTTP GET to the collect URI returned by the Leader.\r\n\r\nMy understanding is that the Leader is free to remove the aggregate results from storage thereafter. (See https://github.com/cloudflare/daphne/issues/53 for discussion.) The spec doesn't require this request to be authenticated, so it's possible for someone to cause the Leader to delete this state before the Collector has a chance to fetch it.\r\n\r\nThis issue can be solved by:\r\n1. requiring the Leader to store results for some period of time;\r\n2. making the collect URI hard to predict (e.g., by sticking a random number in the URI string); or\r\n2. requiring authentication for this endpoint.\r\n\r\n(2.) seems easiest to implement, but may be tricky to spell. Any thoughts on this?",
       "createdAt": "2022-07-21T17:17:25Z",
-      "updatedAt": "2022-07-25T23:08:36Z",
+      "updatedAt": "2022-08-03T18:22:15Z",
       "closedAt": null,
       "comments": [
         {
@@ -5187,6 +5198,13 @@
           "body": "FWIW, the current DAP spec text:\r\n\r\n> The leader MUST retain a collect job's results until the collector sends an HTTP DELETE request to the collect job URI\r\n\r\nimplies (at least to my reading) that the leader must indeed retain the results until an explicit `DELETE` is sent from the collector [1]. I agree that it would be very nice if an aggregator could drop collect results eventually without requiring an explicit request from the collector to do so -- that's consistent with [Chris Wood's idea](https://github.com/cloudflare/daphne/issues/53#issuecomment-1191499038) but inconsistent (IMO) with the current specification text.\r\n\r\nIf I'm not missing anything, I can prep a small PR fixing this up.\r\n\r\n\r\n[1] To be very pedantic, following the [HTTP GET semantics](https://httpwg.org/http-core/draft-ietf-httpbis-semantics-latest.html#GET), the leader could choose to send a representation indicating that the results are gone; but strictly following the text of DAP, the leader would still be required to retain the results. Given that these results would be inaccessible from an outside observer, this is a somewhat academic distinction -- IMO another good reason to make a change here.",
           "createdAt": "2022-07-25T23:08:36Z",
           "updatedAt": "2022-07-25T23:08:36Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@cjpatton we took a change here to improve the text discussing how long leaders should hold on to collect job results, and I think questions about authentication of the collect job URIs is captured by #293. Are there any outstanding concerns about whether polling collect job URIs causes state changes?",
+          "createdAt": "2022-08-03T18:22:15Z",
+          "updatedAt": "2022-08-03T18:22:15Z"
         }
       ]
     },
@@ -5197,19 +5215,19 @@
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/289",
       "state": "OPEN",
       "author": "wangshan",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [
         "draft-02"
       ],
       "body": "In [HPKE Configuration Request](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/blob/main/draft-ietf-ppm-dap.md#hpke-configuration-request-hpke-config), the `[aggregator]/hpke_config` endpoint will be called with a `task_id`, unrecognised `task_id` will result in a 404. \r\nThis requires clients (or any entity wishes to call `[aggregator]/hpke_config`) to know a task id in advance. This is unnecessary for deployments that want to share HPKE config across multiple tasks. Can we consider make `task_id` optional in this endpoint, when queried without `task_id`, aggregator returns either one or a list of `hpke_config`.",
       "createdAt": "2022-07-21T20:45:47Z",
-      "updatedAt": "2022-07-30T00:35:29Z",
+      "updatedAt": "2022-08-03T18:28:44Z",
       "closedAt": null,
       "comments": [
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "This relates to issue https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/248",
           "createdAt": "2022-07-21T21:00:26Z",
           "updatedAt": "2022-07-21T21:00:26Z"
@@ -5241,6 +5259,13 @@
           "body": "I think this is text-ready. @wangshan would you mind writing a PR?",
           "createdAt": "2022-07-30T00:35:29Z",
           "updatedAt": "2022-07-30T00:35:29Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Also relates to #278, in that we can address both of these at once. I sorta buy that #248 is orthogonal, but I don't see why we wouldn't address that problems if we're dealing with this. I think it would save implementations some churn.",
+          "createdAt": "2022-08-03T18:28:44Z",
+          "updatedAt": "2022-08-03T18:28:44Z"
         }
       ]
     },
@@ -5251,12 +5276,12 @@
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/290",
       "state": "OPEN",
       "author": "wangshan",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Task configuration between aggregators currently is handled out-of-band, this requires leader and helper to agree some secure method to exchange task configuration prior to upload.\r\n\r\nAn alternative is to create task in-band and on-demand from `Report` or `ReportShare` received from clients. Assuming server sends a unique task_id and all the parameters required by [Task configuration](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/blob/main/draft-ietf-ppm-dap.md#task-configuration-task-configuration) to the clients out-of-band (this is defined in client capability in current spec). Then clients can include these fields in report's `extension`, and upload them to servers along with reports. This is similar to an idea mentioned in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271.\r\n\r\nUpon receiving a Report (leader) or ReportShare (helper) with unseen tuple of (task_id, extension), the aggregators create the task on-demand, then proceed to aggregate-flow as usual.\r\n\r\nThis can be optimised to avoid checking the tuple of (task_id, extension), by letting client create `task_id` based on `extension`. For example, the client can share some text that defines the use case, communicated to them out-of-band, then create `task_id` using `hash(\"shared text\" || extension)`.  This can be particularly useful if the \"shared text\" or part of extension is only available on the client side.\r\n\r\nThere are some nice features in this method:\r\n- By sending all task parameters to clients then return to the server, we add transparency to the task that clients participate in. Client has the choice to see what data has been collected with what parameters (like `min_batch_size`, `max_batch_lifetime`, or any differential privacy parameters if that's the privacy guarantee used). For some clients these task parameters can even be hardcoded on the client side (for e.g. on a mobile device) to avoid any tempering from server.\r\n- Because `extension` is used in HPKE's AAD, malicious leader cannot change the task parameters, for e.g reducing `min_batch_size`.\r\n- A \"task\" now means the same task_id and same task parameters (including parameters for choosing VDAF). We can guarantee reports from one task will only be aggregated with one VDAF. For the same reason, if a malicious client changes the task_id or task parameters, its report will be aggregated in a different task, with other poison reports from the same malicious attack. The \"good\" reports are not polluted. \r\n- It avoids any out-of-band task orchestration between leader and helper, which isn't defined by the spec yet.\r\n- The on-demand creation is easy to implement with streaming framework that has `groupBy` operator. In fact, task as an object doesn't have to exist in aggregators, it mainly becomes an identifier to group aggregations together.\r\n\r\nThe disadvantage is added overhead in `Report` and `ReportShare`. Some optimisation can be done by moving Extension out of `ReportShare` and into `AggregateInitReq`.\r\n\r\nNote that the parameters that are not necessarily tied to a task may still need to be exchanged out-of-band between aggregators, like collector hpke config (or even aggregator's hpke config, see https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/289). Secrets that should not be know by clients, like `vdaf_verify_key` must still be exchanged out-of-band.\r\n\r\n",
       "createdAt": "2022-07-21T22:33:43Z",
-      "updatedAt": "2022-07-28T16:30:53Z",
+      "updatedAt": "2022-08-03T02:00:32Z",
       "closedAt": null,
       "comments": [
         {
@@ -5275,7 +5300,7 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> Sounds workable. The clients might have to tell the leader who the helper is supposed to be.\r\n\r\nThis is definitely doable, the current task configuration parameters already include `aggregator_endpoints`\r\n\r\n> And the aggregators would probably need some kind of restriction about which expensive computations to perform depending \r\non client authentication. Otherwise malicious clients could invent new tasks which use expensive VDAFs and submit data for them.\r\n\r\nTrue, but without client authentication, this attack is possible anyway, without knowing the cost of computation. \r\n",
           "createdAt": "2022-07-22T14:10:04Z",
           "updatedAt": "2022-07-22T14:22:44Z"
@@ -5289,7 +5314,7 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> The crux of the issue here seems to be that DAP currently lacks task configuration transparency. It's possible for clients to be configured with a task ID and related parameters that they think corresponds to some reasonable level of privacy (e.g., with a large enough `min_batch_size`), where in actuality the privacy guarantees are weak. Would you agree with that summary, @wangshan?\r\n> \r\n> I don't know if in-band configuration is the best solution to this problem. @simon-friedberger points out a number of considerations that would complicate things. I need to think on this more.\r\n\r\nYou summary about transparency is correct. But I'd say it's only half of the concern. The current spec does not specify how leader and helper can exchange task configuration safely. If task creation happens out-of-band, I can imagine at task initialisation, a rouge engineer from leader configs a task with weak privacy guanratee and sync that with helper, without anyone detecting it. With in-band configuration, client can detect such behaviour. Furthermore, client can implement sanity checks to verify the parameters indeed provide a strong guarantee. One advantage of addressing this with in-band configuration, is that it doesn't introduce a new API, therefore no new surface of attack. I'm happy to discuss this more.\r\n\r\nThe problem @simon-friedberger mentioned are definitely worth addressing, but I'd argue without client authentication, it's hard to protect malicious client from sending garbage data to the server regardless of how the task is configured.\r\n\r\n> Also, for what it's worth, in some previous version of this draft the task ID was derived from all relevant parameters in a manner similar to your proposal, i.e., `task_id = hash(\"shared text\" || extension)`, but we removed that because it imposed too much structure on the out of band configuration.\r\n\r\nInteresting, is there a commit/issue I can read about this decision? \r\n",
           "createdAt": "2022-07-22T14:49:33Z",
           "updatedAt": "2022-07-22T14:49:33Z"
@@ -5303,7 +5328,7 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "To make things clear, there are two issues we are discussing:\r\n1. in-band enforcement and transparency, which is the topic of https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271\r\n2. automatic on-demand task configuration.",
           "createdAt": "2022-07-22T15:16:52Z",
           "updatedAt": "2022-07-22T15:16:52Z"
@@ -5314,6 +5339,13 @@
           "body": "Note that this removes the part of the protocol where leader, helpers and collector agree on parameters. \r\n\r\nSo, a collector - as the author of a client, which is probably the default case - can trivially create new tasks with e.g. `min_batch_size = 2` which will probably be too low for most collected data.\r\n\r\nOf course, as the author of a client, they could also just chose to ignore DAP entirely and send the value in the clear to a different telemetry server. So I don't think this fundamentally changes the attack model but it might still be bad for the \"trustability\" of DAP.",
           "createdAt": "2022-07-28T16:30:53Z",
           "updatedAt": "2022-07-28T16:30:53Z"
+        },
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "A few thoughts:\r\n\r\n* Overall I like this idea. In addition to concerns about the trustworthiness of the leader, a generally-available DAP deployment will need to agree on task parameters with its co-aggregators. Having a standardized solution to this problem would make deploying DAP much easier in practice.\r\n\r\n* That said, I think the client is not well-positioned to specify some task parameters. IMO it would be unfortunate if some parameters are determined in-band and some parameters are determined out-of-band. Maybe we can find a solution to these issues? Specifically:\r\n\r\n  * `vdaf_verify_key` is private between the aggregators. (I think the leader can be trusted to generate this value & communicate it to the helper when a new task is introduced?)\r\n  * The leader-helper & leader-collector bearer tokens used for auth are private between the leader/helper & the leader/collector, respectively. (I think the leader could generate & inform the helper of the leader-helper auth token on task creation. The collector-leader token is trickier, since currently all leader-collector communication is initiated by the collector -- there is a chicken & egg problem of confirming who the correct collector is. Also, the bearer token is considered to be a temporary solution--the authentication method may change, which may change the considerations here.)\r\n  * `collector_config` is not private, but it will eventually need to be able to change (it is a public key & therefore must eventually be rotatable). This introduces complications not only because we want to identify tasks by `(task_id, task_parameters)`, but also because client updates are not atomic -- during rotation, for some time some set of (updated) clients will be advertising the rotated keyset, while another set of (non-updated) clients will be advertising the non-rotated keyset.\r\n\r\n* I have a slight preference that tasks continue to be identified by `task_id` rather than `(task_id, task_parameters)`. First, I don't think there is any real benefit to allowing multiple tasks to share the same ID (as long as the task ID space is large enough that accidental collision is negligible). Having a standard identifier shared between the aggregators will help practical debugging quite a lot. And I think at least some task parameters will eventually want to change (i.e. `collector_config`); not including the task parameters as part of the task identifier will make this easier. OTOH, I do think it is valuable to check & fail if the provided task parameters don't match what is configured for an existing task.\r\n\r\n* I am also somewhat dubious about the practical protections this provides to clients -- since the entity operating the collector & providing the client software will almost always be the same, I agree with Simon that they could just ignore DAP entirely and send the value in the clear. (Maybe I am mistaken about the deployment configuration that this is meant to protect?)\r\n\r\n* We are early-on enough in specifying DAP that these parameters could be communicated in an (optional?) field in the relevant messages, rather than as an extension. OTOH, this eases moving the task parameters to the aggregate initialization request--moving extensions is tricky because not every report for the same task is going to have the same set of extensions, nor will the extension ordering necessarily be the same.\r\n\r\n* I think DAP deployments will definitely want to include more information than just the raw task parameters. I imagine things like a collector identity, client authentication, additional task metadata (e.g. human-readable name/description), deployment-specific task parameters, etc. I would be OK implementing these as additional extensions on the client report.",
+          "createdAt": "2022-08-03T01:37:08Z",
+          "updatedAt": "2022-08-03T02:00:32Z"
         }
       ]
     },
@@ -5349,11 +5381,15 @@
       "state": "OPEN",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
-      "labels": [],
+      "assignees": [
+        "tgeoghegan"
+      ],
+      "labels": [
+        "draft-02"
+      ],
       "body": "At IETF 114, we discussed how [draft-01](https://datatracker.ietf.org/doc/draft-ietf-ppm-dap/01/) contains inconsistent guidance and/or requirements on authentication. Some details can be found in [this slide deck](https://datatracker.ietf.org/meeting/114/materials/slides-114-ppm-whats-new-for-dap/), especially slide 7.\r\n\r\nDAP should figure out what the security requirements are for each of the channels between the protocol participants, and then decide what if any prescriptions to make.",
       "createdAt": "2022-07-28T15:03:45Z",
-      "updatedAt": "2022-07-28T15:08:27Z",
+      "updatedAt": "2022-08-03T18:23:19Z",
       "closedAt": null,
       "comments": [
         {
@@ -5374,10 +5410,12 @@
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "If clients upload reports directly to the leader, then the leader learns things like the client's IP among other identifying metadata. This can be mitigated with the use of some kind of anonymizing proxy, like an [OHAI](https://datatracker.ietf.org/wg/ohai/documents/) server, provided the proxy is not colluding with the aggregator(s).\r\n\r\nHowever, it's not clear that every deployment will be able to use such a proxy, because the aggregators can't run it as a service, and perhaps the cost of deploying this additional actor is prohibitive.\r\n\r\nNonetheless, the protocol should discuss the privacy leaks that result from direct uploads and discuss how deployments might use anonymizing proxies.",
       "createdAt": "2022-07-28T15:19:08Z",
-      "updatedAt": "2022-07-28T15:20:14Z",
+      "updatedAt": "2022-08-03T18:31:06Z",
       "closedAt": null,
       "comments": [
         {
@@ -5399,11 +5437,19 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "Right now the task config consists of:\r\n> A unique identifier for the VDAF instance used for the task, including the\r\n> type of measurement associated with the task.\r\n\r\nIf memory serves, this text predates the CFRG's adoption of the draft. It might be appropriate this point to pick codepoints for:\r\n* Prio3Aes128Count\r\n* Prio3Aas128Sum\r\n* Prio3Aes128Histogram\r\n* Popar1\r\n\r\nDo folks have an opinion about where these codepoints should live? Following HPKE's lead, we would define them in the VDAF draft. We can prioritize this for VDAF-03, or decide that it's too early to worry about this.",
+      "body": "Right now the task config consists of:\r\n> A unique identifier for the VDAF instance used for the task, including the\r\n> type of measurement associated with the task.\r\n\r\nIf memory serves, this text predates the CFRG's adoption of the draft. It might be appropriate this point to pick codepoints for:\r\n* Prio3Aes128Count\r\n* Prio3Aes128Sum\r\n* Prio3Aes128Histogram\r\n* Poplar1\r\n\r\nDo folks have an opinion about where these codepoints should live? Following HPKE's lead, we would define them in the VDAF draft. We can prioritize this for VDAF-03, or decide that it's too early to worry about this.",
       "createdAt": "2022-07-30T00:33:42Z",
-      "updatedAt": "2022-07-30T00:33:42Z",
+      "updatedAt": "2022-08-03T19:59:42Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The VDAF draft seems like the right place to define the codepoints. Once `draft-irtf-cfrg-vdaf` becomes an RFC (\ud83e\udd1e\ud83c\udffb), we will want new VDAFs beyond Poplar1 and the current Prio3 family to get defined in new CFRG documents. Ideally DAP should be able to use new VDAFs without any changes, errata or addenda to the DAP document(s), so the new CFRG documents should define the VDAF codepoints.",
+          "createdAt": "2022-08-03T19:59:42Z",
+          "updatedAt": "2022-08-03T19:59:42Z"
+        }
+      ]
     },
     {
       "number": 296,
@@ -33438,24 +33484,26 @@
       "id": "PR_kwDOFEJYQs46UXQa",
       "title": "Increase payload size in HpkeCiphertext to 2^32-1",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/279",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "wangshan",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "See discussion here: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/272",
       "createdAt": "2022-06-24T14:49:36Z",
-      "updatedAt": "2022-07-15T18:27:25Z",
+      "updatedAt": "2022-08-02T12:42:03Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "5c789f1b62ad8f8c1e0d766f9e71390f479405d9",
       "headRepository": "wangshan/draft-ietf-ppm-dap",
       "headRefName": "increase-ciphertext-size-limit",
       "headRefOid": "bfae37d1aaca6fea19abc1559bc55a3bed4c833e",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2022-08-02T12:42:03Z",
+      "mergedAt": "2022-08-02T12:42:03Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "9639d4f7c6baa9efc9712d326b2a635edecadd4d"
+      },
       "comments": [
         {
           "author": "cjpatton",
@@ -33466,7 +33514,7 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "@cjpatton any pointer to where I should look at in particular? From what I can see only the definition of HpkeCiphertext specifies length of encrypted payload, the other fields like `Report.encrypted_input_shares` meant the number of HpkeCiphertext in an array, unless I misunderstood something.",
           "createdAt": "2022-07-04T15:18:34Z",
           "updatedAt": "2022-07-04T15:18:34Z"
@@ -33480,7 +33528,7 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "@cjpatton I've updated the arrays that contain ciphertext to 2^32-1, if I understand correctly, this allows those arrays to contain up to 256 ciphertext with 2^16-1 payload size. However, the number of ReportShare in AggInit request would be smaller than 256 due to ReportShare itself contains more than just ciphertext.",
           "createdAt": "2022-07-11T14:37:20Z",
           "updatedAt": "2022-07-11T14:37:20Z"
@@ -33494,24 +33542,31 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> Oh, wait, don't we also need to increase the length for prep shares (for the VDAF) in `AggregateContinueReq` and the response?\r\n\r\nDo we need to? the `AggregateContinueReq` stores PrepareStep which has no direct relationship with Ciphertext. Are we saying because `AggregateInitializeReq` can have 2^32-1, to keep the index aligned `AggregateContinueReq` must also be 2^32-1?\r\n\r\n",
           "createdAt": "2022-07-12T14:51:05Z",
           "updatedAt": "2022-07-12T14:51:05Z"
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "@chris-wood @cjpatton I changed all types that contain PrepStep and ReportShare to 2^32-1, also taking @chris-wood 's advice to keep 2^32 everywhere by bumping ciphertext to 2^32 as well.",
           "createdAt": "2022-07-12T15:03:49Z",
           "updatedAt": "2022-07-12T15:03:49Z"
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "@chris-wood @cjpatton Something I'm slightly confused about TLS: the current commit has both payload and encrypted_input_shares at 2^32-1, this is not consistent because when payload is at 2^32-1, then the payload cannot possibly fit in to encrypted_input_shares, which also has a lower bound of 1. I'm not sure if I'm interpreting the TLS representation correctly.",
           "createdAt": "2022-07-15T18:27:24Z",
           "updatedAt": "2022-07-15T18:27:24Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Sorry for not replying, @wangshan. In general, we're pretty loose with these bounds. They're not exact. For example, the extensions slot holds up to 2^16 bytes, where each extension itself carries up to 2^16 bytes. Implementations typically just make sure things fit within the bounds of each field when creating and encoding messages. \r\n\r\nAll that said, this change looks good. Thanks!",
+          "createdAt": "2022-08-02T12:41:48Z",
+          "updatedAt": "2022-08-02T12:41:48Z"
         }
       ],
       "reviews": [
@@ -33541,7 +33596,7 @@
             "abbreviatedOid": "826fe94"
           },
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-06-30T11:14:31Z",
@@ -33619,6 +33674,19 @@
           "body": "Oh, wait, don't we also need to increase the length for prep shares (for the VDAF) in `AggregateContinueReq` and the response?",
           "createdAt": "2022-07-11T18:41:18Z",
           "updatedAt": "2022-07-11T18:41:18Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_Gl1t",
+          "commit": {
+            "abbreviatedOid": "bfae37d"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-02T12:40:12Z",
+          "updatedAt": "2022-08-02T12:40:12Z",
           "comments": []
         }
       ]
@@ -34492,24 +34560,26 @@
       "id": "PR_kwDOFEJYQs47q-sI",
       "title": "Add `report_count` to `CollectResp`",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/287",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "This adds a field to collect responses with the number of reports that contributed to the aggregation. Collectors will likely want this count to aid in the interpretation of aggregate results. (see #163) There is also a change in draft-irtf-cfrg-vdaf-02 that opens the door for VDAFs that would require the report count during unsharding. (see cfrg/draft-irtf-cfrg-vdaf#95)\r\n\r\nNote that while this field is not part of the adjacent `HpkeCiphertext`s, it will be protected by to the confidentiality of HTTPS and the leader-collector bearer token authentication.",
       "createdAt": "2022-07-19T18:42:30Z",
-      "updatedAt": "2022-07-19T21:44:48Z",
+      "updatedAt": "2022-08-03T18:51:25Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "22364f6d76421f6f4edcbe81c03cdce3682aad0a",
+      "baseRefOid": "9639d4f7c6baa9efc9712d326b2a635edecadd4d",
       "headRepository": "divergentdave/ppm-specification",
       "headRefName": "collectresp-report-count",
-      "headRefOid": "3c86ffe7d30aaff8ac18401d38acc574fa566c86",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "d17632d4009eb97a1c22b70a2658322a16622860",
+      "closedAt": "2022-08-03T18:51:25Z",
+      "mergedAt": "2022-08-03T18:51:25Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f"
+      },
       "comments": [
         {
           "author": "divergentdave",
@@ -34517,6 +34587,13 @@
           "body": "I'm open to pushing it into the ciphertext, but my thinking was that a tampered report_count would only affect robustness, not privacy, and thus we only need to arrive at the correct report_count when all aggregators follow the protocol.",
           "createdAt": "2022-07-19T19:17:46Z",
           "updatedAt": "2022-07-19T19:17:46Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@divergentdave can you please rebase? Sorry!",
+          "createdAt": "2022-08-02T12:45:32Z",
+          "updatedAt": "2022-08-02T12:45:55Z"
         }
       ],
       "reviews": [
@@ -34545,6 +34622,45 @@
           "createdAt": "2022-07-19T21:44:48Z",
           "updatedAt": "2022-07-19T21:44:48Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_GnVQ",
+          "commit": {
+            "abbreviatedOid": "3c86ffe"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-02T12:44:37Z",
+          "updatedAt": "2022-08-02T12:44:37Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_Oxyw",
+          "commit": {
+            "abbreviatedOid": "d17632d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-03T18:43:23Z",
+          "updatedAt": "2022-08-03T18:43:23Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_OzAK",
+          "commit": {
+            "abbreviatedOid": "d17632d"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "OK, seems reasonable to me.",
+          "createdAt": "2022-08-03T18:47:50Z",
+          "updatedAt": "2022-08-03T18:47:50Z",
+          "comments": []
         }
       ]
     },
@@ -34553,24 +34669,26 @@
       "id": "PR_kwDOFEJYQs48IxDg",
       "title": "Allow leader to remove collect results without an explicit DELETE.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/292",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "BranLwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "The previous wording required the leader to store collect results until\r\nthe collector sent an explicit DELETE request to the collect job's URI.\r\nNow, the relevant text is reworded to allow the leader to remove collect\r\nresults for other reasons (for example, a leader can now garbage-collect\r\nold results after a suitable period of time).\r\n\r\nThis fell out of discussion on #288.",
       "createdAt": "2022-07-26T20:23:50Z",
-      "updatedAt": "2022-07-29T16:13:46Z",
+      "updatedAt": "2022-08-02T17:15:03Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "22364f6d76421f6f4edcbe81c03cdce3682aad0a",
       "headRepository": "BranLwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/allow-deletion-of-collect-results",
       "headRefOid": "86ebbbdff01eb6c27010f708a3eaee3534c5ac69",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2022-08-02T12:38:03Z",
+      "mergedAt": "2022-08-02T12:38:03Z",
+      "mergedBy": "chris-wood",
+      "mergeCommit": {
+        "oid": "b4ab93142240e7a2df43be7e4a827ec5a6cf40c4"
+      },
       "comments": [
         {
           "author": "BranLwyd",
@@ -34699,21 +34817,294 @@
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
-      "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerates the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-series` query type.\r\n\r\nAdds a query type, `fixed-chunk`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled.",
+      "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-series` query type.\r\n\r\nAdds a query type, `fixed-chunk`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-07-30T02:35:27Z",
+      "updatedAt": "2022-08-03T23:28:40Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "22364f6d76421f6f4edcbe81c03cdce3682aad0a",
+      "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/273/1",
-      "headRefOid": "69fcbb2387f0239a24579577e1fc4a1cd16a8388",
+      "headRefOid": "59f982b24b9f5cd9bf22caa6fc34de83e066671e",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
       "comments": [],
-      "reviews": []
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs4_PWnr",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-03T20:45:30Z",
+          "updatedAt": "2022-08-03T20:45:30Z",
+          "comments": [
+            {
+              "originalPosition": 669,
+              "body": "Maybe \"boundary\" is the wrong word? For time-series tasks, these are  the batch windows. For fixed-chunk tasks, these are the chunks.",
+              "createdAt": "2022-08-03T20:45:30Z",
+              "updatedAt": "2022-08-03T20:45:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_PZNE",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-03T20:55:43Z",
+          "updatedAt": "2022-08-03T20:55:52Z",
+          "comments": [
+            {
+              "originalPosition": 147,
+              "body": "TODO: Deal with the case where a client queries an unknown chunk.",
+              "createdAt": "2022-08-03T20:55:43Z",
+              "updatedAt": "2022-08-03T20:55:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_PYpS",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "First pass for spelling and a couple editorial gripes, still reviewing for content",
+          "createdAt": "2022-08-03T20:53:36Z",
+          "updatedAt": "2022-08-03T21:34:07Z",
+          "comments": [
+            {
+              "originalPosition": 33,
+              "body": "```suggestion\r\nincluded in a batch for aggregation. However, since reports are uploaded to the\r\n```",
+              "createdAt": "2022-08-03T20:53:47Z",
+              "updatedAt": "2022-08-03T21:34:07Z"
+            },
+            {
+              "originalPosition": 34,
+              "body": "It's unclear which entity \"it\" refers to in this sentence \r\n```suggestion\r\nLeader, the collector cannot choose the batch directly. Instead, it issues a \"query\" used\r\n```\r\n",
+              "createdAt": "2022-08-03T20:54:27Z",
+              "updatedAt": "2022-08-03T21:34:07Z"
+            },
+            {
+              "originalPosition": 42,
+              "body": "nit/bikeshedding: [\"time series\"](https://en.wikipedia.org/wiki/Time_series) already has a particular meaning, especially among metrics and telemetry people who are likely to be comparing DAP to systems like Prometheus, which discusses time series extensively. I'm not sure that this usage of \"time series\" is wrong, but how about \"time range\" or even \"interval\" to eliminate the ambiguity?",
+              "createdAt": "2022-08-03T20:56:18Z",
+              "updatedAt": "2022-08-03T21:34:07Z"
+            },
+            {
+              "originalPosition": 89,
+              "body": "```suggestion\r\n} QueryConfig;\r\n```",
+              "createdAt": "2022-08-03T20:57:14Z",
+              "updatedAt": "2022-08-03T21:34:07Z"
+            },
+            {
+              "originalPosition": 112,
+              "body": "```suggestion\r\nThe Collector is free to choose any sequence of batch intervals it wishes, subject\r\n```",
+              "createdAt": "2022-08-03T20:58:30Z",
+              "updatedAt": "2022-08-03T21:34:07Z"
+            },
+            {
+              "originalPosition": 113,
+              "body": "```suggestion\r\nto the restrictions prescribed in {{batch-validation}}. However, it is\r\n```",
+              "createdAt": "2022-08-03T20:58:41Z",
+              "updatedAt": "2022-08-03T21:34:07Z"
+            },
+            {
+              "originalPosition": 119,
+              "body": "```suggestion\r\ndenotes the duration.) There are exceptions to this standard operating\r\n```",
+              "createdAt": "2022-08-03T20:59:18Z",
+              "updatedAt": "2022-08-03T21:34:07Z"
+            },
+            {
+              "originalPosition": 122,
+              "body": "```suggestion\r\n- The Collector may need to extend a batch interval forward in time if the\r\n```",
+              "createdAt": "2022-08-03T20:59:25Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 123,
+              "body": "```suggestion\r\n  interval has elapsed and an insufficient number of measurements have been\r\n```",
+              "createdAt": "2022-08-03T20:59:35Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 124,
+              "body": "```suggestion\r\n  uploaded. For example, instead of `(1659546000, 1000)`, the Collector might\r\n```",
+              "createdAt": "2022-08-03T20:59:43Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 139,
+              "body": "```suggestion\r\nFor this query type, the Aggregators batch measurements into arbitrary \"chunks\"\r\n```",
+              "createdAt": "2022-08-03T21:00:06Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 146,
+              "body": "```suggestion\r\n(see {{collect-flow}}) includes a \"chunk ID\", which can be used to query the\r\n```",
+              "createdAt": "2022-08-03T21:00:30Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 250,
+              "body": "```suggestion\r\nas specified by the VDAF. It then encrypts each input share as follows:\r\n```",
+              "createdAt": "2022-08-03T21:03:14Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 400,
+              "body": "```suggestion\r\n   also choose to mark an input share as invalid with the error\r\n```",
+              "createdAt": "2022-08-03T21:31:21Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 407,
+              "body": "```suggestion\r\n      \"batch-saturated\". Note that this behavior is not strictly enforced here\r\n```",
+              "createdAt": "2022-08-03T21:31:39Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 423,
+              "body": "```suggestion\r\nthen locally combines them to yield a single aggregate result. In particular,\r\n```",
+              "createdAt": "2022-08-03T21:31:57Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            },
+            {
+              "originalPosition": 669,
+              "body": "```suggestion\r\nFirst the aggregator checks that the request respects any batch \"boundaries\"\r\n```",
+              "createdAt": "2022-08-03T21:33:04Z",
+              "updatedAt": "2022-08-03T21:34:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_Pj6L",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "I think this change accomplishes what it intends. However, besides specific comments left inline, I have an orthogonal, meta-thought here: can we design this so that the helper is agnostic to what kind of query the task uses?\r\n\r\nBefore this PR, we only supported batch interval queries. The leader's job was to assign reports to aggregation jobs and then communicate that mapping to helpers. The helper would then have to keep track of:\r\n\r\n - which reports belong to which aggregation jobs;\r\n - which reports belong to which batch intervals.\r\n\r\nWith the new fixed chunk queries, the helper has to keep track of:\r\n\r\n - which reports belong to which aggregation jobs (as before);\r\n - which reports belong to which chunks OR which aggregation jobs belong to which chunks.\r\n\r\nThe second mapping in both cases is new code and maybe new database tables that the helper has to deal with. Maybe we can spell this out so that for new query types, only the leader and collector need to know about them.\r\n\r\nUltimately, the only thing a helper is enforcing is that the number of reports included in an aggregate share fall within a range. `min_batch_size <= count < infinity` in the batch interval case, or `min_batch_size < count < max_batch_size` in the fixed chunk case.\r\n\r\nSo instead of:\r\n\r\n```\r\nstruct {\r\n  TaskID task_id;\r\n  BatchSelector batch_selector;\r\n  opaque agg_param<0..2^16-1>;\r\n  uint64 report_count;\r\n  opaque checksum[32];\r\n} AggregateShareReq;\r\n```\r\n\r\n...what if we had:\r\n\r\n```\r\nstruct {\r\n  TaskID task_id;\r\n  AggregationJobId job_ids<0..2^?-1>;\r\n  opaque agg_param<0..2^16-1>;\r\n  uint64 report_count;\r\n  opaque checksum[32];\r\n} AggregateShareReq;\r\n```\r\n\r\nTo service that request, the helper looks up the set of reports associated with each `AggregationJobId` (recall that the helper already has to keep track of this mapping), then verifies that the total number of reports described satisfies the range requirement, and releases the aggregate share if so. There are no options based on query flavour, and the helper has a single codepath for handling aggregate share requests.\r\n\r\nSo long as new query types' results can ultimately be described by the leader in terms of a list of aggregation job IDs, then helpers should be able to support them without code changes.\r\n\r\nThe downsides or questions w.r.t. this idea are:\r\n\r\nP1 - The current design of the batch interval query case allows aggregators to \"eagerly\" aggregate into `min_batch_duration`-sized buckets ahead of a collect request providing the actual `batch_interval`. If we make everything aggregation job ID based, then the helper can't eagerly aggregate across aggregation jobs. The leader could choose to construct aggregation jobs in some pathological manner that makes the helper extremely inefficient but I think that might already have been the case.\r\n\r\nP2 - In the batch interval query case, the helper can no longer enforce `min_batch_duration`. But was that ever needed for robustness or privacy, or was that just to enable to aggregators to eagerly accumulate report shares ahead of a collect request? If an aggregate share contains enough reports to satisfy the task's minimum, does it matter if they all arrived in the same instant?\r\n\r\nP3 - The helper can no longer verify that parameters in an `AggregateShareReq` have anything to do with an authentic collector `CollectReq`. If `AggregateShareReq` is written in terms of a list of `AggregationJobId`, then the leader gets total control over what reports are included. This was already the case in the fixed chunk case, but it does seem like a new power in the batch interval case.\r\n\r\nThat's a pitch for expressing both batch interval and fixed chunk queries to the helper in terms of a list of aggregation job IDs. But I think we could also express fixed chunk queries in terms of batch intervals. Supposing that report nonces contained time regardless of query type, then when the leader constructs an `AggregateShareReq`, it could construct a batch interval from the chunk's lowest and highest timestamps and then send that to the helper.",
+          "createdAt": "2022-08-03T21:41:01Z",
+          "updatedAt": "2022-08-03T23:26:45Z",
+          "comments": [
+            {
+              "originalPosition": 115,
+              "body": "```suggestion\r\nhave the same duration, are continuous, and increases monotonically. For example,\r\n```",
+              "createdAt": "2022-08-03T21:45:39Z",
+              "updatedAt": "2022-08-03T23:26:45Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "Why recommend this? I see how this is generally what we expect collectors to do, but does it matter to the aggregators or to any protocol participant if the collector doesn't do this? The way I see it, if a collector should issue collect requests with non-contiguous batch intervals, then some number of prepared reports will be orphaned, and the aggregators will eventually throw them away based on their respective retention policies.",
+              "createdAt": "2022-08-03T21:47:34Z",
+              "updatedAt": "2022-08-03T23:26:45Z"
+            },
+            {
+              "originalPosition": 142,
+              "body": "```suggestion\r\nthe minimum and maximum number of measurements per chunk.\r\n```",
+              "createdAt": "2022-08-03T21:51:22Z",
+              "updatedAt": "2022-08-03T23:26:45Z"
+            },
+            {
+              "originalPosition": 165,
+              "body": "```suggestion\r\n  determines the query type for batch selection and the properties that all\r\n```",
+              "createdAt": "2022-08-03T21:52:41Z",
+              "updatedAt": "2022-08-03T23:26:45Z"
+            },
+            {
+              "originalPosition": 436,
+              "body": "In the batch interval query model, the helper evaluates the batch interval against the report nonces to validate that a collect request is OK. The helper can trust that the report nonces came from the client (they're in the AEAD) and that the batch interval came from the collector (or at least we want that to be the case; #155). So it's possible for the leader to remove reports from an aggregate share (by never telling the helper about them) but it can't trick the helper into including a report into a batch interval that it shouldn't.\r\n\r\nIn the fixed chunk model, however, we grant the leader total power to assign reports to chunks (modulo the max and min sizes the task defines), so we should carefully analyze what powers that gives the leader. For instance, suppose the leader can see the uploading client's IP and do geolocation. Maybe it constructs one chunk that only contains reports from clients in country A and another chunk that only contains reports from country B in an effort to skew either chunk's aggregation somehow?\r\n\r\nMy intuition on how this feature is used is that you want to enable the leader to create a chunk every `min_chunk_size` reports. So maybe we want to enable the client to verify that the chunks defined by the leader are made up of non-overlapping intervals? That would require putting the `Time` component back in a report `Nonce`, but this would use code the helper needs to have anyway to enforce that batch interval queries don't overlap.",
+              "createdAt": "2022-08-03T22:07:08Z",
+              "updatedAt": "2022-08-03T23:26:45Z"
+            },
+            {
+              "originalPosition": 62,
+              "body": "Is type `Id` defined anywhere?",
+              "createdAt": "2022-08-03T22:09:37Z",
+              "updatedAt": "2022-08-03T23:26:45Z"
+            },
+            {
+              "originalPosition": 140,
+              "body": "editorial nit: clarify which dimension of \"size\" we are interested in here\r\n```suggestion\r\nsuch that each chunk has roughly the same number of reports. The configuration includes\r\n```",
+              "createdAt": "2022-08-03T22:12:21Z",
+              "updatedAt": "2022-08-03T23:26:45Z"
+            },
+            {
+              "originalPosition": 152,
+              "body": "Can you elaborate on what's hard about this, here in the PR thread if not necessarily in the protocol text? You're arguing that if I have multiple running leaders, they can race with each other to define chunks? Or is it that they race with clients uploading reports?",
+              "createdAt": "2022-08-03T22:15:22Z",
+              "updatedAt": "2022-08-03T23:26:46Z"
+            },
+            {
+              "originalPosition": 724,
+              "body": "```suggestion\r\nignores it or aborts the upload sub-protocol as described in {{upload-flow}}. A\r\n```",
+              "createdAt": "2022-08-03T22:25:43Z",
+              "updatedAt": "2022-08-03T23:26:46Z"
+            },
+            {
+              "originalPosition": 555,
+              "body": "```suggestion\r\n    * For fixed-chunk tasks, the request specifies the chunk ID.\r\n```",
+              "createdAt": "2022-08-03T23:21:38Z",
+              "updatedAt": "2022-08-03T23:26:46Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 298,
+      "id": "PR_kwDOFEJYQs48hQnA",
+      "title": "Fix copy-paste error in dap-aggregate-initialize-req media type.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/298",
+      "state": "MERGED",
+      "author": "MichaelScaria",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-08-02T16:50:54Z",
+      "updatedAt": "2022-08-02T17:25:55Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "9639d4f7c6baa9efc9712d326b2a635edecadd4d",
+      "headRepository": "MichaelScaria/draft-ietf-ppm-dap",
+      "headRefName": "main",
+      "headRefOid": "5061a2f95f23cfd53aedd498f90a9c58547b7114",
+      "closedAt": "2022-08-02T17:25:55Z",
+      "mergedAt": "2022-08-02T17:25:54Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "5440547227aa58c8b1c799a2a34cc052b2031e6a"
+      },
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs4_IS1y",
+          "commit": {
+            "abbreviatedOid": "5061a2f"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-02T17:25:48Z",
+          "updatedAt": "2022-08-02T17:25:48Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
