@@ -1949,11 +1949,13 @@ enum {
     by-chunk-id(1),
 } ChunkQueryType;
 
+opaque ChunkId[32];
+
 struct {
     ChunkQueryType chunk_query_type;
     select (chunk_query_type) {
         next-chunk:  Empty;
-        by-chunk-id: Id chunk_id;
+        by-chunk-id: ChunkId chunk_id;
     }
 } ChunkQuery;
 
@@ -2459,7 +2461,7 @@ struct {
   opaque agg_param&lt;0..2^16-1&gt;;
   select (query_type) { // determined by task configuration
     time-series: Empty;
-    fixed-chunk: Id chunk_id;
+    fixed-chunk: ChunkId chunk_id;
   }
   ReportShare report_shares&lt;1..2^32-1&gt;;
 } AggregateInitializeReq;
@@ -2887,7 +2889,7 @@ and a body consisting of a <code>CollectResp</code>:<a href="#section-4.5.1-10" 
 struct {
   select (query_type) { // determined by task configuration
     time-series: Empty;
-    fixed-chunk: Id chunk_id;
+    fixed-chunk: ChunkId chunk_id;
   }
   uint64 report_count;
   HpkeCiphertext encrypted_agg_shares&lt;1..2^32-1&gt;;
