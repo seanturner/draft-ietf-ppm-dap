@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 February 2023                                      Cloudflare
+Expires: 6 February 2023                                      Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                           3 August 2022
+                                                           5 August 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 February 2023.
+   This Internet-Draft will expire on 6 February 2023.
 
 Copyright Notice
 
@@ -575,10 +575,10 @@ struct {
 4.1.  Queries
 
    DAP is designed to give the Collector control over which measurements
-   are included in a batch for aggregation.  Howveer, since reports are
-   uploaded to the Leader, it cannot choose the batch directly.
-   Instead, it issues a "query" used by the Aggregators to guide batch
-   selection.
+   are included in a batch for aggregation.  However, since reports are
+   uploaded to the Leader, the Collector cannot choose the batch
+   directly.  Instead, it issues a "query" used by the Aggregators to
+   guide batch selection.
 
    This document defines the following query types:
 
@@ -627,8 +627,7 @@ struct {
            case fixed-chunk:
                uint64 max_batch_size;
        }
-   }
-   QueryConfig;
+   } QueryConfig;
 
 4.1.1.  Time-series Telemetry
 
@@ -652,21 +651,21 @@ struct {
    *  min_batch_duration - The duration of the smallest permitted batch
       interval.  Additional restrictions apply; see Section 4.5.5.
 
-   The Collector is free to choose any sqeuence batch intervals it
-   wishes, subject to the restrctions prescribed in Section 4.5.5.
+   The Collector is free to choose any sequence of batch intervals it
+   wishes, subject to the restrictions prescribed in Section 4.5.5.
    However, it is RECOMMENDED that the sequence of batch intervals
-   requested by the Collector all have the same duration, are continous,
-   and increases monotonically.  For example, the sequence of batch
-   intervals (1659544000, 1000), (1659545000, 1000), (1659545000, 1000),
-   (1659546000, 1000) satisfies these conditions.  (The first element of
-   the pair denotes the start of the batch interval and the second
-   denotes the duration.)  There are execptions to this standard
-   operating procedure:
+   requested by the Collector all have the same duration, are
+   continuous, and increases monotonically.  For example, the sequence
+   of batch intervals (1659544000, 1000), (1659545000, 1000),
+   (1659545000, 1000), (1659546000, 1000) satisfies these conditions.
+   (The first element of the pair denotes the start of the batch
+   interval and the second denotes the duration.)  There are exceptions
+   to this standard operating procedure:
 
-   *  The Collecotry may need to extend a batch interval forward in time
-      if the interval has elabsed and an insufficient number of
+   *  The Collector may need to extend a batch interval forward in time
+      if the interval has elapsed and an insufficient number of
       measurements have been uploaded.  For example, instead of
-      (1659546000, 1000), the Collector might an issue a query for
+      (1659546000, 1000), the Collector might issue a query for
       (1659546000, 2000).
 
    *  Batch intervals may appear out-of-order if, for example, the
@@ -681,17 +680,17 @@ struct {
    added to measurements by Clients (or added to aggregate shares by
    Aggregators) in order to achieve differential privacy.
 
-   For this query type, the Aggregators batch measuremnet into arbitrary
-   "chunks" such that each chunk has roughly the same size.  The
-   configuration includes parameters min_batch_size and max_batch_size
-   that determine, respectively, the minumum and maximum number of
-   measurements per chunk.
+   For this query type, the Aggregators batch measurements into
+   arbitrary "chunks" such that each chunk has roughly the same number
+   of reports.  The configuration includes parameters min_batch_size and
+   max_batch_size that determine, respectively, the minimum and maximum
+   number of measurements per chunk.
 
    To get the aggregate of the next chunk, the Colector issues a "chunk
    query" of type next-chunk.  (See ChunkQuery in Section 4.1.)  The
-   response to this query ((see Section 4.5)) includes a "chunk ID",
-   which can be used to query the same chunk later on.  This is done
-   using the by-chunk-id chunk query type.
+   response to this query (see Section 4.5) includes a "chunk ID", which
+   can be used to query the same chunk later on.  This is done using the
+   by-chunk-id chunk query type.
 
    Implementation note: The goal for the Aggregators is to aggregate
    precisely min_batch_size measurements per chunk.  Doing so, however,
@@ -723,8 +722,8 @@ struct {
       aggregators appear in this list.
 
    *  query_config: The query configuration (QueryConfig) for this task.
-      This detemrines the query type for batch selection and the
-      properites that all batches for this task must have.
+      This determines the query type for batch selection and the
+      properties that all batches for this task must have.
 
    *  max_batch_lifetime: The maximum number of times a batch of reports
       may be queried by the Collector.
@@ -876,7 +875,7 @@ struct {
       Section 4.3.3.)
 
    To generate a report, the Client first shards its measurement into
-   input shares as specifieed by the VDAF.  It then encrypts each input
+   input shares as specified by the VDAF.  It then encrypts each input
    share as follows:
 
    enc, payload = SealBase(pk,
@@ -1269,7 +1268,7 @@ struct {
           aggregated for the current chunk exceeds the maximum batch
           size (per the task configuration), the Aggregator MAY mark the
           input share as invalid with the error "batch-saturated".  Note
-          that this behasvior is not strictly enforced here but during
+          that this behavior is not strictly enforced here but during
           the collect sub-protocol.  (See Section 4.5.5.)  If both
           checks succeed, the input share is not marked as invalid.
 
@@ -1428,10 +1427,10 @@ out = VDAF.prep_next(prep_state, inbound)
 4.5.  Collecting Results
 
    In this phase, the Collector requests aggregate shares from each
-   aggregator and then locally combines them to yield a single,
-   aggregate result.  In particular, the Collector issues a query to the
-   Leader (Section 4.1), which the Aggregators use to select a batch of
-   reports to aggregate.  Each emits an aggregate share encrypted to the
+   aggregator and then locally combines them to yield a single aggregate
+   result.  In particular, the Collector issues a query to the Leader
+   (Section 4.1), which the Aggregators use to select a batch of reports
+   to aggregate.  Each emits an aggregate share encrypted to the
    Collector so that it can decrypt and combine them to yield the
    aggregate result.  This entire process is composed of two
    interactions:
@@ -1583,7 +1582,7 @@ out = VDAF.prep_next(prep_state, inbound)
       -  For time-series tasks, the request specifies the batch
          interval.
 
-      -  For fixed-chunk tasks, the requiest specifies the chunk ID.
+      -  For fixed-chunk tasks, the request specifies the chunk ID.
 
    *  The opaque aggregation parameter for the VDAF beging executed.
       This value MUST match the same value in the the
@@ -1702,7 +1701,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    parameters associated with the DAP task.  It does so as described
    here.
 
-   Frist the aggregator checks that the request respects any batch
+   First the aggregator checks that the request respects any batch
    "boundaries" determined by the query configuration:
 
    *  For time-series tasks, the query configuration specifies the
@@ -1769,7 +1768,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    nonces pertaining to reports that were previously aggregated for a
    given task.  If the leader receives a report from a client whose
    nonce is in this set, it either ignores it or aborts the upload sub-
-   protocol as descrbied in Section 4.3.  A Helper who receives an
+   protocol as described in Section 4.3.  A Helper who receives an
    encrypted input share whose nonce is in this set rejects the report
    as described in Section 4.4.1.4.
 
