@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-04T01:34:42.690074+00:00",
+  "timestamp": "2022-08-07T01:26:51.674066+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4858,15 +4858,15 @@
       "id": "I_kwDOFEJYQs5L20ft",
       "title": "Increase Ciphertext size limit",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/272",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "wangshan",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "Current HPKE Ciphertext size is limited to 2 bytes, about 65KB, many use cases will need more than this, Prio for eg. doesn't have this limit. Can we change this to 4 bytes  so the size can be `<1..2^32-1>`?\r\n\r\n```\r\nstruct {\r\n  HpkeConfigId config_id;    // config ID\r\n  opaque enc<1..2^16-1>;     // encapsulated HPKE key\r\n  opaque payload<1..2^16-1>; // ciphertext\r\n} HpkeCiphertext;\r\n```",
       "createdAt": "2022-06-15T19:48:27Z",
-      "updatedAt": "2022-06-24T14:50:34Z",
-      "closedAt": null,
+      "updatedAt": "2022-08-04T19:32:26Z",
+      "closedAt": "2022-08-04T19:32:26Z",
       "comments": [
         {
           "author": "chris-wood",
@@ -4877,14 +4877,14 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "@chris-wood will do.\r\nUse case wise, 65KB can only represent 4B int vector of 16K dimension, if we encode correlations in individual reports then it can easily be breached, for eg. if I want to see histogram of errors by locales, let's say I have 100 error codes and 200 locales, that's already 20K dimension in one hot encoding.",
           "createdAt": "2022-06-24T11:18:57Z",
           "updatedAt": "2022-06-24T11:18:57Z"
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "PR created: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/279",
           "createdAt": "2022-06-24T14:50:34Z",
           "updatedAt": "2022-06-24T14:50:34Z"
@@ -5439,7 +5439,7 @@
       "labels": [],
       "body": "Right now the task config consists of:\r\n> A unique identifier for the VDAF instance used for the task, including the\r\n> type of measurement associated with the task.\r\n\r\nIf memory serves, this text predates the CFRG's adoption of the draft. It might be appropriate this point to pick codepoints for:\r\n* Prio3Aes128Count\r\n* Prio3Aes128Sum\r\n* Prio3Aes128Histogram\r\n* Poplar1\r\n\r\nDo folks have an opinion about where these codepoints should live? Following HPKE's lead, we would define them in the VDAF draft. We can prioritize this for VDAF-03, or decide that it's too early to worry about this.",
       "createdAt": "2022-07-30T00:33:42Z",
-      "updatedAt": "2022-08-03T19:59:42Z",
+      "updatedAt": "2022-08-04T19:19:37Z",
       "closedAt": null,
       "comments": [
         {
@@ -5448,6 +5448,13 @@
           "body": "The VDAF draft seems like the right place to define the codepoints. Once `draft-irtf-cfrg-vdaf` becomes an RFC (\ud83e\udd1e\ud83c\udffb), we will want new VDAFs beyond Poplar1 and the current Prio3 family to get defined in new CFRG documents. Ideally DAP should be able to use new VDAFs without any changes, errata or addenda to the DAP document(s), so the new CFRG documents should define the VDAF codepoints.",
           "createdAt": "2022-08-03T19:59:42Z",
           "updatedAt": "2022-08-03T19:59:42Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I agree with @tgeoghegan.",
+          "createdAt": "2022-08-04T19:19:37Z",
+          "updatedAt": "2022-08-04T19:19:37Z"
         }
       ]
     },
@@ -34819,18 +34826,26 @@
       "labels": [],
       "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-series` query type.\r\n\r\nAdds a query type, `fixed-chunk`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-08-03T23:28:40Z",
+      "updatedAt": "2022-08-06T01:14:38Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/273/1",
-      "headRefOid": "59f982b24b9f5cd9bf22caa6fc34de83e066671e",
+      "headRefOid": "42f9cf88d4fe5625589b02caa0c2595d9ca3c14d",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks @tgeoghegan for the comments! Based on your feedback and feedback in the PPM slack, I will definitely be adding the timestamp back into the report struct for fixed-chunk tasks.",
+          "createdAt": "2022-08-06T01:14:38Z",
+          "updatedAt": "2022-08-06T01:14:38Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs4_PWnr",
@@ -34866,9 +34881,9 @@
           "comments": [
             {
               "originalPosition": 147,
-              "body": "TODO: Deal with the case where a client queries an unknown chunk.",
+              "body": "TODO: Deal with the case where a Collector queries an unknown chunk.",
               "createdAt": "2022-08-03T20:55:43Z",
-              "updatedAt": "2022-08-03T20:55:52Z"
+              "updatedAt": "2022-08-06T00:48:53Z"
             }
           ]
         },
@@ -34892,9 +34907,9 @@
             },
             {
               "originalPosition": 34,
-              "body": "It's unclear which entity \"it\" refers to in this sentence \r\n```suggestion\r\nLeader, the collector cannot choose the batch directly. Instead, it issues a \"query\" used\r\n```\r\n",
+              "body": "It's unclear which entity \"it\" refers to in this sentence \r\n```suggestion\r\nLeader, the Collector cannot choose the batch directly. Instead, it issues a \"query\" used\r\n```\r\n",
               "createdAt": "2022-08-03T20:54:27Z",
-              "updatedAt": "2022-08-03T21:34:07Z"
+              "updatedAt": "2022-08-05T23:01:36Z"
             },
             {
               "originalPosition": 42,
@@ -35059,6 +35074,50 @@
               "body": "```suggestion\r\n    * For fixed-chunk tasks, the request specifies the chunk ID.\r\n```",
               "createdAt": "2022-08-03T23:21:38Z",
               "updatedAt": "2022-08-03T23:26:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_bsQP",
+          "commit": {
+            "abbreviatedOid": "0462f37"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-05T23:07:56Z",
+          "updatedAt": "2022-08-06T01:02:44Z",
+          "comments": [
+            {
+              "originalPosition": 42,
+              "body": "I sort of think of this query type as being the \"DAP analogue\" of time-series data in Prometheus, but maybe this is wrong? From my (probably misinformed!) point of view, \"time-series DAP\" provides all of the functionality of \"time-series Prometheus\", except that lose the ability to see individual measurements and only see aggregates. \r\n\r\nIf I'm missing something conceptually important, we should definitely avoid overloading the term.",
+              "createdAt": "2022-08-05T23:07:56Z",
+              "updatedAt": "2022-08-06T01:02:44Z"
+            },
+            {
+              "originalPosition": 62,
+              "body": "Nope, this supposed to be an `opaque [32]`, i.e., the same type as other IDs in the protocol. Fixed.",
+              "createdAt": "2022-08-05T23:11:13Z",
+              "updatedAt": "2022-08-06T01:02:44Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "That all sounds right. I think it's good for us to spell out how we expect Collectors to behave, but \"RECOMMENDED\" may be stronger than needed. We certainly don't want to give Collectors the impression that, if they don't follow this recommendation, they're doing something wrong. (This is certainly not the case, there are lots of reasons to diverge here.)\r\n\r\nA better approach might be to a give a bit of guidance, then spell out optional Aggregator behavior elsewhere.\r\n> Typically the Collector issues queries for which the batch intervals continuous, monotonically increasing, have the same duration. For example ... However, there are cases in which Collector may need to issue queries out-of-order. For example, a previous batch might need to be queried again with a different aggregation parameter (e.g, for Poplar1). In addition, the Collector may need to vary the duration to adjust to changing measurement upload rates.\r\n\r\nThen in the relevant collect sub-protocol section(s), we would have something like:\r\n> The Leader (resp. Helper) MAY abort a CollectReq (resp. AggregateShareReq) with error \"XXX\" as needed. For example, the batch of reports to which the request pertains might be so old that the Aggregator has removed them from its long-term storage.\r\n\r\nIncidentally, this came up this week with @BranLwyd while working on Daphne/Janus interop.\r\ncc/ @nakatsuka-y since we're discussing this question in https://github.com/cloudflare/daphne/issues/45.",
+              "createdAt": "2022-08-05T23:29:38Z",
+              "updatedAt": "2022-08-06T01:02:44Z"
+            },
+            {
+              "originalPosition": 152,
+              "body": "Imagine you're streaming reports to a bunch of independent Leader \"workers\", all of which are trying to fill the same chunk. Let's say each worker has the following procedure for kicking off an agg job:\r\n1. Wait until min(100, N) reports have arrived, where N is the number of reports left to go for the chunk. (I.e., you have aggregated min_batch_size - N reports for the batch.)\r\n2. Run an aggregation job. Tell your peers how many reports you aggregated. (This may be less than the number of reports processed, due to rejections.)\r\n\r\nThe \"hard\" part is that the value of N at the start of step 1 depends on the output of each worker at step 2. Computing this correctly requires coordination. I can imagine a few ways of doing this, but the \"best\" option may depend on the scale and other deployment-specific considerations. It seems like a good idea to give some leeway.",
+              "createdAt": "2022-08-05T23:54:17Z",
+              "updatedAt": "2022-08-06T01:02:44Z"
+            },
+            {
+              "originalPosition": 436,
+              "body": "> In the fixed chunk model, however, we grant the leader total power to assign reports to chunks (modulo the max and min sizes the task defines), so we should carefully analyze what powers that gives the leader.\r\n\r\nNice catch. There should already be an OPEN ISSUE somewhere in this PR about this.\r\n\r\n> For instance, suppose the leader can see the uploading client's IP and do geolocation. Maybe it constructs one chunk that only contains reports from clients in country A and another chunk that only contains reports from country B in an effort to skew either chunk's aggregation somehow?\r\n\r\nAgreed, this is a risk worth considering. I imagine there are other things the Leader can do like this already, but you're right that the intention of including the timestamp in the report was to allow the Client to control (at least in part), which batch its report goes in.\r\n\r\nIt's worth pointing out that replay protection requirements haven't changed: Each Aggregator still needs to ensure that a single report doesn't get replayed in multiple chunks.\r\n\r\n> My intuition on how this feature is used is that you want to enable the leader to create a chunk every `min_chunk_size` reports. So maybe we want to enable the client to verify that the chunks defined by the leader are made up of non-overlapping intervals? That would require putting the `Time` component back in a report `Nonce`, but this would use code the helper needs to have anyway to enforce that batch interval queries don't overlap.\r\n\r\nOhhhh that's an interesting idea! Your intuition is right I think. It's a little stricter than what this PR does now. (And thus harder to implement?). The Leader can still mount a similar \"attack\" by only processing reports from the Client population it's interested in. However there is a cost: It'll end up losing the data for all other Clients.\r\n\r\nFeedback on feasibility of the implementation would be useful.",
+              "createdAt": "2022-08-06T01:02:28Z",
+              "updatedAt": "2022-08-06T01:02:44Z"
             }
           ]
         }
