@@ -594,17 +594,17 @@ struct {
    measurements specific to the given query type:
 
    enum {
-       next-chunk(0),
-       by-chunk-id(1),
+       next-batch(0),
+       by-batch-id(1),
    } ChunkQueryType;
 
-   opaque ChunkId[32];
+   opaque BatchId[32];
 
    struct {
        ChunkQueryType chunk_query_type;
        select (chunk_query_type) {
-           next-chunk:  Empty;
-           by-chunk-id: ChunkId chunk_id;
+           next-batch:  Empty;
+           by-batch-id: BatchId batch_id;
        }
    } ChunkQuery;
 
@@ -689,10 +689,10 @@ struct {
    number of measurements per chunk.
 
    To get the aggregate of the next chunk, the Collector issues a "chunk
-   query" of type next-chunk.  (See ChunkQuery in Section 4.1.)  The
+   query" of type next-batch.  (See ChunkQuery in Section 4.1.)  The
    response to this query (see Section 4.5) includes a "chunk ID", which
    can be used to query the same chunk later on.  This is done using the
-   by-chunk-id chunk query type.
+   by-batch-id chunk query type.
 
    Implementation note: The goal for the Aggregators is to aggregate
    precisely min_batch_size measurements per chunk.  Doing so, however,
@@ -1084,7 +1084,7 @@ struct {
      opaque agg_param<0..2^16-1>;
      select (query_type) { // determined by task configuration
        time-series: Empty;
-       fixed-chunk: ChunkId chunk_id;
+       fixed-chunk: BatchId batch_id;
      }
      ReportShare report_shares<1..2^32-1>;
    } AggregateInitializeReq;
@@ -1504,7 +1504,7 @@ out = VDAF.prep_next(prep_state, inbound)
    struct {
      select (query_type) { // determined by task configuration
        time-series: Empty;
-       fixed-chunk: ChunkId chunk_id;
+       fixed-chunk: BatchId batch_id;
      }
      uint64 report_count;
      HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
@@ -1556,7 +1556,7 @@ out = VDAF.prep_next(prep_state, inbound)
    struct {
      select (query_type) { // determined by task configuration
        time-series: Interval batch_interval;
-       fixed-chunk: ChunkId chunk_id;
+       fixed-chunk: BatchId batch_id;
      }
    } BatchSelector;
 
