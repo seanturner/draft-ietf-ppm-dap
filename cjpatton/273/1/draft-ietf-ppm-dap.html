@@ -2045,7 +2045,7 @@ differential privacy.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
 such that each chunk has roughly the same number of reports. The configuration includes
 parameters <code>min_batch_size</code> and <code>max_batch_size</code> that determine, respectively,
 the minimum and maximum number of measurements per chunk.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-3">To get the aggregate of the next chunk, the Colector issues a "chunk query" of
+<p id="section-4.1.2-3">To get the aggregate of the next chunk, the Collector issues a "chunk query" of
 type <code>next-chunk</code>. (See ChunkQuery in <a href="#query" class="xref">Section 4.1</a>.) The response to this query
 (see <a href="#collect-flow" class="xref">Section 4.5</a>) includes a "chunk ID", which can be used to query the
 same chunk later on. This is done using the <code>by-chunk-id</code> chunk query type.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
@@ -2937,7 +2937,7 @@ a POST request to <code>[aggregator]/aggregate_share</code> with the following m
 struct {
   select (query_type) { // determined by task configuration
     time-series: Interval batch_interval;
-    fixed-chunk: Id chunk_id;
+    fixed-chunk: ChunkId chunk_id;
   }
 } BatchSelector;
 

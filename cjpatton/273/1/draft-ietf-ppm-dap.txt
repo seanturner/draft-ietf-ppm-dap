@@ -688,7 +688,7 @@ struct {
    max_batch_size that determine, respectively, the minimum and maximum
    number of measurements per chunk.
 
-   To get the aggregate of the next chunk, the Colector issues a "chunk
+   To get the aggregate of the next chunk, the Collector issues a "chunk
    query" of type next-chunk.  (See ChunkQuery in Section 4.1.)  The
    response to this query (see Section 4.5) includes a "chunk ID", which
    can be used to query the same chunk later on.  This is done using the
@@ -1556,7 +1556,7 @@ out = VDAF.prep_next(prep_state, inbound)
    struct {
      select (query_type) { // determined by task configuration
        time-series: Interval batch_interval;
-       fixed-chunk: Id chunk_id;
+       fixed-chunk: ChunkId chunk_id;
      }
    } BatchSelector;
 
