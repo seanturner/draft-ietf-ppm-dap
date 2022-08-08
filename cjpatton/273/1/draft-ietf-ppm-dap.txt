@@ -1708,7 +1708,17 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
       divisible by min_batch_duration and that batch_interval.duration
       >= min_batch_duration.
 
-   *  For fixed-chunk tasks, there are no boundaries to check.
+   *  For fixed-chunk tasks, the batch is assocaited with a "batch ID"
+      selected by the Leader.  Thus the Aggregator needs to check that
+      the query is associated with a known batch ID:
+
+      -  If the query contained in the CollectReq has type by-batch-id,
+         the Leader checks that the provided batch ID corresponds to a
+         batch ID it returned in a previous CollectResp for the task.
+
+      -  The Helper checks that the batch ID provided by the leader in
+         its AggregateShareReq corresponds to a batch ID used in a
+         previous AggregateInitializeReq for the task.
 
    If the boundary check fails, then the Aggregator MUST abort with
    error "batchInvalid".

@@ -3099,7 +3099,20 @@ query, the Aggregator checks that both <code>batch_interval.start</code> and
 <code>batch_interval.duration</code> are divisible by <code>min_batch_duration</code> and that
 <code>batch_interval.duration &gt;= min_batch_duration</code>.<a href="#section-4.5.5-3.1" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.5.5-3.2">For fixed-chunk tasks, there are no boundaries to check.<a href="#section-4.5.5-3.2" class="pilcrow">¶</a>
+            <li class="normal" id="section-4.5.5-3.2">
+              <p id="section-4.5.5-3.2.1">For fixed-chunk tasks, the batch is assocaited with a "batch ID" selected by
+the Leader. Thus the Aggregator needs to check that the query is associated
+with a known batch ID:<a href="#section-4.5.5-3.2.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.5.5-3.2.2.1">If the query contained in the CollectReq has type <code>by-batch-id</code>, the
+Leader checks that the provided batch ID corresponds to a batch ID it
+returned in a previous CollectResp for the task.<a href="#section-4.5.5-3.2.2.1" class="pilcrow">¶</a>
+</li>
+                <li class="normal" id="section-4.5.5-3.2.2.2">The Helper checks that the batch ID provided by the leader in its
+AggregateShareReq corresponds to a batch ID used in a previous
+AggregateInitializeReq for the task.<a href="#section-4.5.5-3.2.2.2" class="pilcrow">¶</a>
+</li>
+              </ul>
 </li>
           </ul>
 <p id="section-4.5.5-4">If the boundary check fails, then the Aggregator <span class="bcp14">MUST</span> abort with error
