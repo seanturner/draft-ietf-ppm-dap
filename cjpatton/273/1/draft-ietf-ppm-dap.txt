@@ -89,8 +89,8 @@ Table of Contents
      3.2.  HTTPS Sender Authentication
    4.  Protocol Definition
      4.1.  Queries
-       4.1.1.  Time-series Telemetry
-       4.1.2.  Fixed-size Chunks
+       4.1.1.  Time-interval Queries
+       4.1.2.  Fixed-size Queries
      4.2.  Task Configuration
      4.3.  Uploading Reports
        4.3.1.  HPKE Configuration Request
@@ -584,8 +584,8 @@ struct {
 
    enum {
       reserved(0), // Reserved for testing purposes
-      time-series(1),
-      fixed-chunk(2),
+      time-interval(1),
+      fixed-size(2),
       (65535)
    } QueryType;
 
@@ -596,22 +596,22 @@ struct {
    enum {
        next-batch(0),
        by-batch-id(1),
-   } ChunkQueryType;
+   } FixedSizeQueryType;
 
    opaque BatchId[32];
 
    struct {
-       ChunkQueryType chunk_query_type;
-       select (chunk_query_type) {
+       FixedSizeQueryType fixed_size_query_type;
+       select (fixed_size_query_type) {
            next-batch:  Empty;
            by-batch-id: BatchId batch_id;
        }
-   } ChunkQuery;
+   } FixedSizeQuery;
 
    struct {
        select (query_type) { // determined by query configuration
-           case time-series: Interval batch_interval;
-           case fixed-chunk: ChunkQuery chunk_query;
+           case time-interval: Interval batch_interval;
+           case fixed-size: FixedSizeQuery fixed_size_query;
        }
    } Query;
 
@@ -624,16 +624,16 @@ struct {
        QueryType query_type;
        uint64 min_batch_size;
        select (query_type) {
-           case time-series:
+           case time-interval:
                Duration min_batch_duration;
-           case fixed-chunk:
+           case fixed-size:
                uint64 max_batch_size;
        }
    } QueryConfig;
 
-4.1.1.  Time-series Telemetry
+4.1.1.  Time-interval Queries
 
-   The first query type, time-series, is designed to support
+   The first query type, time-interval, is designed to support
    applications in which some process is observed over a long period of
    time.  The Collector specifies a "batch interval" that determines the
    time range for measurements included in the batch: For each
@@ -666,34 +666,34 @@ struct {
    Collector may need to vary the duration to adjust to changing
    measurement upload rates.
 
-4.1.2.  Fixed-size Chunks
+4.1.2.  Fixed-size Queries
 
-   The fixed-chunk query type is used to support applications in which
+   The fixed-size query type is used to support applications in which
    the Collector needs the ability to strictly control the sample size.
    This is particularly important for controlling the amount of noise
    added to measurements by Clients (or added to aggregate shares by
    Aggregators) in order to achieve differential privacy.
 
    For this query type, the Aggregators batch measurements into
-   arbitrary "chunks" such that each chunk has roughly the same number
-   of reports.  The configuration includes parameters min_batch_size and
+   arbitrary batches such that each batch has roughly the same number of
+   reports.  The configuration includes parameters min_batch_size and
    max_batch_size that determine, respectively, the minimum and maximum
-   number of measurements per chunk.
+   number of measurements per batch.
 
-   To get the aggregate of the next chunk, the Collector issues a "chunk
-   query" of type next-batch.  (See ChunkQuery in Section 4.1.)  The
+   To get the aggregate of the next batch, the Collector issues a query
+   of type next-batch.  (See FixedSizeQuery in Section 4.1.)  The
    response to this query (see Section 4.5) includes a "batch ID", which
-   can be used to query the same chunk later on.  This is done using the
-   by-batch-id chunk query type.
+   can be used to query the same batch later on.  This is done using the
+   by-batch-id batch-query type.
 
    Implementation note: The goal for the Aggregators is to aggregate
-   precisely min_batch_size measurements per chunk.  Doing so, however,
-   is challenging for Leader deployments in which multiple, independent
-   nodes running the aggregate sub-protocol (see Section 4.4) need to be
-   coordinated.  The maximum batch size is intended to allow room for
-   error.  Typically the difference between the minimum and maximum
-   batch size will be a small fraction of the target batch size for each
-   chunk.
+   precisely min_batch_size measurements per batch.  Doing so, however,
+   umay be challenging for Leader deployments in which multiple,
+   independent nodes running the aggregate sub-protocol (see
+   Section 4.4) need to be coordinated.  The maximum batch size is
+   intended to allow room for error.  Typically the difference between
+   the minimum and maximum batch size will be a small fraction of the
+   target batch size for each batch.
 
    [OPEN ISSUE: It may be feasilble to require a fixed batch size, i.e.,
    min_batch_size == max_batch_size.  We should know better once we've
@@ -850,12 +850,12 @@ struct {
       generated.  Specifically, the time field is set to the number of
       seconds elapsed since the start of the UNIX epoch.
 
-      -  For time-series tasks, the client MUST round this value to the
-         nearest multiple of min_batch_duration in order to ensure that
-         that the timestamp cannot be used to link a report back to the
-         Client that generated it.
+      -  For time-interval tasks, the client MUST round this value to
+         the nearest multiple of min_batch_duration in order to ensure
+         that that the timestamp cannot be used to link a report back to
+         the Client that generated it.
 
-         [OPEN ISSUE What should we do for fixed-chunk tasks?  We could
+         [OPEN ISSUE What should we do for fixed-size tasks?  We could
          have the query config specify min batch duration for this type
          as well?]
 
@@ -1079,8 +1079,8 @@ struct {
      AggregationJobID job_id;
      opaque agg_param<0..2^16-1>;
      select (query_type) { // determined by task configuration
-       time-series: Empty;
-       fixed-chunk: BatchId batch_id;
+       time-interval: Empty;
+       fixed-size: BatchId batch_id;
      }
      ReportShare report_shares<1..2^32-1>;
    } AggregateInitializeReq;
@@ -1105,17 +1105,17 @@ struct {
    *  Information used by the Aggregators to determine how to aggregate
       each report:
 
-      -  For fixed-chunks tasks, the Leader specifies a "chunk ID" that
-         determines the chunk to which each report for this aggregation
+      -  For fixed-size tasks, the Leader specifies a "batch ID" that
+         determines the batch to which each report for this aggregation
          job belongs.
 
-         [OPEN ISSUE: For fixed-chunks tasks, the Leader is in complete
+         [OPEN ISSUE: For fixed-size tasks, the Leader is in complete
          control over which batch a report is included in.  For time-
-         series tasks, the Client has some control, since the timestamp
-         determines which batch window it falls in.  Is this desirable
-         from a privacy perspective?  If not, it might be simpler to
-         drop the timestamp altogether and have the agg init request
-         specify the batch window instead.]
+         interval tasks, the Client has some control, since the
+         timestamp determines which batch window it falls in.  Is this
+         desirable from a privacy perspective?  If not, it might be
+         simpler to drop the timestamp altogether and have the agg init
+         request specify the batch window instead.]
 
    *  The sequence of report shares to aggregate.  The
       encrypted_input_share field of the report share is the
@@ -1252,9 +1252,9 @@ struct {
    3.  Depending on the query type for the task, additional checks may
        be applicable:
 
-       *  For fixed-chunk tasks, the Aggregators need to ensure that
-          each batch is roughly the same size.  If the number of reports
-          aggregated for the current chunk exceeds the maximum batch
+       *  For fixed-size tasks, the Aggregators need to ensure that each
+          batch is roughly the same size.  If the number of reports
+          aggregated for the current batch exceeds the maximum batch
           size (per the task configuration), the Aggregator MAY mark the
           input share as invalid with the error "batch-saturated".  Note
           that this behavior is not strictly enforced here but during
@@ -1495,8 +1495,8 @@ out = VDAF.prep_next(prep_state, inbound)
 
    struct {
      select (query_type) { // determined by task configuration
-       time-series: Empty;
-       fixed-chunk: BatchId batch_id;
+       time-interval: Empty;
+       fixed-size: BatchId batch_id;
      }
      uint64 report_count;
      HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
@@ -1505,8 +1505,8 @@ out = VDAF.prep_next(prep_state, inbound)
    This structure includes the following:
 
    *  information used to bind the aggregate result to the query.  For
-      fixed-chunk tasks, this includes the chunk ID assigned to the
-      batch by the Leader.
+      fixed-size tasks, this includes the batch ID assigned to the batch
+      by the Leader.
 
    *  The number of reports included in the batch.
 
@@ -1547,8 +1547,8 @@ out = VDAF.prep_next(prep_state, inbound)
 
    struct {
      select (query_type) { // determined by task configuration
-       time-series: Interval batch_interval;
-       fixed-chunk: BatchId batch_id;
+       time-interval: Interval batch_interval;
+       fixed-size: BatchId batch_id;
      }
    } BatchSelector;
 
@@ -1568,10 +1568,10 @@ out = VDAF.prep_next(prep_state, inbound)
       the batch being aggregated.  The value depends on the query type
       for the task:
 
-      -  For time-series tasks, the request specifies the batch
+      -  For time-interval tasks, the request specifies the batch
          interval.
 
-      -  For fixed-chunk tasks, the request specifies the chunk ID.
+      -  For fixed-size tasks, the request specifies the batch ID.
 
    *  The opaque aggregation parameter for the VDAF beging executed.
       This value MUST match the same value in the the
@@ -1677,10 +1677,10 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    The value of batch_selector is computed by the Collector from its
    query and the response to its query:
 
-   *  For time-series tasks, the batch selector is the batch interval
+   *  For time-interval tasks, the batch selector is the batch interval
       specified in the query.
 
-   *  For fixed-chunk tasks, the batch selector is the chunk ID assigned
+   *  For fixed-size tasks, the batch selector is the batch ID assigned
       sent in the response.
 
 4.5.5.  Batch Validation
@@ -1693,14 +1693,14 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    First the aggregator checks that the request respects any batch
    "boundaries" determined by the query configuration:
 
-   *  For time-series tasks, the query configuration specifies the
+   *  For time-interval tasks, the query configuration specifies the
       minimum batch duration, min_batch_duration.  For the
       batch_interval included with the query, the Aggregator checks that
       both batch_interval.start and batch_interval.duration are
       divisible by min_batch_duration and that batch_interval.duration
       >= min_batch_duration.
 
-   *  For fixed-chunk tasks, the batch is assocaited with a "batch ID"
+   *  For fixed-size tasks, the batch is assocaited with a "batch ID"
       selected by the Leader.  Thus the Aggregator needs to check that
       the query is associated with a known batch ID:
 
@@ -1718,11 +1718,11 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    Next, the Aggregator checks that batch contains a valid number of
    reports.  Let X denote the set of reports in the batch:
 
-   *  For time-series tasks, the query configuration specifies the
+   *  For time-interval tasks, the query configuration specifies the
       minimum batch size, min_batch_size.  The Aggregator checks that
       len(X) >= min_batch_size.
 
-   *  For fixed-chunk tasks, the query configuration specifies the
+   *  For fixed-size tasks, the query configuration specifies the
       minimum batch size, min_batch_size, and maximum batch size.  The
       Aggregator checks that len(X) >= min_batch_size and len(X) <
       max_batch_size.
@@ -1745,7 +1745,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    intersections may be prohibitively expensive for some deployments.
    The following is sufficient (but not necessary):
 
-   *  For time-series tasks, the Aggregator checks that the batch
+   *  For time-interval tasks, the Aggregator checks that the batch
       interval does not overlap with the batch interval of any previous
       query.  If this batch interval check fails, then the Aggregator
       MAY abort with error "batchOverlap".

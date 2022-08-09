@@ -1199,10 +1199,10 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                 <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="xref">4.1</a>.  <a href="#name-queries" class="xref">Queries</a></p>
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.1">
-                    <p id="section-toc.1-1.4.2.1.2.1.1"><a href="#section-4.1.1" class="xref">4.1.1</a>.  <a href="#name-time-series-telemetry" class="xref">Time-series Telemetry</a></p>
+                    <p id="section-toc.1-1.4.2.1.2.1.1"><a href="#section-4.1.1" class="xref">4.1.1</a>.  <a href="#name-time-interval-queries" class="xref">Time-interval Queries</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.2">
-                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="xref">4.1.2</a>.  <a href="#name-fixed-size-chunks" class="xref">Fixed-size Chunks</a></p>
+                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="xref">4.1.2</a>.  <a href="#name-fixed-size-queries" class="xref">Fixed-size Queries</a></p>
 </li>
                 </ul>
 </li>
@@ -1933,8 +1933,8 @@ by the Aggregators to guide batch selection.<a href="#section-4.1-1" class="pilc
 <pre>
 enum {
    reserved(0), // Reserved for testing purposes
-   time-series(1),
-   fixed-chunk(2),
+   time-interval(1),
+   fixed-size(2),
    (65535)
 } QueryType;
 </pre><a href="#section-4.1-3" class="pilcrow">¶</a>
@@ -1947,22 +1947,22 @@ given query type:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
 enum {
     next-batch(0),
     by-batch-id(1),
-} ChunkQueryType;
+} FixedSizeQueryType;
 
 opaque BatchId[32];
 
 struct {
-    ChunkQueryType chunk_query_type;
-    select (chunk_query_type) {
+    FixedSizeQueryType fixed_size_query_type;
+    select (fixed_size_query_type) {
         next-batch:  Empty;
         by-batch-id: BatchId batch_id;
     }
-} ChunkQuery;
+} FixedSizeQuery;
 
 struct {
     select (query_type) { // determined by query configuration
-        case time-series: Interval batch_interval;
-        case fixed-chunk: ChunkQuery chunk_query;
+        case time-interval: Interval batch_interval;
+        case fixed-size: FixedSizeQuery fixed_size_query;
     }
 } Query;
 </pre><a href="#section-4.1-5" class="pilcrow">¶</a>
@@ -1976,20 +1976,20 @@ struct {
     QueryType query_type;
     uint64 min_batch_size;
     select (query_type) {
-        case time-series:
+        case time-interval:
             Duration min_batch_duration;
-        case fixed-chunk:
+        case fixed-size:
             uint64 max_batch_size;
     }
 } QueryConfig;
 </pre><a href="#section-4.1-7" class="pilcrow">¶</a>
 </div>
-<div id="time-series-telemetry">
+<div id="time-interval-queries">
 <section id="section-4.1.1">
-          <h4 id="name-time-series-telemetry">
-<a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-time-series-telemetry" class="section-name selfRef">Time-series Telemetry</a>
+          <h4 id="name-time-interval-queries">
+<a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-time-interval-queries" class="section-name selfRef">Time-interval Queries</a>
           </h4>
-<p id="section-4.1.1-1">The first query type, <code>time-series</code>, is designed to support applications in
+<p id="section-4.1.1-1">The first query type, <code>time-interval</code>, is designed to support applications in
 which some process is observed over a long period of time. The Collector
 specifies a "batch interval" that determines the time range for measurements
 included in the batch: For each measurement in the batch, the time at which that
@@ -2021,31 +2021,31 @@ aggregation parameter (e.g, for Poplar1). In addition, the Collector may need to
 vary the duration to adjust to changing measurement upload rates.<a href="#section-4.1.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
-<div id="fixed-size-chunks">
+<div id="fixed-size-queries">
 <section id="section-4.1.2">
-          <h4 id="name-fixed-size-chunks">
-<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-fixed-size-chunks" class="section-name selfRef">Fixed-size Chunks</a>
+          <h4 id="name-fixed-size-queries">
+<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-fixed-size-queries" class="section-name selfRef">Fixed-size Queries</a>
           </h4>
-<p id="section-4.1.2-1">The <code>fixed-chunk</code> query type is used to support applications in which the
+<p id="section-4.1.2-1">The <code>fixed-size</code> query type is used to support applications in which the
 Collector needs the ability to strictly control the sample size. This is
 particularly important for controlling the amount of noise added to measurements
 by Clients (or added to aggregate shares by Aggregators) in order to achieve
 differential privacy.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-2">For this query type, the Aggregators batch measurements into arbitrary "chunks"
-such that each chunk has roughly the same number of reports. The configuration
+<p id="section-4.1.2-2">For this query type, the Aggregators batch measurements into arbitrary batches
+such that each batch has roughly the same number of reports. The configuration
 includes parameters <code>min_batch_size</code> and <code>max_batch_size</code> that determine,
-respectively, the minimum and maximum number of measurements per chunk.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-3">To get the aggregate of the next chunk, the Collector issues a "chunk query" of
-type <code>next-batch</code>. (See ChunkQuery in <a href="#query" class="xref">Section 4.1</a>.) The response to this query
-(see <a href="#collect-flow" class="xref">Section 4.5</a>) includes a "batch ID", which can be used to query the
-same chunk later on. This is done using the <code>by-batch-id</code> chunk query type.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
+respectively, the minimum and maximum number of measurements per batch.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-3">To get the aggregate of the next batch, the Collector issues a query of type
+<code>next-batch</code>. (See FixedSizeQuery in <a href="#query" class="xref">Section 4.1</a>.) The response to this query (see
+<a href="#collect-flow" class="xref">Section 4.5</a>) includes a "batch ID", which can be used to query the same
+batch later on. This is done using the <code>by-batch-id</code> batch-query type.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-4">Implementation note: The goal for the Aggregators is to aggregate precisely
-<code>min_batch_size</code> measurements per chunk. Doing so, however, is challenging for
-Leader deployments in which multiple, independent nodes running the aggregate
-sub-protocol (see <a href="#aggregate-flow" class="xref">Section 4.4</a>) need to be coordinated. The maximum batch
-size is intended to allow room for error. Typically the difference between
-the minimum and maximum batch size will be a small fraction of the target batch
-size for each chunk.<a href="#section-4.1.2-4" class="pilcrow">¶</a></p>
+<code>min_batch_size</code> measurements per batch. Doing so, however, umay be challenging
+for Leader deployments in which multiple, independent nodes running the
+aggregate sub-protocol (see <a href="#aggregate-flow" class="xref">Section 4.4</a>) need to be coordinated. The
+maximum batch size is intended to allow room for error. Typically the difference
+between the minimum and maximum batch size will be a small fraction of the
+target batch size for each batch.<a href="#section-4.1.2-4" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-5">[OPEN ISSUE: It may be feasilble to require a fixed batch size, i.e.,
 <code>min_batch_size == max_batch_size</code>. We should know better once we've had some
 implementation/deployment experience.]<a href="#section-4.1.2-5" class="pilcrow">¶</a></p>
@@ -2217,12 +2217,12 @@ Specifically, the <code>time</code> field is set to the number of seconds elapse
 the start of the UNIX epoch.<a href="#section-4.3.2-4.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.3.2-4.2.2.1">
-                  <p id="section-4.3.2-4.2.2.1.1">For time-series tasks, the client <span class="bcp14">MUST</span> round this value to the nearest
+                  <p id="section-4.3.2-4.2.2.1.1">For time-interval tasks, the client <span class="bcp14">MUST</span> round this value to the nearest
 multiple of <code>min_batch_duration</code> in order to ensure that that the
 timestamp cannot be used to link a report back to the Client that
 generated it.<a href="#section-4.3.2-4.2.2.1.1" class="pilcrow">¶</a></p>
 <p id="section-4.3.2-4.2.2.1.2">
-[OPEN ISSUE What should we do for fixed-chunk tasks? We could have the
+[OPEN ISSUE What should we do for fixed-size tasks? We could have the
 query config specify min batch duration for this type as well?]<a href="#section-4.3.2-4.2.2.1.2" class="pilcrow">¶</a></p>
 </li>
               </ul>
@@ -2450,8 +2450,8 @@ struct {
   AggregationJobID job_id;
   opaque agg_param&lt;0..2^16-1&gt;;
   select (query_type) { // determined by task configuration
-    time-series: Empty;
-    fixed-chunk: BatchId batch_id;
+    time-interval: Empty;
+    fixed-size: BatchId batch_id;
   }
   ReportShare report_shares&lt;1..2^32-1&gt;;
 } AggregateInitializeReq;
@@ -2478,11 +2478,11 @@ definition of Poplar is done.]]<a href="#section-4.4.1.1-7.3.2" class="pilcrow">
                 <p id="section-4.4.1.1-7.4.1">Information used by the Aggregators to determine how to aggregate each report:<a href="#section-4.4.1.1-7.4.1" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-4.4.1.1-7.4.2.1">
-                    <p id="section-4.4.1.1-7.4.2.1.1">For fixed-chunks tasks, the Leader specifies a "chunk ID" that determines
-the chunk to which each report for this aggregation job belongs.<a href="#section-4.4.1.1-7.4.2.1.1" class="pilcrow">¶</a></p>
+                    <p id="section-4.4.1.1-7.4.2.1.1">For fixed-size tasks, the Leader specifies a "batch ID" that determines
+the batch to which each report for this aggregation job belongs.<a href="#section-4.4.1.1-7.4.2.1.1" class="pilcrow">¶</a></p>
 <p id="section-4.4.1.1-7.4.2.1.2">
-[OPEN ISSUE: For fixed-chunks tasks, the Leader is in complete control over
-which batch a report is included in. For time-series tasks, the Client has
+[OPEN ISSUE: For fixed-size tasks, the Leader is in complete control over
+which batch a report is included in. For time-interval tasks, the Client has
 some control, since the timestamp determines which batch window it falls
 in. Is this desirable from a privacy perspective? If not, it might be
 simpler to drop the timestamp altogether and have the agg init request
@@ -2618,9 +2618,9 @@ also choose to mark an input share as invalid with the error
               <li id="section-4.4.1.4-3.3">
                 <p id="section-4.4.1.4-3.3.1">Depending on the query type for the task, additional checks may be applicable:<a href="#section-4.4.1.4-3.3.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.4.1.4-3.3.2.1">For fixed-chunk tasks, the Aggregators need to ensure that each batch is
+<li class="normal" id="section-4.4.1.4-3.3.2.1">For fixed-size tasks, the Aggregators need to ensure that each batch is
 roughly the same size. If the number of reports aggregated for the current
-chunk exceeds the maximum batch size (per the task configuration), the
+batch exceeds the maximum batch size (per the task configuration), the
 Aggregator <span class="bcp14">MAY</span> mark the input share as invalid with the error
 "batch-saturated". Note that this behavior is not strictly enforced here
 but during the collect sub-protocol. (See <a href="#batch-validation" class="xref">Section 4.5.5</a>.)
@@ -2875,8 +2875,8 @@ and a body consisting of a <code>CollectResp</code>:<a href="#section-4.5.1-10" 
 <pre>
 struct {
   select (query_type) { // determined by task configuration
-    time-series: Empty;
-    fixed-chunk: BatchId batch_id;
+    time-interval: Empty;
+    fixed-size: BatchId batch_id;
   }
   uint64 report_count;
   HpkeCiphertext encrypted_agg_shares&lt;1..2^32-1&gt;;
@@ -2885,8 +2885,8 @@ struct {
 </div>
 <p id="section-4.5.1-12">This structure includes the following:<a href="#section-4.5.1-12" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.1-13.1">information used to bind the aggregate result to the query. For fixed-chunk
-tasks, this includes the chunk ID assigned to the batch by the Leader.<a href="#section-4.5.1-13.1" class="pilcrow">¶</a>
+<li class="normal" id="section-4.5.1-13.1">information used to bind the aggregate result to the query. For fixed-size
+tasks, this includes the batch ID assigned to the batch by the Leader.<a href="#section-4.5.1-13.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.5.1-13.2">The number of reports included in the batch.<a href="#section-4.5.1-13.2" class="pilcrow">¶</a>
 </li>
@@ -2926,8 +2926,8 @@ a POST request to <code>[aggregator]/aggregate_share</code> with the following m
 <pre>
 struct {
   select (query_type) { // determined by task configuration
-    time-series: Interval batch_interval;
-    fixed-chunk: BatchId batch_id;
+    time-interval: Interval batch_interval;
+    fixed-size: BatchId batch_id;
   }
 } BatchSelector;
 
@@ -2948,9 +2948,9 @@ struct {
               <p id="section-4.5.2-5.2.1">The "batch seletor", which encodes parameters used to determine the batch
 being aggregated. The value depends on the query type for the task:<a href="#section-4.5.2-5.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.2-5.2.2.1">For time-series tasks, the request specifies the batch interval.<a href="#section-4.5.2-5.2.2.1" class="pilcrow">¶</a>
+<li class="normal" id="section-4.5.2-5.2.2.1">For time-interval tasks, the request specifies the batch interval.<a href="#section-4.5.2-5.2.2.1" class="pilcrow">¶</a>
 </li>
-                <li class="normal" id="section-4.5.2-5.2.2.2">For fixed-chunk tasks, the request specifies the chunk ID.<a href="#section-4.5.2-5.2.2.2" class="pilcrow">¶</a>
+                <li class="normal" id="section-4.5.2-5.2.2.2">For fixed-size tasks, the request specifies the batch ID.<a href="#section-4.5.2-5.2.2.2" class="pilcrow">¶</a>
 </li>
               </ul>
 </li>
@@ -3063,10 +3063,10 @@ share (<code>0x02</code> for the leader and <code>0x03</code> for the helper). T
 <code>batch_selector</code> is computed by the Collector from its query and the response to
 its query:<a href="#section-4.5.4-6" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.4-7.1">For time-series tasks, the batch selector is the batch interval specified in
+<li class="normal" id="section-4.5.4-7.1">For time-interval tasks, the batch selector is the batch interval specified in
 the query.<a href="#section-4.5.4-7.1" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.5.4-7.2">For fixed-chunk tasks, the batch selector is the chunk ID assigned sent in the
+            <li class="normal" id="section-4.5.4-7.2">For fixed-size tasks, the batch selector is the batch ID assigned sent in the
 response.<a href="#section-4.5.4-7.2" class="pilcrow">¶</a>
 </li>
           </ul>
@@ -3083,14 +3083,14 @@ with the DAP task. It does so as described here.<a href="#section-4.5.5-1" class
 <p id="section-4.5.5-2">First the aggregator checks that the request respects any batch "boundaries"
 determined by the query configuration:<a href="#section-4.5.5-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.5-3.1">For time-series tasks, the query configuration specifies the minimum batch
+<li class="normal" id="section-4.5.5-3.1">For time-interval tasks, the query configuration specifies the minimum batch
 duration, <code>min_batch_duration</code>. For the <code>batch_interval</code> included with the
 query, the Aggregator checks that both <code>batch_interval.start</code> and
 <code>batch_interval.duration</code> are divisible by <code>min_batch_duration</code> and that
 <code>batch_interval.duration &gt;= min_batch_duration</code>.<a href="#section-4.5.5-3.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.5.5-3.2">
-              <p id="section-4.5.5-3.2.1">For fixed-chunk tasks, the batch is assocaited with a "batch ID" selected by
+              <p id="section-4.5.5-3.2.1">For fixed-size tasks, the batch is assocaited with a "batch ID" selected by
 the Leader. Thus the Aggregator needs to check that the query is associated
 with a known batch ID:<a href="#section-4.5.5-3.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
@@ -3110,10 +3110,10 @@ AggregateInitializeReq for the task.<a href="#section-4.5.5-3.2.2.2" class="pilc
 <p id="section-4.5.5-5">Next, the Aggregator checks that batch contains a valid number of reports. Let
 <code>X</code> denote the set of reports in the batch:<a href="#section-4.5.5-5" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.5-6.1">For time-series tasks, the query configuration specifies the minimum batch
+<li class="normal" id="section-4.5.5-6.1">For time-interval tasks, the query configuration specifies the minimum batch
 size, <code>min_batch_size</code>. The Aggregator checks that <code>len(X) &gt;= min_batch_size</code>.<a href="#section-4.5.5-6.1" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.5.5-6.2">For fixed-chunk tasks, the query configuration specifies the minimum batch
+            <li class="normal" id="section-4.5.5-6.2">For fixed-size tasks, the query configuration specifies the minimum batch
 size, <code>min_batch_size</code>, and maximum batch size. The Aggregator checks that
 <code>len(X) &gt;= min_batch_size</code> and <code>len(X) &lt; max_batch_size</code>.<a href="#section-4.5.5-6.2" class="pilcrow">¶</a>
 </li>
@@ -3131,7 +3131,7 @@ Aggregator <span class="bcp14">MUST</span> abort with error "batchOverlap".<a hr
 prohibitively expensive for some deployments. The following is sufficient (but
 not necessary):<a href="#section-4.5.5-10" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.5-11.1">For time-series tasks, the Aggregator checks that the batch interval does not
+<li class="normal" id="section-4.5.5-11.1">For time-interval tasks, the Aggregator checks that the batch interval does not
 overlap with the batch interval of any previous query. If this batch interval
 check fails, then the Aggregator <span class="bcp14">MAY</span> abort with error "batchOverlap".<a href="#section-4.5.5-11.1" class="pilcrow">¶</a>
 </li>
