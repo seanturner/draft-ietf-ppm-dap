@@ -695,6 +695,10 @@ struct {
    batch size will be a small fraction of the target batch size for each
    chunk.
 
+   [OPEN ISSUE: It may be feasilble to require a fixed batch size, i.e.,
+   min_batch_size == max_batch_size.  We should know better once we've
+   had some implementation/deployment experience.]
+
 4.2.  Task Configuration
 
    Prior to the start of execution of the protocol, each participant
