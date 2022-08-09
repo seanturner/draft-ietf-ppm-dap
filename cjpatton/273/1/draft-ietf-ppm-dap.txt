@@ -635,7 +635,7 @@ struct {
 
    The first query type, time-series, is designed to support
    applications in which some process is observed over a long period of
-   time.  The Collector specifes a "batch interval" that determines the
+   time.  The Collector specifies a "batch interval" that determines the
    time range for measurements included in the batch: For each
    measurement in the batch, the time at which that measurement was
    generated (see Section 4.3) must fall within the batch interval
@@ -1096,7 +1096,7 @@ struct {
 
    *  The aggregation job ID.
 
-   *  The opaque, VDAF-specifict aggregation parameter provided during
+   *  The opaque, VDAF-specific aggregation parameter provided during
       the collection flow (agg_param),
 
       [[OPEN ISSUE: Check that this handling of agg_param is appropriate
@@ -1117,16 +1117,12 @@ struct {
          drop the timestamp altogether and have the agg init request
          specify the batch window instead.]
 
-   *  The sequence of report shares to aggregate.
-
-   The info field of each ReportShare matches the Report uploaded by the
-   Client.  The encrypted_input_share field is the HpkeCiphertext whose
-   index in Report.encrypted_input_shares is equal to the index of the
-   aggregator in the task's aggregator_endpoints to which the
-   AggregateInitializeReq is being sent.  The agg_param field is an
-   opaque, VDAF-specific aggregation parameter provided during a
-   collection flow.  The job_id parameter contains the leader's chosen
-   AggregationJobID.
+   *  The sequence of report shares to aggregate.  The
+      encrypted_input_share field of the report share is the
+      HpkeCiphertext whose index in Report.encrypted_input_shares is
+      equal to the index of the aggregator in the task's
+      aggregator_endpoints to which the AggregateInitializeReq is being
+      sent.
 
    Let [aggregator] denote the helper's API endpoint.  The leader sends
    a POST request to [aggregator]/aggregate with its
@@ -1211,9 +1207,9 @@ struct {
 
 4.4.1.3.  Input Share Decryption
 
-   Each report share has a corresponding task ID, report info (nonce,
-   batch selector, nonce, and extensions), and encrypted input share.
-   Let task_id, info, and encrypted_input_share denote these values,
+   Each report share has a corresponding task ID, report info
+   (timestamp, nonce, and extensions), and encrypted input share.  Let
+   task_id, info, and encrypted_input_share denote these values,
    respectively.  Given these values, an aggregator decrypts the input
    share as follows.  First, the aggregator looks up the HPKE config and
    corresponding secret key indicated by
