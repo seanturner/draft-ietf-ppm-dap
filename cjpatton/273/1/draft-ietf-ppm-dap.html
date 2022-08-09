@@ -2032,12 +2032,12 @@ particularly important for controlling the amount of noise added to measurements
 by Clients (or added to aggregate shares by Aggregators) in order to achieve
 differential privacy.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-2">For this query type, the Aggregators batch measurements into arbitrary "chunks"
-such that each chunk has roughly the same number of reports. The configuration includes
-parameters <code>min_batch_size</code> and <code>max_batch_size</code> that determine, respectively,
-the minimum and maximum number of measurements per chunk.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
+such that each chunk has roughly the same number of reports. The configuration
+includes parameters <code>min_batch_size</code> and <code>max_batch_size</code> that determine,
+respectively, the minimum and maximum number of measurements per chunk.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-3">To get the aggregate of the next chunk, the Collector issues a "chunk query" of
 type <code>next-batch</code>. (See ChunkQuery in <a href="#query" class="xref">Section 4.1</a>.) The response to this query
-(see <a href="#collect-flow" class="xref">Section 4.5</a>) includes a "chunk ID", which can be used to query the
+(see <a href="#collect-flow" class="xref">Section 4.5</a>) includes a "batch ID", which can be used to query the
 same chunk later on. This is done using the <code>by-batch-id</code> chunk query type.<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
 <p id="section-4.1.2-4">Implementation note: The goal for the Aggregators is to aggregate precisely
 <code>min_batch_size</code> measurements per chunk. Doing so, however, is challenging for
