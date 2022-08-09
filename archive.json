@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-07T01:26:51.674066+00:00",
+  "timestamp": "2022-08-09T01:28:06.691649+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -3422,10 +3422,12 @@
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "Collectors will want to know how many inputs are included in the aggregations they receive, for a number of reasons: they may wish to compute a mean over a privately aggregated sum, or track metrics on how many clients are providing inputs. struct `CollectResp` should include a count of how many contributions went into an aggregation.",
       "createdAt": "2021-11-05T22:55:01Z",
-      "updatedAt": "2022-07-11T20:47:34Z",
+      "updatedAt": "2022-08-08T20:01:31Z",
       "closedAt": null,
       "comments": [
         {
@@ -34826,13 +34828,13 @@
       "labels": [],
       "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-series` query type.\r\n\r\nAdds a query type, `fixed-chunk`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-08-06T01:14:38Z",
+      "updatedAt": "2022-08-08T22:16:16Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/273/1",
-      "headRefOid": "42f9cf88d4fe5625589b02caa0c2595d9ca3c14d",
+      "headRefOid": "12d84c010bc39c3ee7a89f38b404fea4042986e9",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -35118,6 +35120,274 @@
               "body": "> In the fixed chunk model, however, we grant the leader total power to assign reports to chunks (modulo the max and min sizes the task defines), so we should carefully analyze what powers that gives the leader.\r\n\r\nNice catch. There should already be an OPEN ISSUE somewhere in this PR about this.\r\n\r\n> For instance, suppose the leader can see the uploading client's IP and do geolocation. Maybe it constructs one chunk that only contains reports from clients in country A and another chunk that only contains reports from country B in an effort to skew either chunk's aggregation somehow?\r\n\r\nAgreed, this is a risk worth considering. I imagine there are other things the Leader can do like this already, but you're right that the intention of including the timestamp in the report was to allow the Client to control (at least in part), which batch its report goes in.\r\n\r\nIt's worth pointing out that replay protection requirements haven't changed: Each Aggregator still needs to ensure that a single report doesn't get replayed in multiple chunks.\r\n\r\n> My intuition on how this feature is used is that you want to enable the leader to create a chunk every `min_chunk_size` reports. So maybe we want to enable the client to verify that the chunks defined by the leader are made up of non-overlapping intervals? That would require putting the `Time` component back in a report `Nonce`, but this would use code the helper needs to have anyway to enforce that batch interval queries don't overlap.\r\n\r\nOhhhh that's an interesting idea! Your intuition is right I think. It's a little stricter than what this PR does now. (And thus harder to implement?). The Leader can still mount a similar \"attack\" by only processing reports from the Client population it's interested in. However there is a cost: It'll end up losing the data for all other Clients.\r\n\r\nFeedback on feasibility of the implementation would be useful.",
               "createdAt": "2022-08-06T01:02:28Z",
               "updatedAt": "2022-08-06T01:02:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_csta",
+          "commit": {
+            "abbreviatedOid": "42f9cf8"
+          },
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T00:08:25Z",
+          "updatedAt": "2022-08-08T18:34:48Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "nit: `QueryConfig` isn't ever transmitted on-the-wire; I think it does not need to be expressed as a struct, and could instead be expressed as a set of properties (similarly to task configurations)",
+              "createdAt": "2022-08-08T00:08:26Z",
+              "updatedAt": "2022-08-08T18:34:48Z"
+            },
+            {
+              "originalPosition": 145,
+              "body": "```suggestion\r\nTo get the aggregate of the next chunk, the Collector issues a \"chunk query\" of\r\n```\r\n\r\n(typo)",
+              "createdAt": "2022-08-08T00:37:55Z",
+              "updatedAt": "2022-08-08T18:34:48Z"
+            },
+            {
+              "originalPosition": 58,
+              "body": "Q: what is the conceptual difference between a \"chunk\" and a \"batch\"? That is, why isn't this type called `BatchId` (and other names made in terms of \"batches\" instead of \"chunks\"?)\r\n\r\nThis is most confusing in interacting with `{min,max}_batch_size`, which determine the acceptable size of a chunk (rather than a batch). I think `max_batch_duration` would also apply to a chunk, rather than a batch.",
+              "createdAt": "2022-08-08T02:11:03Z",
+              "updatedAt": "2022-08-08T18:34:48Z"
+            },
+            {
+              "originalPosition": 436,
+              "body": "> So maybe we want to enable the client to verify that the chunks defined by the leader are made up of non-overlapping intervals?\r\n\r\nI think enforcing non-overlapping timestamps in distinct chunks would introduce a few challenges:\r\n\r\n1. Reports will not arrive ordered by timestamp. Given that, we might receive reports after we have already created a chunk for a given interval; I suppose we'd have no choice but to toss reports like this if aggregating them would size the chunk over `max_batch_size`.\r\n\r\n1. More seriously, we don't generally know if we're done with a given chunk until all of the aggregation jobs in that chunk have concluded: enough reports might be rejected from outstanding aggregation jobs that we no longer meet the `min_batch_size` parameter. If we have already created another chunk to aggregate into when we realize this has happened, I think we are stuck -- we can't finish aggregating the chunk because it doesn't contain enough reports, we can't add additional reports to this chunk since doing so would extend this chunk into the new chunk. OTOH, if we don't allow another chunk to be created until we have finished aggregating reports into the current chunk, we have limited the amount of parallel aggregations we can do: near the end of a chunk, we might have to stop creating new aggregation jobs until we have completed enough oustanding aggregation jobs to confirm that we are done with the current chunk before we can create another chunk & start aggregating reports into it.\r\n\r\n(I do think it would be valuable to somehow limit the leader's power here for the reasons argued upthread; but I think we need to think through these issues.)",
+              "createdAt": "2022-08-08T02:47:22Z",
+              "updatedAt": "2022-08-08T18:34:49Z"
+            },
+            {
+              "originalPosition": 200,
+              "body": "nit: this is the only place that `ReportHeader` is used; inline `ReportHeader` into `Report`?",
+              "createdAt": "2022-08-08T02:52:02Z",
+              "updatedAt": "2022-08-08T18:34:48Z"
+            },
+            {
+              "originalPosition": 347,
+              "body": "I think L1008-L1010 are now redundant with the parameter description that precedes it, remove?",
+              "createdAt": "2022-08-08T03:14:18Z",
+              "updatedAt": "2022-08-08T18:34:48Z"
+            },
+            {
+              "originalPosition": 526,
+              "body": "```suggestion\r\n    fixed-chunk: ChunkId chunk_id;\r\n```\r\n\r\n(typo)",
+              "createdAt": "2022-08-08T03:26:51Z",
+              "updatedAt": "2022-08-08T18:34:48Z"
+            },
+            {
+              "originalPosition": 152,
+              "body": "I think creating an aggregation job and attaching it to a given chunk requires knowing [an overestimate of] the sum of the number of reports successfully aggregated + the number of \"outstanding\" reports in in-progress aggregation jobs. Otherwise, creating an aggregation job may cause the chunk to grow past `max_batch_size`, effectively losing the chunk.\r\n\r\nIf you can update this sum \"transactionally\" with creation of the aggregation job, you can always hit `min_batch_size` exactly.\r\n\r\nIf you can't, I think avoiding chunk overflow requires having enough \"leeway\" (in `max_batch_size - min_batch_size`) such that every worker creating a max-size job at once will not move a chunk that has not yet aggregated `min_batch_size` reports to have aggregated more than `max_batch_size` reports, since every worker might simultaneously see the same information and independently decide to schedule an aggregation job. Another way of putting it is: I think increasing the \"precision\" of the size of your chunks would require reducing parallelism in the number of workers simultaneously aggregating into the chunk; equivalently, increasing worker parallelism to aggregate a task more quickly will lead to decreased \"precision\" in the size of the chunks that are generated.\r\n\r\nIs that sort of what you're thinking (especially in the analysis in the previous paragraph)? I'm also curious if hitting `min_batch_size` exactly provides advantages over just knowing the number of reports in the chunk -- it would be relatively easy to communicate the report count to the collector, and if doing so would let us stop worrying about `max_batch_size` that might be the easier path.",
+              "createdAt": "2022-08-08T18:22:58Z",
+              "updatedAt": "2022-08-08T18:34:49Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "One thing useful to call out (but probably not add to the spec text) is that collectors may want to send a collect request before reports for the \"query\" have finished arriving. For example, in a time-series task, the collector may want to send a collect request for a batch interval that has not yet expired, with the expectation that the created collect job will not be resolved until the interval has completed.\r\n\r\nChris, you pointed out that this is nice in the sense that it means the collector & the aggregators don't need to agree on the clock. Makes sense to me.\r\n\r\nI think this is even more important for fixed-chunk tasks: the next chunk being \"ready for collection\" is based on the rate of report arrival, which the collector can't see. So I think we _need_ to support the \"aggressive collector\" use-case to support fixed-chunk tasks.\r\n\r\nAll that said, I'm agnostic on whether this kind of detail should make it into the spec text. :) I think mentioning that the the collector can choose whatever intervals it wishes is probably a good idea; I'm less sure of the value of `RECOMMEND`ing a particular sequence of intervals.",
+              "createdAt": "2022-08-08T18:34:43Z",
+              "updatedAt": "2022-08-08T18:45:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_hJjV",
+          "commit": {
+            "abbreviatedOid": "42f9cf8"
+          },
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T19:03:29Z",
+          "updatedAt": "2022-08-08T19:03:32Z",
+          "comments": [
+            {
+              "originalPosition": 270,
+              "body": "I think L800 (a few lines down from here) needs to change. It currently reads:\r\n\r\n> The leader MUST ignore any report whose nonce contains a timestamp that falls in\r\na batch interval for which it has received at least one collect request from the\r\ncollector.\r\n\r\nNonces no longer have a timestamp. Depending on the task configuration, reports might no longer have a timestamp at all.\r\n\r\nMore importantly, this would block an \"aggressive collector\" which wants to send collect requests before reports have finished arriving for a given batch, with the expectation that the collect job will stay live until the batch is \"over\". Supporting the aggressive collector is a nice-to-have for time-series tasks (since it breaks the need for a collector to have a clock that matches the aggregators', and removes a case where a collector can trigger data loss accidentally), and I think a requirement for fixed-chunk tasks (since batches are determined by the rate of report arrival, and the collector does not have any insight into this, so it can't know when to make another collect request).",
+              "createdAt": "2022-08-08T19:03:29Z",
+              "updatedAt": "2022-08-08T19:03:32Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_hd8h",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T20:15:25Z",
+          "updatedAt": "2022-08-08T20:15:26Z",
+          "comments": [
+            {
+              "originalPosition": 436,
+              "body": "I think this concern is valid, but making sure each chunk has non-overlapping intervals can cause us to lose some late-arriving reports. For example, assuming max_batch_lifetime is 1 for simplicity, and I have a task that can quickly fulfill min chunk size in a short period of time (e.g. 1 minute). If leader has constructed a chunk that meets minimum chunk size, the min and max time of all the reports in this chunk defines the interval for this chunk. Now for the next chunk, leader is only allowed to collect reports that have timestamps later than the max timestamp of the previous chunk. If there are late arriving reports, leader is forced to drop all of them even though they are valid, so the availability of the leader service may take a hit in this case.\r\n\r\nEDIT: just saw @BranLwyd's comments, I think my point mostly echoes your bullet point 1.",
+              "createdAt": "2022-08-08T20:15:26Z",
+              "updatedAt": "2022-08-08T20:19:24Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_hVLL",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T19:41:07Z",
+          "updatedAt": "2022-08-08T20:17:57Z",
+          "comments": [
+            {
+              "originalPosition": 58,
+              "body": "Hmmm yeah. I was trying not to overload the term \"batch\", but (1) I don't think this does and (2) a new term is confusing. I'll update \"chunk\" to \"batch\".",
+              "createdAt": "2022-08-08T19:41:07Z",
+              "updatedAt": "2022-08-08T20:17:57Z"
+            },
+            {
+              "originalPosition": 80,
+              "body": "Agreed, but what's the downside of defining a wire format? ",
+              "createdAt": "2022-08-08T19:43:09Z",
+              "updatedAt": "2022-08-08T20:17:57Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_hK4z",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T19:08:38Z",
+          "updatedAt": "2022-08-08T20:35:16Z",
+          "comments": [
+            {
+              "originalPosition": 42,
+              "body": "I see what you mean. I think my only remaining gripe is that calling this query variant `time-series` implies that the other one isn't. Wikipedia's headline definition of time series is \"a series of data points indexed (or listed or graphed) in time order.\" Now that we've put the timestamp back into fixed-chunk reports, those are also time series.\r\n\r\nMore generally, a \"time series\" is a body of data points. This enum is `QueryType`, which should describe how we query some body of data. I think that's why a query type of `interval` feels more appropriate. Basically: a time series is a noun, but this enumeration should list verbs that you do to that noun.",
+              "createdAt": "2022-08-08T19:08:38Z",
+              "updatedAt": "2022-08-08T20:35:16Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "I think downgrading to lowercase guidance here is appropriate. My reading of [RFC 2119's description of SHOULD/RECOMMENDED](https://datatracker.ietf.org/doc/html/rfc2119#section-3) is that implementations should be very careful before they ignore a RECOMMENDation, but I don't think anything particularly bad happens if a collector doesn't do what is prescribed here.",
+              "createdAt": "2022-08-08T19:59:54Z",
+              "updatedAt": "2022-08-08T20:35:16Z"
+            },
+            {
+              "originalPosition": 152,
+              "body": "My bias is for simplicity in the protocol text, which I think argues for requiring fixed size chunks, and my intuition is that this should be achievable. My intuition (I'm using \"intuition\" as a weasel word here so that I don't actually have to support my arguments) is that the coordination you describe should be achievable in a datastore with [serializability](https://en.wikipedia.org/wiki/Serializability), which I think DAP implementations require anyway in order to do things like anti-replay.\r\n\r\nHowever I think I want to get more implementation experience with the fixed chunk mode before I argue this point further, so let's go ahead with what's here now.\r\n\r\nFinally, we already have #163 to wire up the report count to the collector, orthogonally to what's going on in this PR.",
+              "createdAt": "2022-08-08T20:02:12Z",
+              "updatedAt": "2022-08-08T20:35:17Z"
+            },
+            {
+              "originalPosition": 97,
+              "body": "```suggestion\r\nspecifies a \"batch interval\" that determines the time range for measurements\r\n```",
+              "createdAt": "2022-08-08T20:04:53Z",
+              "updatedAt": "2022-08-08T20:35:16Z"
+            },
+            {
+              "originalPosition": 230,
+              "body": "This wasn't a MUST previously, and we discussed why at the time in [#281](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/281#pullrequestreview-1025110801).",
+              "createdAt": "2022-08-08T20:08:24Z",
+              "updatedAt": "2022-08-08T20:35:16Z"
+            },
+            {
+              "originalPosition": 436,
+              "body": "re: Brandon's points:\r\n\r\n(1): This was already a case we had to handle in the batch interval query, and I think we would handle it the same way here: if a report arrives after the collect job for its chunk has been serviced, it gets ignored.\r\n\r\n(2): Ooh, this is interesting. I think this can be handled, though. Let's say a collector comes along and asks for the result of aggregating chunk ID 4, and then immediately asks for chunk ID 5. The leader will generate a couple of collect job URIs and send those back to the collector -- at this point there's no aggregator commitment to which reports go in which chunk. The leader might then identify a set of candidate reports for chunk 4 and another set for chunk 5. It then carves each set of reports into some number of aggregation jobs and executes them with the helper.\r\n\r\nNow, suppose enough reports are rejected from the candidate set assigned to chunk 4 that `min_batch_size` isn't satisfied. The leader will want to then steal some aggregation jobs from chunk 5 to get chunk 4 over the minimum.\r\n\r\nOK, but what if the aggregation jobs for chunk 5 finished first and the aggregate result was delivered to the collector? In that case, yes, we are stuck and can never satisfy the collect request for chunk 4. But we could assert that the leader can't deliver the results for the collect job for chunk 5 until it has delivered the results for chunk 4. Note that the constraint here is not on when or in what order the aggregators can do the work of preparation. The constraint is on when the results can be delivered, because it's only at that point that the aggregators commit to assigning a set of reports to a chunk.\r\n\r\nSo I think this means that aggregators could still be running all the aggregate jobs in parallel. They just have to require that before you can deliver the results for collect job _n_, the collect jobs for the previous _n-1_ chunks must have been completed.\r\n\r\nThe problem with this is that we want to allow collectors to skip ahead in the stream of chunks. I suppose this could be accomplished by having the collector send DELETE requests to collect job URIs for those chunks it wants to skip?",
+              "createdAt": "2022-08-08T20:34:41Z",
+              "updatedAt": "2022-08-08T20:35:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_hwQR",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T21:28:03Z",
+          "updatedAt": "2022-08-08T21:31:43Z",
+          "comments": [
+            {
+              "originalPosition": 319,
+              "body": "VDAF-specifict -> VDAF-specific",
+              "createdAt": "2022-08-08T21:28:03Z",
+              "updatedAt": "2022-08-08T21:31:43Z"
+            },
+            {
+              "originalPosition": 360,
+              "body": "report info should be nonce, time, and extensions?",
+              "createdAt": "2022-08-08T21:29:04Z",
+              "updatedAt": "2022-08-08T21:31:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_h2sS",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T21:55:31Z",
+          "updatedAt": "2022-08-08T21:55:32Z",
+          "comments": [
+            {
+              "originalPosition": 436,
+              "body": "@tgeoghegan Regarding bullet point 1, what if each report rounds down its timestamp to the nearest n-hour window (a coarse-grained timestamp to protect client privacy, let's say 4 hours for example)? Leader can create a chunk with just enough reports that have timestamp 00:00, doesn't that mean leader will be forced to drop all future reports that mark its timestamp to be 00:00? and must wait until reports that have timestamp 04:00 to create a new chunk?",
+              "createdAt": "2022-08-08T21:55:31Z",
+              "updatedAt": "2022-08-08T21:56:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_hvoR",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-08T21:25:14Z",
+          "updatedAt": "2022-08-08T22:16:16Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "It's a minor thing -- it makes the standard slightly harder to follow for human readers (if I read an RFC that defines a wire-format for some structure, I'd expect that structure to end up serialized at some point, and might become confused or think I'm missing something if it's not).",
+              "createdAt": "2022-08-08T21:25:14Z",
+              "updatedAt": "2022-08-08T22:16:16Z"
+            },
+            {
+              "originalPosition": 436,
+              "body": "(1) I think this is different than the previous case: previously, the collector could control how long it waited before issuing a collect request (this provided a bound on the maximum _negative_ clock skew/effective latency permissible in a client). All clients with clock skew smaller than this would expect to have their reports aggregated.\r\n\r\nThis new issue will arise any time a chunk fills up, and will risk dropping data by design, with no actor in the system positioned to control for/mitigate the data loss. (Increasing the batch sizes will decrease how often chunks fill up & therefore reduce how frequently we risk data loss, but the data loss risk is still there any time we cut a new batch/chunk.)\r\n\r\n\r\n(2)\r\n\r\n> The constraint is on when the results can be delivered, because it's only at that point that the aggregators commit to assigning a set of reports to a chunk.\r\n\r\nWith how this PR is currently written, aggregators commit to assigning a set of reports to a chunk when they send an `AggregateInitializeReq`, since that request includes the batch ID. Given that, in VDAFs that support it, aggregation will be happening incrementally regardless of the receipt of any collect requests, I think the issue is not fixed by asserting that collect request results must be delivered in-order.\r\n\r\nMaybe that should change? I don't think there's anything that conceptually requires the agg-job-to-batch binding to happen on creation of the aggregation job; OTOH, if we don't do it then, currently none of the aggregation or collection messages would provide the binding, so we'd need to spell out how the binding would be communicated.\r\n\r\nNote that even if agg-job-to-batch binding happened at e.g. time of collect request, this issue might still be tricky: depending on how we previously allocated reports to aggregation jobs, it might not be easy/possible to select a set of aggregation jobs to include in the batch that (a) meets the `{min,max}_batch_size` requirements and (b) does not end up throwing away any reports from other aggregation jobs due to overlapping intervals.\r\n\r\n\r\n(If permissible, it might be simpler to drop `max_batch_size`, since that would make both of these issues much easier to deal with.)",
+              "createdAt": "2022-08-08T21:48:37Z",
+              "updatedAt": "2022-08-08T22:16:16Z"
+            },
+            {
+              "originalPosition": 230,
+              "body": "I think rounding should be suggested (to whatever degree is appropriate based on discussion in the other comment on this line) for both time-series and fixed-chunk tasks, since both task types now contain a timestamp & I suppose the client privacy concern is the same either way.\r\n\r\nThe wrinkle is that fixed-chunk tasks don't have a `min_batch_duration` to round to. Maybe a client-only parameter could be introduced? It'd be nice if a cleverer solution was apparent that didn't add another parameter to the system, but nothing comes to mind.",
+              "createdAt": "2022-08-08T21:56:46Z",
+              "updatedAt": "2022-08-08T22:16:16Z"
+            },
+            {
+              "originalPosition": 327,
+              "body": "```suggestion\r\n    * For fixed-chunks tasks, the Leader specifies a \"batch ID\" that determines\r\n```\r\n\r\n(edit: also, perhaps \"fixed-batch tasks\" rather than \"fixed-chunk tasks\"? this is less obviously correct, but I think \"fixed-chunk\" is the only place the \"chunk\" terminology is still used)",
+              "createdAt": "2022-08-08T21:59:03Z",
+              "updatedAt": "2022-08-08T22:16:16Z"
             }
           ]
         }
