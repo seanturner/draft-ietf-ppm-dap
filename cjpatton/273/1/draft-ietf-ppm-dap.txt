@@ -850,7 +850,7 @@ struct {
       generated.  Specifically, the time field is set to the number of
       seconds elapsed since the start of the UNIX epoch.
 
-      -  For time-interval tasks, the client MUST round this value to
+      -  For time-interval tasks, the client SHOULD round this value to
          the nearest multiple of min_batch_duration in order to ensure
          that that the timestamp cannot be used to link a report back to
          the Client that generated it.
@@ -899,12 +899,11 @@ struct {
    Report.  If this retried report does not succeed, clients MUST abort
    and discontinue retrying.
 
-   The leader MUST ignore any report whose nonce contains a timestamp
-   that falls in a batch interval for which it has received at least one
-   collect request from the collector.  (See Section 4.5.)  Otherwise,
-   comparing the aggregate result to the previous aggregate result may
-   result in a privacy violation.  (Note that the helpers enforce this
-   as well; see Section 4.5.)  In addition, the leader SHOULD abort the
+   The Leader MUST ignore any report pertaining to a batch that has
+   already been collected.  (See Section 4.4.1.4 for details.)
+   Otherwise, comparing the aggregate result to the previous aggregate
+   result may result in a privacy violation.  (Note that the Helpers
+   enforce this as well.)  In addition, the leader SHOULD abort the
    upload protocol and alert the client with error "reportTooLate".
 
    Leaders can buffer reports while waiting to aggregate them.  The
