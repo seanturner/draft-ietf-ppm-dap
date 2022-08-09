@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 9 February 2023                                      Cloudflare
+Expires: 10 February 2023                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                           8 August 2022
+                                                           9 August 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 9 February 2023.
+   This Internet-Draft will expire on 10 February 2023.
 
 Copyright Notice
 
@@ -653,26 +653,18 @@ struct {
    *  min_batch_duration - The duration of the smallest permitted batch
       interval.  Additional restrictions apply; see Section 4.5.5.
 
-   The Collector is free to choose any sequence of batch intervals it
-   wishes, subject to the restrictions prescribed in Section 4.5.5.
-   However, it is RECOMMENDED that the sequence of batch intervals
-   requested by the Collector all have the same duration, are
-   continuous, and increases monotonically.  For example, the sequence
-   of batch intervals (1659544000, 1000), (1659545000, 1000),
+   Typically the Collector issues queries for which the batch intervals
+   are continuous, monotonically increasing, and have the same duration.
+   For example, the sequence of batch intervals.  For example, the
+   sequence of batch intervals (1659544000, 1000), (1659545000, 1000),
    (1659545000, 1000), (1659546000, 1000) satisfies these conditions.
    (The first element of the pair denotes the start of the batch
-   interval and the second denotes the duration.)  There are exceptions
-   to this standard operating procedure:
-
-   *  The Collector may need to extend a batch interval forward in time
-      if the interval has elapsed and an insufficient number of
-      measurements have been uploaded.  For example, instead of
-      (1659546000, 1000), the Collector might issue a query for
-      (1659546000, 2000).
-
-   *  Batch intervals may appear out-of-order if, for example, the
-      Collector needs to query a previous batch with a new aggregation
-      parameter.  This is permitted for certain VDAFs.
+   interval and the second denotes the duration.)  Of course, there are
+   cases in which Collector may need to issue queries out-of-order.  For
+   example, a previous batch might need to be queried again with a
+   different aggregation parameter (e.g, for Poplar1).  In addition, the
+   Collector may need to vary the duration to adjust to changing
+   measurement upload rates.
 
 4.1.2.  Fixed-size Chunks
 
@@ -1761,6 +1753,10 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    [[OPEN ISSUE: #195 tracks how we might relax this constraint to allow
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the collector much room for mistakes.]]
+
+   [OPEN ISSUE: We might need to permit the Aggregator to drop a request
+   as needed, if for example the reports in the batch are so old that
+   the Aggregator has deleted them from storage.]
 
 4.5.6.  Anti-replay
 
