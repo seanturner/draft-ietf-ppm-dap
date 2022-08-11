@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-09T01:28:06.691649+00:00",
+  "timestamp": "2022-08-11T01:16:23.923764+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -3418,7 +3418,7 @@
       "id": "I_kwDOFEJYQs4-XTJo",
       "title": "Aggregators should inform collector of contribution count in collect response",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/163",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -3427,8 +3427,8 @@
       ],
       "body": "Collectors will want to know how many inputs are included in the aggregations they receive, for a number of reasons: they may wish to compute a mean over a privately aggregated sum, or track metrics on how many clients are providing inputs. struct `CollectResp` should include a count of how many contributions went into an aggregation.",
       "createdAt": "2021-11-05T22:55:01Z",
-      "updatedAt": "2022-08-08T20:01:31Z",
-      "closedAt": null,
+      "updatedAt": "2022-08-10T19:24:04Z",
+      "closedAt": "2022-08-10T19:24:04Z",
       "comments": [
         {
           "author": "divergentdave",
@@ -3436,6 +3436,13 @@
           "body": "The linked PR only added a `report_count` to the `AggregateShareReq` structure, which communicates it to the helper. I'm reopening this issue because the collector does not yet receive this information. In addition to the statistics-related motivation above, a recent PR to the VDAF spec, cfrg/draft-irtf-cfrg-vdaf#95, expects the number of reports to be available when unsharding.",
           "createdAt": "2022-07-11T20:47:34Z",
           "updatedAt": "2022-07-11T20:47:34Z"
+        },
+        {
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This was completed in #287.",
+          "createdAt": "2022-08-10T19:24:04Z",
+          "updatedAt": "2022-08-10T19:24:04Z"
         }
       ]
     },
@@ -5283,7 +5290,7 @@
       "labels": [],
       "body": "Task configuration between aggregators currently is handled out-of-band, this requires leader and helper to agree some secure method to exchange task configuration prior to upload.\r\n\r\nAn alternative is to create task in-band and on-demand from `Report` or `ReportShare` received from clients. Assuming server sends a unique task_id and all the parameters required by [Task configuration](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/blob/main/draft-ietf-ppm-dap.md#task-configuration-task-configuration) to the clients out-of-band (this is defined in client capability in current spec). Then clients can include these fields in report's `extension`, and upload them to servers along with reports. This is similar to an idea mentioned in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271.\r\n\r\nUpon receiving a Report (leader) or ReportShare (helper) with unseen tuple of (task_id, extension), the aggregators create the task on-demand, then proceed to aggregate-flow as usual.\r\n\r\nThis can be optimised to avoid checking the tuple of (task_id, extension), by letting client create `task_id` based on `extension`. For example, the client can share some text that defines the use case, communicated to them out-of-band, then create `task_id` using `hash(\"shared text\" || extension)`.  This can be particularly useful if the \"shared text\" or part of extension is only available on the client side.\r\n\r\nThere are some nice features in this method:\r\n- By sending all task parameters to clients then return to the server, we add transparency to the task that clients participate in. Client has the choice to see what data has been collected with what parameters (like `min_batch_size`, `max_batch_lifetime`, or any differential privacy parameters if that's the privacy guarantee used). For some clients these task parameters can even be hardcoded on the client side (for e.g. on a mobile device) to avoid any tempering from server.\r\n- Because `extension` is used in HPKE's AAD, malicious leader cannot change the task parameters, for e.g reducing `min_batch_size`.\r\n- A \"task\" now means the same task_id and same task parameters (including parameters for choosing VDAF). We can guarantee reports from one task will only be aggregated with one VDAF. For the same reason, if a malicious client changes the task_id or task parameters, its report will be aggregated in a different task, with other poison reports from the same malicious attack. The \"good\" reports are not polluted. \r\n- It avoids any out-of-band task orchestration between leader and helper, which isn't defined by the spec yet.\r\n- The on-demand creation is easy to implement with streaming framework that has `groupBy` operator. In fact, task as an object doesn't have to exist in aggregators, it mainly becomes an identifier to group aggregations together.\r\n\r\nThe disadvantage is added overhead in `Report` and `ReportShare`. Some optimisation can be done by moving Extension out of `ReportShare` and into `AggregateInitReq`.\r\n\r\nNote that the parameters that are not necessarily tied to a task may still need to be exchanged out-of-band between aggregators, like collector hpke config (or even aggregator's hpke config, see https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/289). Secrets that should not be know by clients, like `vdaf_verify_key` must still be exchanged out-of-band.\r\n\r\n",
       "createdAt": "2022-07-21T22:33:43Z",
-      "updatedAt": "2022-08-03T02:00:32Z",
+      "updatedAt": "2022-08-10T22:47:12Z",
       "closedAt": null,
       "comments": [
         {
@@ -5348,6 +5355,27 @@
           "body": "A few thoughts:\r\n\r\n* Overall I like this idea. In addition to concerns about the trustworthiness of the leader, a generally-available DAP deployment will need to agree on task parameters with its co-aggregators. Having a standardized solution to this problem would make deploying DAP much easier in practice.\r\n\r\n* That said, I think the client is not well-positioned to specify some task parameters. IMO it would be unfortunate if some parameters are determined in-band and some parameters are determined out-of-band. Maybe we can find a solution to these issues? Specifically:\r\n\r\n  * `vdaf_verify_key` is private between the aggregators. (I think the leader can be trusted to generate this value & communicate it to the helper when a new task is introduced?)\r\n  * The leader-helper & leader-collector bearer tokens used for auth are private between the leader/helper & the leader/collector, respectively. (I think the leader could generate & inform the helper of the leader-helper auth token on task creation. The collector-leader token is trickier, since currently all leader-collector communication is initiated by the collector -- there is a chicken & egg problem of confirming who the correct collector is. Also, the bearer token is considered to be a temporary solution--the authentication method may change, which may change the considerations here.)\r\n  * `collector_config` is not private, but it will eventually need to be able to change (it is a public key & therefore must eventually be rotatable). This introduces complications not only because we want to identify tasks by `(task_id, task_parameters)`, but also because client updates are not atomic -- during rotation, for some time some set of (updated) clients will be advertising the rotated keyset, while another set of (non-updated) clients will be advertising the non-rotated keyset.\r\n\r\n* I have a slight preference that tasks continue to be identified by `task_id` rather than `(task_id, task_parameters)`. First, I don't think there is any real benefit to allowing multiple tasks to share the same ID (as long as the task ID space is large enough that accidental collision is negligible). Having a standard identifier shared between the aggregators will help practical debugging quite a lot. And I think at least some task parameters will eventually want to change (i.e. `collector_config`); not including the task parameters as part of the task identifier will make this easier. OTOH, I do think it is valuable to check & fail if the provided task parameters don't match what is configured for an existing task.\r\n\r\n* I am also somewhat dubious about the practical protections this provides to clients -- since the entity operating the collector & providing the client software will almost always be the same, I agree with Simon that they could just ignore DAP entirely and send the value in the clear. (Maybe I am mistaken about the deployment configuration that this is meant to protect?)\r\n\r\n* We are early-on enough in specifying DAP that these parameters could be communicated in an (optional?) field in the relevant messages, rather than as an extension. OTOH, this eases moving the task parameters to the aggregate initialization request--moving extensions is tricky because not every report for the same task is going to have the same set of extensions, nor will the extension ordering necessarily be the same.\r\n\r\n* I think DAP deployments will definitely want to include more information than just the raw task parameters. I imagine things like a collector identity, client authentication, additional task metadata (e.g. human-readable name/description), deployment-specific task parameters, etc. I would be OK implementing these as additional extensions on the client report.",
           "createdAt": "2022-08-03T01:37:08Z",
           "updatedAt": "2022-08-03T02:00:32Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> So, a collector - as the author of a client, which is probably the default case - can trivially create new tasks with e.g. min_batch_size = 2 which will probably be too low for most collected data.\r\n\r\nThis threat exists even without on-demand task configuration, the author of client can create a task of min_batch_size=2 out of band, and client would not know about it. But as long as we send such parameters to client side, such behaviour becomes much more detectable.\r\n\r\nIn general, like you said, DAP cannot prevent a collector/leader organisation from deliberately miss using or bypassing the DAP channel, but doing so requires some change on client and it's harder to hide than server-side work",
+          "createdAt": "2022-08-10T22:14:25Z",
+          "updatedAt": "2022-08-10T22:14:25Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> We are early-on enough in specifying DAP that these parameters could be communicated in an (optional?) field in the relevant messages, rather than as an extension. \r\n\r\nI think extension is designed to do this: as an optional field for report? cc @chris-wood \r\n\r\n> OTOH, this eases moving the task parameters to the aggregate initialization request--moving extensions is tricky because not every report for the same task is going to have the same set of extensions, nor will the extension ordering necessarily be the same.\r\n\r\nI'm curious why the extension can be different for the same task (other than key rotation in collector hpke config), and why the ordering may different?\r\n",
+          "createdAt": "2022-08-10T22:24:18Z",
+          "updatedAt": "2022-08-10T22:24:18Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@BranLwyd I agree `collector_config` and `vdaf_verify_key` shouldn't go to device, for the latter I think there were concerns whether it's privacy leak free if the key is chosen by the leader. I don't see how we can deliver these parameters other than OOB, perhaps an independent authority that leader and helper can query?\r\n\r\n>  First, I don't think there is any real benefit to allowing multiple tasks to share the same ID (as long as the task ID space is large enough that accidental collision is negligible). \r\n\r\nI agree with this too, if we can exclude parameters that may change during one task (like `collector_config`), then the reason for a task id to be shared by more than one tasks, is most likely due to task creation error or malicious attack. ",
+          "createdAt": "2022-08-10T22:47:12Z",
+          "updatedAt": "2022-08-10T22:47:12Z"
         }
       ]
     },
@@ -5417,7 +5445,7 @@
       ],
       "body": "If clients upload reports directly to the leader, then the leader learns things like the client's IP among other identifying metadata. This can be mitigated with the use of some kind of anonymizing proxy, like an [OHAI](https://datatracker.ietf.org/wg/ohai/documents/) server, provided the proxy is not colluding with the aggregator(s).\r\n\r\nHowever, it's not clear that every deployment will be able to use such a proxy, because the aggregators can't run it as a service, and perhaps the cost of deploying this additional actor is prohibitive.\r\n\r\nNonetheless, the protocol should discuss the privacy leaks that result from direct uploads and discuss how deployments might use anonymizing proxies.",
       "createdAt": "2022-07-28T15:19:08Z",
-      "updatedAt": "2022-08-03T18:31:06Z",
+      "updatedAt": "2022-08-10T20:17:36Z",
       "closedAt": null,
       "comments": [
         {
@@ -5426,6 +5454,27 @@
           "body": "#64 discusses a related idea, or a specific way to address this, where uploads would go through the collector.\r\n\r\nAlso related to this is the notion of a proxy that would batch up reports, which could reduce the operational burden of running an aggregator (i.e., only the proxy needs to be highly available and receive millions of uploads from clients).",
           "createdAt": "2022-07-28T15:20:14Z",
           "updatedAt": "2022-07-28T15:20:14Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "batch up can be applied from the client as well, if client is allowed to send a fixed number of reports in a period of time. I feel batching is an implementation detail that helps scaling, not sure if it should be reflected on the protocol level.\r\n\r\nBut I agree adding description in the protocol about anonymizing, other than batching we can also introduce a jitter in the proxy to break ordering relaitonship.",
+          "createdAt": "2022-08-10T18:37:01Z",
+          "updatedAt": "2022-08-10T18:37:01Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> batch up can be applied from the client as well, if client is allowed to send a fixed number of reports in a period of time.\r\n\r\nThis wouldn't help with batching reports across many clients. The idea here is that instead of a leader having to receive a small message from each of a million clients, it could receive one large message from the batching proxy.\r\n\r\n> I feel batching is an implementation detail that helps scaling, not sure if it should be reflected on the protocol level.\r\n\r\nI wish this was the case, but I think at a minimum the protocol would have to define some kind of \"ReportList\" structure so that multiple reports could be transmitted in a single message.",
+          "createdAt": "2022-08-10T18:48:09Z",
+          "updatedAt": "2022-08-10T18:48:09Z"
+        },
+        {
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I suppose different batching strategies could either require protocol support or not:\r\n1) Something like `ReportList` surely requires protocol support.\r\n2) OTOH, an `/upload` endpoint could be implemented as accepting a number of concurrent requests, then writing them all back to durable storage in a single batch/transaction (however that maps back to the durable storage system), before responding to any of the requests.\r\n\r\n(1) requires protocol support, but helps even if the performance-limiting factor is e.g. all of the TLS handshakes, message parsing, or some other artifact of receiving many small messages over TLS.\r\n\r\n(2) would give many of the advantages of batching without requiring protocol support, and would help most if the underlying performance limits are due to the limits of the durable storage system in use.",
+          "createdAt": "2022-08-10T20:17:36Z",
+          "updatedAt": "2022-08-10T20:17:36Z"
         }
       ]
     },
@@ -34576,7 +34625,7 @@
       "labels": [],
       "body": "This adds a field to collect responses with the number of reports that contributed to the aggregation. Collectors will likely want this count to aid in the interpretation of aggregate results. (see #163) There is also a change in draft-irtf-cfrg-vdaf-02 that opens the door for VDAFs that would require the report count during unsharding. (see cfrg/draft-irtf-cfrg-vdaf#95)\r\n\r\nNote that while this field is not part of the adjacent `HpkeCiphertext`s, it will be protected by to the confidentiality of HTTPS and the leader-collector bearer token authentication.",
       "createdAt": "2022-07-19T18:42:30Z",
-      "updatedAt": "2022-08-03T18:51:25Z",
+      "updatedAt": "2022-08-10T19:23:11Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "9639d4f7c6baa9efc9712d326b2a635edecadd4d",
@@ -34828,13 +34877,13 @@
       "labels": [],
       "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-series` query type.\r\n\r\nAdds a query type, `fixed-chunk`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-08-08T22:16:16Z",
+      "updatedAt": "2022-08-10T21:23:44Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/273/1",
-      "headRefOid": "12d84c010bc39c3ee7a89f38b404fea4042986e9",
+      "headRefOid": "7b037950d6a74468d3c1bbb516153c6b849a449c",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -35388,6 +35437,286 @@
               "body": "```suggestion\r\n    * For fixed-chunks tasks, the Leader specifies a \"batch ID\" that determines\r\n```\r\n\r\n(edit: also, perhaps \"fixed-batch tasks\" rather than \"fixed-chunk tasks\"? this is less obviously correct, but I think \"fixed-chunk\" is the only place the \"chunk\" terminology is still used)",
               "createdAt": "2022-08-08T21:59:03Z",
               "updatedAt": "2022-08-08T22:16:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_m_kp",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T18:20:01Z",
+          "updatedAt": "2022-08-09T18:20:01Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "TODO: Ready for text",
+              "createdAt": "2022-08-09T18:20:01Z",
+              "updatedAt": "2022-08-09T18:20:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_nElY",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T18:28:17Z",
+          "updatedAt": "2022-08-09T18:28:18Z",
+          "comments": [
+            {
+              "originalPosition": 152,
+              "body": "@BranLwyd as discussed at IETF, the main reason to target a given batch size is that in some statistical applications you need to be able to control for the sample size. This would be important, for example, when using local differential privacy.\r\n\r\nI'd like to start resolving threads where possible. The question left open here is whether requiring `min_batch_size == max_batch_size` is feasible. @tgeoghegan are you alright with resolving this with an OPEN ISSUE in the text?",
+              "createdAt": "2022-08-09T18:28:18Z",
+              "updatedAt": "2022-08-09T18:28:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_nEvx",
+          "commit": {
+            "abbreviatedOid": "42f9cf8"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T18:28:52Z",
+          "updatedAt": "2022-08-09T18:28:52Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "Ack.",
+              "createdAt": "2022-08-09T18:28:52Z",
+              "updatedAt": "2022-08-09T18:28:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_nG1j",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T18:36:24Z",
+          "updatedAt": "2022-08-09T18:36:25Z",
+          "comments": [
+            {
+              "originalPosition": 152,
+              "body": "Yes, I'm comfortable revisiting this after we get some experience implementing the fixed chunk mode. However I would urge you to highlight this particular question in the thread you started on the ppm-ietf list just in case someone there has an opinion.",
+              "createdAt": "2022-08-09T18:36:24Z",
+              "updatedAt": "2022-08-09T18:36:25Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_npXT",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T20:42:15Z",
+          "updatedAt": "2022-08-09T20:42:15Z",
+          "comments": [
+            {
+              "originalPosition": 114,
+              "body": "Dropped the RECOMMENDATION. I'm not sure how to spell the Aggregator behavior, so I left as an open issue. WE can deal with this later.",
+              "createdAt": "2022-08-09T20:42:15Z",
+              "updatedAt": "2022-08-09T20:42:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_np44",
+          "commit": {
+            "abbreviatedOid": "59f982b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T20:44:18Z",
+          "updatedAt": "2022-08-09T20:44:18Z",
+          "comments": [
+            {
+              "originalPosition": 152,
+              "body": "Done.",
+              "createdAt": "2022-08-09T20:44:18Z",
+              "updatedAt": "2022-08-09T20:44:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_nrFu",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T20:48:59Z",
+          "updatedAt": "2022-08-09T20:48:59Z",
+          "comments": [
+            {
+              "originalPosition": 360,
+              "body": "Haha yup good catch! ",
+              "createdAt": "2022-08-09T20:48:59Z",
+              "updatedAt": "2022-08-09T20:48:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_nzJP",
+          "commit": {
+            "abbreviatedOid": "42f9cf8"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T21:20:10Z",
+          "updatedAt": "2022-08-09T21:20:11Z",
+          "comments": [
+            {
+              "originalPosition": 270,
+              "body": "Good catch. I think the following solves both issues. This also matches the Helper's behavior in {{input-share-batch-validation}}.\r\n\r\n> The Leader MUST ignore any report pertaining to a batch that has already been collected.\r\n\r\nFor time-interval tasks the intended interpretation is \"the Leader rejects the report if the timestamp falls in a batch interval that has been collected\". For fixed-size tasks the intended interpretation is \"The Leader MUST NOT include the report in a previously collected batch.\"",
+              "createdAt": "2022-08-09T21:20:11Z",
+              "updatedAt": "2022-08-09T21:20:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_nzcH",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T21:21:26Z",
+          "updatedAt": "2022-08-09T21:21:27Z",
+          "comments": [
+            {
+              "originalPosition": 230,
+              "body": "Oh good, I thought the intention was MUST. How about SHOULD?",
+              "createdAt": "2022-08-09T21:21:27Z",
+              "updatedAt": "2022-08-09T21:21:27Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_n0Xe",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T21:25:39Z",
+          "updatedAt": "2022-08-09T21:25:39Z",
+          "comments": [
+            {
+              "originalPosition": 230,
+              "body": "Right, I don't know what to do about this awkwardness. One way to resolve this is to find a reason not to include the timestamp for fixed-size tasks. (The argument would be that preventing overlapping batch intervals for this task type has marginal benefit or is not feasible.) There is an OPEN ISSUE in the text in case we want to punt.",
+              "createdAt": "2022-08-09T21:25:39Z",
+              "updatedAt": "2022-08-09T21:25:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_n_oi",
+          "commit": {
+            "abbreviatedOid": "7b03795"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T22:24:03Z",
+          "updatedAt": "2022-08-09T22:24:03Z",
+          "comments": [
+            {
+              "originalPosition": 436,
+              "body": "Thanks, everyone, for taking time to help with this. I think we're now at a point where we need to take a step back and think through requirements.\r\n\r\nFirst, in response to feedback from @tgeoghegan and @BranLwyd, not that we have renamed \"time-series\" to \"time-interval\" and \"fixed-chunk\" to \"fized-size\". Instead of \"chunk\" we'll just say \"batch\".\r\n\r\nA quick summary to see if we're on the same page. @tgeoghegan points out a desirable property of time-interval tasks: Given the sequence of queries, a Clients know exactly *which* batch their report would be included in, since we have the following properties:\r\n- (1.) a report can belong to exactly one batch\r\n- (2.) batches are non-overlapping\r\n- (3.) a query determines a unique batch \r\n\r\nFor \"fixed-size\" tasks, we currently guarantee something strictly weaker: a Client is know their report is included in at most one batch, but it does not know which one. This is because we have (1.) and (2.) but not (3.).\r\n\r\nWe don't seem to have a workable solution to this yet:\r\n- (a.) We could have the Client include the batch ID in its report. This is the direct analogue of including the timestamp in the report. However this is a non-starter because it shifts coordination of the batch selection to Clients.\r\n- (b.) We could require that batches don't overlap in time, just as we do for time-interval tasks. @BranLwyd and @junyechen1996 have pointed out various reasons why this is tricky.\r\n\r\nThese difficulties beg the following essential question: **How important is property (3.)?** Without it, the Leader is capable of sorting reports into batches as it pleases. For example:\r\n* The Leader can batch reports by User-Agent, location, and so on. This is is still possible with (3.), but this would at least force the Leader to \"throw away\" reports from clients that are not in the target group, but pertain to the query.\r\n* The Leader can do a kind of weak stuffing attack. Stuffing attacks ares still possible with (3.), but again, it would at least force the Leader to throw away any reports that pertain to the query.",
+              "createdAt": "2022-08-09T22:24:03Z",
+              "updatedAt": "2022-08-09T22:24:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_oAXN",
+          "commit": {
+            "abbreviatedOid": "7b03795"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-09T22:28:40Z",
+          "updatedAt": "2022-08-09T22:28:41Z",
+          "comments": [
+            {
+              "originalPosition": 436,
+              "body": "My take: This threat falls into a big bucket of Sybil-like attacks that I would like to see a more systematic solution for. (Yes Sybil attacks are hard, but they're at least tractable.) Thus I don't think it's worth expending too much effort trying to get (3.). My vote would be to not require it for every query type (and fixed-size queries in particular), but make sure whatever we spell doesn't prevent it.",
+              "createdAt": "2022-08-09T22:28:40Z",
+              "updatedAt": "2022-08-09T22:28:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_tk0V",
+          "commit": {
+            "abbreviatedOid": "12d84c0"
+          },
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-10T20:46:46Z",
+          "updatedAt": "2022-08-10T20:46:46Z",
+          "comments": [
+            {
+              "originalPosition": 230,
+              "body": "Thinking about this a little more, I suppose the task doesn't need a new explicit parameter -- clients can freely round their submitted timestamps to any desired resolution already.\r\n\r\nI suppose this will be left as an OPEN ISSUE right now, but one way to resolve would be to say that clients can round their timestamps, and additionally mandate (or perhaps suggest) that clients of a time-series task must round to at most the `min_batch_duration` to keep their reports in the correct batch.",
+              "createdAt": "2022-08-10T20:46:46Z",
+              "updatedAt": "2022-08-10T20:47:45Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs4_toSh",
+          "commit": {
+            "abbreviatedOid": "7b03795"
+          },
+          "author": "BranLwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Thanks for your patience. :) This LGTM.\r\n\r\nI would definitely like if we could find a way to somehow unify the different query types (lots of places in the spec now basically bifurcate struct content/validation logic/etc), but IIUC this is a somewhat exploratory change to discover the different query types that need to be supported, so merging this LGTM.",
+          "createdAt": "2022-08-10T21:00:31Z",
+          "updatedAt": "2022-08-10T21:23:44Z",
+          "comments": [
+            {
+              "originalPosition": 143,
+              "body": "```suggestion\r\n`min_batch_size` measurements per batch. Doing so, however, may be challenging\r\n```\r\n\r\n(typo)",
+              "createdAt": "2022-08-10T21:00:31Z",
+              "updatedAt": "2022-08-10T21:23:44Z"
             }
           ]
         }
