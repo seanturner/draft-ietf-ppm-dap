@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-11T01:16:23.923764+00:00",
+  "timestamp": "2022-08-14T01:24:23.420281+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4907,19 +4907,19 @@
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/273",
       "state": "OPEN",
       "author": "wangshan",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [
         "draft-02"
       ],
       "body": "If the collector is not interested in time and interval, but simply want to collect aggregation in a batch that meets `min_batch_size`. Then can the protocol support a 'batch-based collection' instead of current interval-based?\r\n\r\nConsider a Prio usecase, when `max_batch_lifetime == 1`, collector will only need to collect the aggregation so far, with a batch size B >= `min_batch_size`. This can be orchestrated by the leader, which can implement a counting service to track batch size for a task, once it reaches `min_batch_size`, leader sends AggregateShareReq to collect helper's `aggregate_share` and return to collector.\r\n\r\nThis requires a new id to tie agg-flow with agg-share-flow. For example, in addition to `agg_job_id`, leader can send a unique `batch_id` in every AggregateReq. At collect time, leader use the same `batch_id` to collect `output_share` in helper (helper can still proactively aggregate output_shares to `aggregate_share`, since there are no more batch windows, helper can store `aggregate_share` by `agg_job_id`, or accumulate all aggregation jobs' `output_share` to one `aggregate_share`, and store it with `batch_id`). Illustrated as following:\r\n\r\n```\r\n|<------------------------ batch_id1 ----------------->| <== AggregationShareReq\r\n|    agg_job_id1     |   agg_job_id2   |   agg_job_id3 | <== AggregateReq\r\nT0                                                    Tm <== Time\r\n```\r\nHere [T0, Tm] is the time takes to aggregate `min_batch_size` number of reports, it has no relationship with `min_batch_duration` or collector interval.\r\n\r\nAs this issue pointed out: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/195, to avoid privacy leak, each batch window must contain at least `min_batch_size` reports, otherwise attacker can find ways to slice intervals to break privacy guarantee. But if the protocol does require each batch window meets `min_batch_size`, then the collect interval itself is no longer useful, since the duration that takes to meet `min_batch_size` is the smallest duration that can be queried. Therefore, it seems to make sense to base collection entirely on batch size, not interval.\r\n",
       "createdAt": "2022-06-16T13:55:49Z",
-      "updatedAt": "2022-07-29T20:26:47Z",
+      "updatedAt": "2022-08-12T22:05:11Z",
       "closedAt": null,
       "comments": [
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "In this case the aggregators no longer need to worry about `min_batch_duration`. Leader can store last know Tm to filter out late arrivals if needed.",
           "createdAt": "2022-06-16T13:59:51Z",
           "updatedAt": "2022-06-16T13:59:51Z"
@@ -4933,7 +4933,7 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "Yes, `batch_filter` sounds like a more generic name that can incorporate both batch interval and batch id. \r\n\r\nBut I think allowing advanced filter can open up privacy concerns. When slicing the batches, one not only have to make sure the sliced batch meets all privacy guarantees, but also all the deltas with previously slices. We may find a way to do this with time intervals, but adding other metadata like region will make it extremely hard. These metadata will likely be related to client measurements, so I think it's better to encode such information in the measurement, or designing different tasks for them. \r\n\r\nThere are use cases where drill down or fine-grained filtering is not needed, usr simply want aggregate results with privacy guarantee.",
           "createdAt": "2022-06-17T12:01:23Z",
           "updatedAt": "2022-06-17T12:01:23Z"
@@ -4954,7 +4954,7 @@
         },
         {
           "author": "wangshan",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> For batch-based tasks, an aggregate result corresponds to a unique set of exactly min_batch_size measurements. Reports are sorted into to batches by the leader.\r\n\r\nI think exact `min_batch_size` maybe too strong, >= should be sufficient, so implementations can control how close to `min_batch_size` they want",
           "createdAt": "2022-06-30T12:24:48Z",
           "updatedAt": "2022-06-30T12:24:48Z"
@@ -4965,6 +4965,13 @@
           "body": "Per discussion in IETF 114, let's aim to support this in the next version of the draft, with a simpler (but equivalent) version of the existing query validation. ",
           "createdAt": "2022-07-28T15:22:58Z",
           "updatedAt": "2022-07-28T15:22:58Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Looking at the implementation strategy for #297, I think there is a different approach which would be less disruptive to the existing design/provide better unification between the different query types, allow better precision w.r.t the number of reports per batch in the new `fixed-size` case, add less complexity to the helper, and give the leader less power to choose how reports are mapped into batches. (I suggested this in a review comment on #297, but @simon-friedberger correctly pointed out that this discussion would be less confusing in a GH issue.)\r\n\r\nThe high-level idea is: the current approach in #297 for `fixed-size` tasks is to bind aggregation jobs to batches (identified by an opaque \"batch ID\") at time of creation of the aggregation job. Instead, we could identify batches in `fixed-size` tasks by a batch interval (as is currently done with `time-interval` task types), dropping the concept of an opaque batch ID entirely. Another way of stating this idea is that, rather than introducing a new query type, we view this new feature as choosing how batch intervals are decided: `time-interval` generates batch intervals on a fixed cadence, `fixed-size` generates batch intervals dynamically based on the rate of incoming reports.\r\n\r\n* This approach would allow unifying almost all of the functionality/struct definitions between the `fixed-size` & `time-interval` task types. The largest difference would be in batch validation: `time-interval` batch intervals would be considered valid if the interval's `start` & `duration` are multiples of `min_batch_duration` (i.e. same as today), `fixed-size` batch intervals would be considered valid if they contain exactly[1] `min_batch_size` reports. (This is one part of the suggested design that adds complexity to the helper -- both the leader & the helper would need to implement this batch validation logic.)\r\n* This also allows reports in a single aggregation job to be matched to different batches, which sidesteps some hairy technical concerns ([PR discussion](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297#discussion_r939781474)) around whether a leader can generate aggregation jobs that are guaranteed to neither underflow `min_batch_size` nor overflow `max_batch_size` without having to stop generating aggregation jobs at batch boundaries until enough existing aggregation jobs complete to confirm that the batch won't be too small. (This doesn't change how a helper would operate; all the helper needs to do is verify that the chosen batches are of the correct size as suggested in the previous point.)\r\n* #297 suggests adding functionality to allow the collector to ask the leader what the next batch is. We would still need this for `fixed-size` tasks, since the batch intervals are based on the rate of incoming reports which the collector does not have insight into. In the interest of keeping the task types unified, this could also be implemented for `time-interval` task types. (All of this complexity falls onto the leader only.)\r\n* #297 also changes when reports are no longer accepted: the previous semantics were \"reports are no longer accepted once a collect request is received\", the new semantics are \"reports are no longer accepted once results are collected\". I think we still want this change [2], since otherwise the \"tell-me-what-the-next-batch-is\" functionality from the previous point couldn't be used safely without potentially cutting off a batch prematurely. (I think this change would also need to be made to the helper, but IMO it's no more complex than the existing requirement.)\r\n\r\nI touch on a few more points in the [original PR comment](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297#issuecomment-1212692348) but this captures the big idea.\r\n\r\n[1] #297 includes `min_batch_duration` and `max_batch_duration` to provide the leader some leeway in producing acceptably-sized batches. I think this is no longer required as the leader can always choose an interval to contain an exact number of reports (assuming we include a way to break timestamp ties, which is possible but probably a little messy).\r\n\r\n[2] Somewhat off-topic from the issue at hand, but I think allowing collect requests to be made before a batch interval is complete is valuable for performance reasons, too. Tasks using a VDAF with a trivial (i.e. `()`) aggregation parameter can incrementally aggregate reports as they arrive. This isn't currently possible for tasks with a nontrivial aggregation parameter, since the aggregation parameter to use is not communicated to the aggregators until the collect request is made. But if the collect request arrives before the batch is complete, we can start incrementally aggregating reports at that point. This, of course, assumes that the collector knows the aggregation parameter before the batch interval is complete -- seems like a fair assumption but may not always be true?",
+          "createdAt": "2022-08-12T22:05:10Z",
+          "updatedAt": "2022-08-12T22:05:10Z"
         }
       ]
     },
@@ -5290,7 +5297,7 @@
       "labels": [],
       "body": "Task configuration between aggregators currently is handled out-of-band, this requires leader and helper to agree some secure method to exchange task configuration prior to upload.\r\n\r\nAn alternative is to create task in-band and on-demand from `Report` or `ReportShare` received from clients. Assuming server sends a unique task_id and all the parameters required by [Task configuration](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/blob/main/draft-ietf-ppm-dap.md#task-configuration-task-configuration) to the clients out-of-band (this is defined in client capability in current spec). Then clients can include these fields in report's `extension`, and upload them to servers along with reports. This is similar to an idea mentioned in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271.\r\n\r\nUpon receiving a Report (leader) or ReportShare (helper) with unseen tuple of (task_id, extension), the aggregators create the task on-demand, then proceed to aggregate-flow as usual.\r\n\r\nThis can be optimised to avoid checking the tuple of (task_id, extension), by letting client create `task_id` based on `extension`. For example, the client can share some text that defines the use case, communicated to them out-of-band, then create `task_id` using `hash(\"shared text\" || extension)`.  This can be particularly useful if the \"shared text\" or part of extension is only available on the client side.\r\n\r\nThere are some nice features in this method:\r\n- By sending all task parameters to clients then return to the server, we add transparency to the task that clients participate in. Client has the choice to see what data has been collected with what parameters (like `min_batch_size`, `max_batch_lifetime`, or any differential privacy parameters if that's the privacy guarantee used). For some clients these task parameters can even be hardcoded on the client side (for e.g. on a mobile device) to avoid any tempering from server.\r\n- Because `extension` is used in HPKE's AAD, malicious leader cannot change the task parameters, for e.g reducing `min_batch_size`.\r\n- A \"task\" now means the same task_id and same task parameters (including parameters for choosing VDAF). We can guarantee reports from one task will only be aggregated with one VDAF. For the same reason, if a malicious client changes the task_id or task parameters, its report will be aggregated in a different task, with other poison reports from the same malicious attack. The \"good\" reports are not polluted. \r\n- It avoids any out-of-band task orchestration between leader and helper, which isn't defined by the spec yet.\r\n- The on-demand creation is easy to implement with streaming framework that has `groupBy` operator. In fact, task as an object doesn't have to exist in aggregators, it mainly becomes an identifier to group aggregations together.\r\n\r\nThe disadvantage is added overhead in `Report` and `ReportShare`. Some optimisation can be done by moving Extension out of `ReportShare` and into `AggregateInitReq`.\r\n\r\nNote that the parameters that are not necessarily tied to a task may still need to be exchanged out-of-band between aggregators, like collector hpke config (or even aggregator's hpke config, see https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/289). Secrets that should not be know by clients, like `vdaf_verify_key` must still be exchanged out-of-band.\r\n\r\n",
       "createdAt": "2022-07-21T22:33:43Z",
-      "updatedAt": "2022-08-10T22:47:12Z",
+      "updatedAt": "2022-08-12T11:27:12Z",
       "closedAt": null,
       "comments": [
         {
@@ -5350,7 +5357,7 @@
           "updatedAt": "2022-07-28T16:30:53Z"
         },
         {
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "body": "A few thoughts:\r\n\r\n* Overall I like this idea. In addition to concerns about the trustworthiness of the leader, a generally-available DAP deployment will need to agree on task parameters with its co-aggregators. Having a standardized solution to this problem would make deploying DAP much easier in practice.\r\n\r\n* That said, I think the client is not well-positioned to specify some task parameters. IMO it would be unfortunate if some parameters are determined in-band and some parameters are determined out-of-band. Maybe we can find a solution to these issues? Specifically:\r\n\r\n  * `vdaf_verify_key` is private between the aggregators. (I think the leader can be trusted to generate this value & communicate it to the helper when a new task is introduced?)\r\n  * The leader-helper & leader-collector bearer tokens used for auth are private between the leader/helper & the leader/collector, respectively. (I think the leader could generate & inform the helper of the leader-helper auth token on task creation. The collector-leader token is trickier, since currently all leader-collector communication is initiated by the collector -- there is a chicken & egg problem of confirming who the correct collector is. Also, the bearer token is considered to be a temporary solution--the authentication method may change, which may change the considerations here.)\r\n  * `collector_config` is not private, but it will eventually need to be able to change (it is a public key & therefore must eventually be rotatable). This introduces complications not only because we want to identify tasks by `(task_id, task_parameters)`, but also because client updates are not atomic -- during rotation, for some time some set of (updated) clients will be advertising the rotated keyset, while another set of (non-updated) clients will be advertising the non-rotated keyset.\r\n\r\n* I have a slight preference that tasks continue to be identified by `task_id` rather than `(task_id, task_parameters)`. First, I don't think there is any real benefit to allowing multiple tasks to share the same ID (as long as the task ID space is large enough that accidental collision is negligible). Having a standard identifier shared between the aggregators will help practical debugging quite a lot. And I think at least some task parameters will eventually want to change (i.e. `collector_config`); not including the task parameters as part of the task identifier will make this easier. OTOH, I do think it is valuable to check & fail if the provided task parameters don't match what is configured for an existing task.\r\n\r\n* I am also somewhat dubious about the practical protections this provides to clients -- since the entity operating the collector & providing the client software will almost always be the same, I agree with Simon that they could just ignore DAP entirely and send the value in the clear. (Maybe I am mistaken about the deployment configuration that this is meant to protect?)\r\n\r\n* We are early-on enough in specifying DAP that these parameters could be communicated in an (optional?) field in the relevant messages, rather than as an extension. OTOH, this eases moving the task parameters to the aggregate initialization request--moving extensions is tricky because not every report for the same task is going to have the same set of extensions, nor will the extension ordering necessarily be the same.\r\n\r\n* I think DAP deployments will definitely want to include more information than just the raw task parameters. I imagine things like a collector identity, client authentication, additional task metadata (e.g. human-readable name/description), deployment-specific task parameters, etc. I would be OK implementing these as additional extensions on the client report.",
           "createdAt": "2022-08-03T01:37:08Z",
@@ -5376,6 +5383,34 @@
           "body": "@BranLwyd I agree `collector_config` and `vdaf_verify_key` shouldn't go to device, for the latter I think there were concerns whether it's privacy leak free if the key is chosen by the leader. I don't see how we can deliver these parameters other than OOB, perhaps an independent authority that leader and helper can query?\r\n\r\n>  First, I don't think there is any real benefit to allowing multiple tasks to share the same ID (as long as the task ID space is large enough that accidental collision is negligible). \r\n\r\nI agree with this too, if we can exclude parameters that may change during one task (like `collector_config`), then the reason for a task id to be shared by more than one tasks, is most likely due to task creation error or malicious attack. ",
           "createdAt": "2022-08-10T22:47:12Z",
           "updatedAt": "2022-08-10T22:47:12Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> > So, a collector - as the author of a client, which is probably the default case - can trivially create new tasks with e.g. min_batch_size = 2 which will probably be too low for most collected data.\r\n> \r\n> This threat exists even without on-demand task configuration, the author of client can create a task of min_batch_size=2 out of band, and client would not know about it. But as long as we send such parameters to client side, such behaviour becomes much more detectable.\r\n\r\nBut with an out-of-band agreement this can be handled during the agreement. If the collector says we want to collect user age with `min_batch_size = 2` and compute the median the aggregators can decline because it is a bad idea. If we are specifying that this will be handled automatically by software such a check cannot be done.",
+          "createdAt": "2022-08-11T07:26:39Z",
+          "updatedAt": "2022-08-11T07:26:39Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": ">  If the collector says we want to collect user age with min_batch_size = 2 and compute the median the aggregators can decline because it is a bad idea. If we are specifying that this will be handled automatically by software such a check cannot be done.\r\n\r\nCan we not implement the same check in aggregators when a task is being created on demand?",
+          "createdAt": "2022-08-11T16:01:00Z",
+          "updatedAt": "2022-08-11T16:01:00Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Overall I like the direction we're going with this thread. Like others, I'm most interested in the potential for streamlining task on-boarding. That said, lots of good points have been brought up about the potential for things to go wrong. I think my top concerns are:\r\n* In-band enforcement (I think @BranLwyd and @chris-wood raised this previously): What should we do if one party accepts a task config, but the other does not? In particular I'm thinking of the case where the Leader starts an aggregation job, but the Helper aborts due to the task config being unacceptable (for whatever reason). In practice, a couple of engineers from two different orgs will have to hop on a call and start debugging and we'll declare an incident. Meanwhile, a backlog of reports will start building up. Out-of-band task configuration reduces the chance of these sorts of surprises coming up.\r\n* We need to ensure that co-Aggregators can still do capacity planning. I think this means that there will have to be at least some \"global\" parameters that are picked out of band, e.g., min_batch_duration for time-interval tasks.\r\n\r\nI think this issue is ready for an initial draft PR. It would be helpful to see the details spelled out to see if there's anything not workable here.",
+          "createdAt": "2022-08-11T21:31:16Z",
+          "updatedAt": "2022-08-11T21:34:18Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> Can we not implement the same check in aggregators when a task is being created on demand?\r\n\r\nThat depends, I don't think this kind of check can be codified because the aggregation system doesn't know the privacy implication of the data being processed. App usage time is probably less important than monthly income but both are just numbers to be averaged.\r\n\r\nI am fine if we want to ignore this but suggest that we clearly describe it as out of scope then.",
+          "createdAt": "2022-08-12T11:27:11Z",
+          "updatedAt": "2022-08-12T11:27:11Z"
         }
       ]
     },
@@ -5524,6 +5559,22 @@
       "body": "This will be VDAF-02 or 03, depending on when we need to cut DAP-02.",
       "createdAt": "2022-07-30T01:26:45Z",
       "updatedAt": "2022-07-30T01:26:45Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 299,
+      "id": "I_kwDOFEJYQs5Pt9UJ",
+      "title": "Add concept of \"minimum task lifetime\"",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/299",
+      "state": "OPEN",
+      "author": "chris-wood",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Aggregators should keep task data around for as long as the task requires. Afterwards, they can garbage collect as needed.",
+      "createdAt": "2022-08-12T16:47:41Z",
+      "updatedAt": "2022-08-12T16:47:41Z",
       "closedAt": null,
       "comments": []
     }
@@ -34877,13 +34928,13 @@
       "labels": [],
       "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-series` query type.\r\n\r\nAdds a query type, `fixed-chunk`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-08-10T21:23:44Z",
+      "updatedAt": "2022-08-12T18:05:52Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/273/1",
-      "headRefOid": "7b037950d6a74468d3c1bbb516153c6b849a449c",
+      "headRefOid": "8e01916f7587b5311e3850a4518543cbc2dc74c7",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -34895,6 +34946,41 @@
           "body": "Thanks @tgeoghegan for the comments! Based on your feedback and feedback in the PPM slack, I will definitely be adding the timestamp back into the report struct for fixed-chunk tasks.",
           "createdAt": "2022-08-06T01:14:38Z",
           "updatedAt": "2022-08-06T01:14:38Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I would definitely like if we could find a way to somehow unify the different query types (lots of places in the spec now basically bifurcate struct content/validation logic/etc), but IIUC this is a somewhat exploratory change to discover the different query types that need to be supported, so merging this LGTM.\r\n\r\nI think we should aim to merge what we intend to implement. I agree that that it would be great to make the Helper as agnostic as possible to to the query type. I think we've done about as good a job as we can here, *if we want to reach for property (3.)*. But I'm open to alternative ideas, or reasons to drop (3.). Let's keep discussing!",
+          "createdAt": "2022-08-11T20:14:18Z",
+          "updatedAt": "2022-08-11T20:17:39Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "My current thinking (pretty high-level, may be sketchy, review appreciated):\r\n\r\n* I think something like property (3) is very desirable to have. We've been discussing achieving this property by requiring that distinct batches be non-overlapping in time. I think one way to make it feasible to implement that idea is to change how client reports, aggregation jobs, and batches are bound together:\r\n  * Currently, we bind a client report to a batch when the aggregation job is created via an `AggregateInitializeReq`. But there's no reason this conceptually needs to be true: we could instead choose to bind client reports to batches at or after the end of aggregation. We also require that all reports in the same aggregation job be bound to the same batch, but again, there is no reason this conceptually needs to be true: we could instead allow different client reports in the same aggregation job to be bound to different batches. We could implement these conceptual changes by adding an additional step to the aggregate flow, or perhaps even better by having the `AggregateShareReq` include enough information to identify the aggregated reports that are bound to the batch. I think the latter option would be better since, if we commit to batches having non-overlapping time intervals in the `fixed-size` task type, a batch would be identified by a batch interval in both the `time-interval` and `fixed-size` task types.\r\n  * These changes would make it much easier to group reports into batches while still meeting the `{min,max}_batch_size` & non-overlapping-in-time batch constraints for a few reasons. First, since the binding happens after aggregation concludes, reports that fail the aggregation flow can no longer unexpectedly \"remove\" reports from a batch -- we only add successfully-aggregated reports to batches. Even more importantly, by allowing different reports in the same aggregation job to be bound to different batches, we can effectively split (successfully aggregated) reports in an aggregation job to more than one batch -- so an aggregation job that is \"too big\" to fit in the currently-open batch can still provide enough reports to finish the currently-open batch, with the remaining reports going into a following batch. (In fact, I think with these changes we could probably always hit `min_batch_size` exactly -- the leader would just select an interval end that selects the correct number of reports. We probably want some way to break timestamp ties -- details likely a bit messy.)\r\n  * This doesn't _uniquely_ determine batches if we allow leeway in the batch size. But it's close, and like I said, I think we actually don't need the leeway anymore in which case the batches are uniquely determined.\r\n  * `BatchId` no longer needs to exist as a concept, since batches are now always identified by an interval.\r\n\r\n* Once we have (3) for the `fixed-size` case, I think we can unify both the `fixed-size` and the `time-interval` cases to nearly the same logic -- they are both effectively aggregating reports over intervals of time, the largest difference is how the intervals of time are decided.\r\n  * Specifically, the `time-interval` case would determine the batches as `[0, T)`, `[T, 2T)`, ... just as today (where `T` is the `min_batch_duration`). The `fixed-size` case would generate intervals based on the rate of client reports arriving -- the interval boundaries would be selected to create batches of the appropriate size.\r\n  * We still need the ability added in this PR for the collector to request the \"next\" batch ID. It's a nice-to-have for the `time-interval` case, but a requirement for the `fixed-size` case since in this case the collector has no insight into what the batch intervals might be.\r\n  * The ability for the collector to collect multiple contiguous batches is still required for the `time-interval` case, since we might need to do so to hit `min_batch_size`. We could implement it for `fixed-size` if we wished, by mandating that the generated batches be contiguous (i.e. no gaps between batches).\r\n  * The expected collector behavior for `time-interval` wouldn't change: occasionally use the collect flow to collect the next interval of interest. (With these changes, the collector could safely request an interval that is not yet complete; or, if it wanted to, ask to be *told* what the \"next\" batch interval is, though I don't think this would be required.)\r\n  * The expected collector behavior for `fixed-size` would be very similar to what is suggested in this PR: occasionally use the collect flow to collect the \"next\" batch interval, using the \"tell-me-the-next-batch\" functionality.\r\n  * I think we'd want to keep the change in this PR to allow reports to arrive after a collect request arrives (but not after the collection completes), since otherwise the \"tell-me-the-next-batch\" functionality could not be used without potentially cutting a batch short.\r\n\r\nLike I said, this is pretty sketchy. I'm probably missing some things, review would be appreciated.",
+          "createdAt": "2022-08-12T03:23:10Z",
+          "updatedAt": "2022-08-12T04:10:04Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> * Currently, we bind a client report to a batch when the aggregation job is created via an `AggregateInitializeReq`. But there's no reason this conceptually needs to be true: we could instead choose to bind client reports to batches at or after the end of aggregation. We also require that all reports in the same aggregation job be bound to the same batch, but again, there is no reason this conceptually needs to be true: we could instead allow different client reports in the same aggregation job to be bound to different batches. We could implement these conceptual changes by adding an additional step to the aggregate flow, or perhaps even better by having the `AggregateShareReq` include enough information to identify the aggregated reports that are bound to the batch. I think the latter option would be better since, if we commit to batches having non-overlapping time intervals in the `fixed-size` task type, a batch would be identified by a batch interval in both the `time-interval` and `fixed-size` task types.\r\n\r\nIIUC you're saying we can do the report validation first and only assign reports to batches for the actual aggregation. I completely agree with that. If that's not what you're saying, could you please elaborate?\r\n\r\n> we can effectively split (successfully aggregated) reports in an aggregation job to more than one batch \r\n\r\nI think your wording here is a bit confusing. Once the jobs are aggregated they are already in a batch because that's what we're aggregating over. I think I know what you mean but I'm not sure.",
+          "createdAt": "2022-08-12T09:03:18Z",
+          "updatedAt": "2022-08-12T18:05:52Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Meta: Can we move this discussion to an issue? The order gets confusing and parts are lost in PRs.",
+          "createdAt": "2022-08-12T11:20:55Z",
+          "updatedAt": "2022-08-12T11:20:55Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > ```\r\n> >   * Currently, we bind a client report to a batch when the aggregation job is created via an `AggregateInitializeReq`. But there's no reason this conceptually needs to be true: we could instead choose to bind client reports to batches at or after the end of aggregation. We also require that all reports in the same aggregation job be bound to the same batch, but again, there is no reason this conceptually needs to be true: we could instead allow different client reports in the same aggregation job to be bound to different batches. We could implement these conceptual changes by adding an additional step to the aggregate flow, or perhaps even better by having the `AggregateShareReq` include enough information to identify the aggregated reports that are bound to the batch. I think the latter option would be better since, if we commit to batches having non-overlapping time intervals in the `fixed-size` task type, a batch would be identified by a batch interval in both the `time-interval` and `fixed-size` task types.\r\n> > ```\r\n> \r\n> IIUC you're saying we can do the report validation first and only assign reports to batches for the actual aggregation. I completely agree with that. If that's not what you're saying, could you please elaborate?\r\n\r\nYes, that's correct. With how the PR is currently worded, in the `fixed-size` case reports are assigned to batches when aggregation begins; my suggestion is to change that to assign reports to batches implicitly based on their timestamp.\r\n\r\n> > ```\r\n> >   we can effectively split (successfully aggregated) reports in an aggregation job to more than one batch \r\n> > ```\r\n> \r\n> I think your wording here is a bit confusing. Once the jobs are aggregated they are already in a batch because that's what we're aggregating over. I think I know what you mean but I'm not sure.\r\n\r\nThe aggregation flow is done via a grouping of reports called an \"aggregation job\". Collection is done via a (different!) grouping of reports called a \"batch\", I suppose -- this \"batch\" concept is explicit for the `fixed-size` case which introduces an explicit batch ID, and was I believe implicit for the existing `time-interval` case (which identified batches by \"batch interval\").\r\n\r\nWith how this PR is currently worded, all of the reports in a given aggregation job must fall into the same batch in the `fixed-size` case, since reports are bound to a batch during `AggregateInitializeReq`. My suggestion is to change this to bind reports to batches implicitly based on their timestamp, and identify batches by a batch interval in all cases, rather than using a \"batch ID\" in the `fixed-size` case.\r\n\r\n> Meta: Can we move this discussion to an issue? The order gets confusing and parts are lost in PRs.\r\n\r\nI'd agree with this, is #273 a good place for further discussion?",
+          "createdAt": "2022-08-12T16:26:22Z",
+          "updatedAt": "2022-08-12T16:26:22Z"
         }
       ],
       "reviews": [
@@ -35177,7 +35263,7 @@
           "commit": {
             "abbreviatedOid": "42f9cf8"
           },
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
@@ -35245,7 +35331,7 @@
           "commit": {
             "abbreviatedOid": "42f9cf8"
           },
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
@@ -35407,7 +35493,7 @@
           "commit": {
             "abbreviatedOid": "12d84c0"
           },
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
@@ -35685,7 +35771,7 @@
           "commit": {
             "abbreviatedOid": "12d84c0"
           },
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
@@ -35705,7 +35791,7 @@
           "commit": {
             "abbreviatedOid": "7b03795"
           },
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "state": "APPROVED",
           "body": "Thanks for your patience. :) This LGTM.\r\n\r\nI would definitely like if we could find a way to somehow unify the different query types (lots of places in the spec now basically bifurcate struct content/validation logic/etc), but IIUC this is a somewhat exploratory change to discover the different query types that need to be supported, so merging this LGTM.",
