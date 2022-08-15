@@ -2219,7 +2219,7 @@ encrypted input share of each of the Aggregators. The header consists of:<a href
 </li>
             <li class="normal" id="section-4.3.2-4.2">A timestamp representing the time at which the report was generated.
 Specifically, the <code>time</code> field is set to the number of seconds elapsed since
-the start of the UNIX epoch. The client <span class="bcp14">SHOULD</span> round this value to the nearest
+the start of the UNIX epoch. The client <span class="bcp14">SHOULD</span> round this value down to the nearest
 multiple of <code>time_precision</code> in order to ensure that that the timestamp cannot
 be used to link a report back to the Client that generated it.<a href="#section-4.3.2-4.2" class="pilcrow">¶</a>
 </li>
