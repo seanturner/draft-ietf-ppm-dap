@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 12 February 2023                                     Cloudflare
+Expires: 16 February 2023                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                          11 August 2022
+                                                          15 August 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 12 February 2023.
+   This Internet-Draft will expire on 16 February 2023.
 
 Copyright Notice
 
@@ -622,10 +622,11 @@ struct {
 
    struct {
        QueryType query_type;
+       Duration time_precision;
        uint64 min_batch_size;
        select (query_type) {
            case time-interval:
-               Duration min_batch_duration;
+               Empty;
            case fixed-size:
                uint64 max_batch_size;
        }
@@ -650,8 +651,10 @@ struct {
       ultimately depends on the application and the nature of the
       measurements and aggregation function.
 
-   *  min_batch_duration - The duration of the smallest permitted batch
-      interval.  Additional restrictions apply; see Section 4.5.5.
+   *  time_precision - The duration of the smallest permitted batch
+      interval.  Additional restrictions apply; see Section 4.5.5.  In
+      addition, Clients use this value to truncate their report
+      timestamps; see Section 4.3.
 
    Typically the Collector issues queries for which the batch intervals
    are continuous, monotonically increasing, and have the same duration.
@@ -848,16 +851,10 @@ struct {
 
    *  A timestamp representing the time at which the report was
       generated.  Specifically, the time field is set to the number of
-      seconds elapsed since the start of the UNIX epoch.
-
-      -  For time-interval tasks, the client SHOULD round this value to
-         the nearest multiple of min_batch_duration in order to ensure
-         that that the timestamp cannot be used to link a report back to
-         the Client that generated it.
-
-         [OPEN ISSUE What should we do for fixed-size tasks?  We could
-         have the query config specify min batch duration for this type
-         as well?]
+      seconds elapsed since the start of the UNIX epoch.  The client
+      SHOULD round this value to the nearest multiple of time_precision
+      in order to ensure that that the timestamp cannot be used to link
+      a report back to the Client that generated it.
 
    *  A nonce used by the Aggregators to ensure the report appears in at
       most one batch.  (See Section 4.5.6.)  The Client MUST generate
@@ -1693,11 +1690,11 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    "boundaries" determined by the query configuration:
 
    *  For time-interval tasks, the query configuration specifies the
-      minimum batch duration, min_batch_duration.  For the
-      batch_interval included with the query, the Aggregator checks that
-      both batch_interval.start and batch_interval.duration are
-      divisible by min_batch_duration and that batch_interval.duration
-      >= min_batch_duration.
+      "minimum batch duration", which is determined by time_precision.
+      For the batch_interval included with the query, the Aggregator
+      checks that both batch_interval.start and batch_interval.duration
+      are divisible by time_precision and that batch_interval.duration
+      >= time_precision.
 
    *  For fixed-size tasks, the batch is assocaited with a "batch ID"
       selected by the Leader.  Thus the Aggregator needs to check that

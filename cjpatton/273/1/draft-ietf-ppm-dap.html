@@ -376,23 +376,37 @@ ul.empty li, .ulEmpty li {
 
 /* definition lists */
 dl {
+  clear: left;
+  --indent: 3ch;
+  /* --indent: attr(indent ch); not supported in any browser, but we can dream */
 }
 dl > dt {
   float: left;
   margin-right: 1em;
+  min-width: 20ch;
+}
+dl.dlNewline > dt {
+  float: none;
 }
 dl > dd {
   margin-bottom: .8em;
-  min-height: 1.3em;
+  margin-left: var(--indent) !important; /* stupid element overrides */
+  min-height: 2ex;
 }
 :is(dl.compact, .dlCompact) > dd {
-  margin-bottom: 0em;
+  margin-bottom: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:first-child, .break:first-child + *) {
+  margin-top: 0;
+}
+:is(dl.compact, .dlCompact) > dd > :is(:last-child) {
+  margin-bottom: 0;
 }
 dl > dd > dl {
   margin-top: 0.5em;
-  margin-bottom: 0em;
+  margin-bottom: 0;
 }
-dd.break {
+dl .break {
   display: none;
 }
 
@@ -587,11 +601,11 @@ hr {
   margin: 0;
   font-size: var(--small-font-size);
   line-height: 18px;
-  --identifier-width: 8em;
+  --identifier-width: 15ch;
 }
 #identifiers dt {
   width: var(--identifier-width);
-  margin: 0;
+  min-width: var(--identifier-width);
   clear: left;
   float: left;
   text-align: right;
@@ -920,16 +934,6 @@ a.toplink {
   margin: 8px 0.5em 0;
 }
 
-/* Fix the dl styling to match the RFC 7992 attributes */
-dl > dt,
-dl.dlParallel > dt {
-  float: left;
-  margin-right: 1em;
-}
-dl.dlNewline > dt {
-  float: none;
-}
-
 /* Provide styling for table cell text alignment */
 table .text-left {
   text-align: left;
@@ -1045,7 +1049,7 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 12 February 2023</td>
+<td class="center">Expires 16 February 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1058,12 +1062,12 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-08-11" class="published">11 August 2022</time>
+<time datetime="2022-08-15" class="published">15 August 2022</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2023-02-12">12 February 2023</time></dd>
+<dd class="expires"><time datetime="2023-02-16">16 February 2023</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1133,7 +1137,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 12 February 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 16 February 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1974,10 +1978,11 @@ is encoded by the "query configuration" configured out-of-band:<a href="#section
 <pre>
 struct {
     QueryType query_type;
+    Duration time_precision;
     uint64 min_batch_size;
     select (query_type) {
         case time-interval:
-            Duration min_batch_duration;
+            Empty;
         case fixed-size:
             uint64 max_batch_size;
     }
@@ -2005,8 +2010,9 @@ privacy. However, this ultimately depends on the application and the nature of
 the measurements and aggregation function.<a href="#section-4.1.1-3.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.1.1-3.2">
-              <code>min_batch_duration</code> - The duration of the smallest permitted batch interval.
-Additional restrictions apply; see <a href="#batch-validation" class="xref">Section 4.5.5</a>.<a href="#section-4.1.1-3.2" class="pilcrow">¶</a>
+              <code>time_precision</code> - The duration of the smallest permitted batch interval.
+Additional restrictions apply; see <a href="#batch-validation" class="xref">Section 4.5.5</a>. In addition, Clients
+use this value to truncate their report timestamps; see <a href="#upload-flow" class="xref">Section 4.3</a>.<a href="#section-4.1.1-3.2" class="pilcrow">¶</a>
 </li>
           </ul>
 <p id="section-4.1.1-4">Typically the Collector issues queries for which the batch intervals are
@@ -2211,21 +2217,11 @@ encrypted input share of each of the Aggregators. The header consists of:<a href
 <ul class="normal">
 <li class="normal" id="section-4.3.2-4.1">The task ID for which the report is intended.<a href="#section-4.3.2-4.1" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.3.2-4.2">
-              <p id="section-4.3.2-4.2.1">A timestamp representing the time at which the report was generated.
+            <li class="normal" id="section-4.3.2-4.2">A timestamp representing the time at which the report was generated.
 Specifically, the <code>time</code> field is set to the number of seconds elapsed since
-the start of the UNIX epoch.<a href="#section-4.3.2-4.2.1" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-4.3.2-4.2.2.1">
-                  <p id="section-4.3.2-4.2.2.1.1">For time-interval tasks, the client <span class="bcp14">SHOULD</span> round this value to the nearest
-multiple of <code>min_batch_duration</code> in order to ensure that that the
-timestamp cannot be used to link a report back to the Client that
-generated it.<a href="#section-4.3.2-4.2.2.1.1" class="pilcrow">¶</a></p>
-<p id="section-4.3.2-4.2.2.1.2">
-[OPEN ISSUE What should we do for fixed-size tasks? We could have the
-query config specify min batch duration for this type as well?]<a href="#section-4.3.2-4.2.2.1.2" class="pilcrow">¶</a></p>
-</li>
-              </ul>
+the start of the UNIX epoch. The client <span class="bcp14">SHOULD</span> round this value to the nearest
+multiple of <code>time_precision</code> in order to ensure that that the timestamp cannot
+be used to link a report back to the Client that generated it.<a href="#section-4.3.2-4.2" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.3.2-4.3">A nonce used by the Aggregators to ensure the report appears in at most one
 batch. (See <a href="#anti-replay" class="xref">Section 4.5.6</a>.) The Client <span class="bcp14">MUST</span> generate this by generating 16
@@ -3082,11 +3078,11 @@ with the DAP task. It does so as described here.<a href="#section-4.5.5-1" class
 <p id="section-4.5.5-2">First the aggregator checks that the request respects any batch "boundaries"
 determined by the query configuration:<a href="#section-4.5.5-2" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.5-3.1">For time-interval tasks, the query configuration specifies the minimum batch
-duration, <code>min_batch_duration</code>. For the <code>batch_interval</code> included with the
-query, the Aggregator checks that both <code>batch_interval.start</code> and
-<code>batch_interval.duration</code> are divisible by <code>min_batch_duration</code> and that
-<code>batch_interval.duration &gt;= min_batch_duration</code>.<a href="#section-4.5.5-3.1" class="pilcrow">¶</a>
+<li class="normal" id="section-4.5.5-3.1">For time-interval tasks, the query configuration specifies the "minimum batch
+duration", which is determined by <code>time_precision</code>. For the <code>batch_interval</code>
+included with the query, the Aggregator checks that both
+<code>batch_interval.start</code> and <code>batch_interval.duration</code> are divisible by
+<code>time_precision</code> and that <code>batch_interval.duration &gt;= time_precision</code>.<a href="#section-4.5.5-3.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.5.5-3.2">
               <p id="section-4.5.5-3.2.1">For fixed-size tasks, the batch is assocaited with a "batch ID" selected by
