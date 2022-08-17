@@ -635,21 +635,20 @@ struct {
 4.1.1.  Time-interval Queries
 
    The first query type, time-interval, is designed to support
-   applications in which measurements are collected over a long period
-   of time.  The Collector specifies a "batch interval" that determines
-   the time range for reports included in the batch: For each
-   measurement in the batch, the time at which that measurement was
-   generated (see Section 4.3) must fall within the batch interval
-   specified by the Collector.
+   applications in which reports are collected over a long period of
+   time.  The Collector specifies a "batch interval" that determines the
+   time range for reports included in the batch: For each report in the
+   batch, the time at which that report was generated (see Section 4.3)
+   must fall within the batch interval specified by the Collector.
 
    The configuration of this query type specifies two paramters:
 
-   *  min_batch_size - Is the smallest number of measurements the batch
-      is allowed to include.  In a sense, this parameter controls the
+   *  min_batch_size - Is the smallest number of reports the batch is
+      allowed to include.  In a sense, this parameter controls the
       degree of privacy that will be obtained: The larger the minimum
       batch size, the higher degree of privacy.  However, this
       ultimately depends on the application and the nature of the
-      measurements and aggregation function.
+      reports and aggregation function.
 
    *  time_precision - The duration of the smallest permitted batch
       interval.  Additional restrictions apply; see Section 4.5.5.  In
@@ -666,22 +665,22 @@ struct {
    cases in which Collector may need to issue queries out-of-order.  For
    example, a previous batch might need to be queried again with a
    different aggregation parameter (e.g, for Poplar1).  In addition, the
-   Collector may need to vary the duration to adjust to changing
-   measurement upload rates.
+   Collector may need to vary the duration to adjust to changing report
+   upload rates.
 
 4.1.2.  Fixed-size Queries
 
    The fixed-size query type is used to support applications in which
    the Collector needs the ability to strictly control the sample size.
    This is particularly important for controlling the amount of noise
-   added to measurements by Clients (or added to aggregate shares by
+   added to reports by Clients (or added to aggregate shares by
    Aggregators) in order to achieve differential privacy.
 
    For this query type, the Aggregators group reports into arbitrary
    batches such that each batch has roughly the same number of reports.
    The configuration includes parameters min_batch_size and
    max_batch_size that determine, respectively, the minimum and maximum
-   number of measurements per batch.
+   number of reports per batch.
 
    To get the aggregate of the next batch, the Collector issues a query
    of type next-batch.  (See FixedSizeQuery in Section 4.1.)  The
@@ -690,13 +689,13 @@ struct {
    by-batch-id batch-query type.
 
    Implementation note: The goal for the Aggregators is to aggregate
-   precisely min_batch_size measurements per batch.  Doing so, however,
-   may be challenging for Leader deployments in which multiple,
-   independent nodes running the aggregate sub-protocol (see
-   Section 4.4) need to be coordinated.  The maximum batch size is
-   intended to allow room for error.  Typically the difference between
-   the minimum and maximum batch size will be a small fraction of the
-   target batch size for each batch.
+   precisely min_batch_size reports per batch.  Doing so, however, may
+   be challenging for Leader deployments in which multiple, independent
+   nodes running the aggregate sub-protocol (see Section 4.4) need to be
+   coordinated.  The maximum batch size is intended to allow room for
+   error.  Typically the difference between the minimum and maximum
+   batch size will be a small fraction of the target batch size for each
+   batch.
 
    [OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
    min_batch_size == max_batch_size.  We should know better once we've
