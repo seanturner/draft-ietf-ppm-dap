@@ -611,7 +611,8 @@ hr {
   text-align: right;
 }
 #identifiers dd {
-  margin: 0 0 0 calc(1em + var(--identifier-width));
+  margin: 0;
+  margin-left: calc(1em + var(--identifier-width)) !important;
   min-width: 5em;
 }
 #identifiers .authors .author {
@@ -667,7 +668,7 @@ hr {
   margin: 0 10px 0 -25px;
 }
 .references dd {
-  margin-left: 8em;
+  margin-left: 8em !important;
   overflow: auto;
 }
 
@@ -1049,7 +1050,7 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 </tr></thead>
 <tfoot><tr>
 <td class="left">Geoghegan, et al.</td>
-<td class="center">Expires 16 February 2023</td>
+<td class="center">Expires 18 February 2023</td>
 <td class="right">[Page]</td>
 </tr></tfoot>
 </table>
@@ -1062,12 +1063,12 @@ svg :is([stroke="fill"], [fill^="#fff"]) {
 <dd class="internet-draft">draft-ietf-ppm-dap-latest</dd>
 <dt class="label-published">Published:</dt>
 <dd class="published">
-<time datetime="2022-08-15" class="published">15 August 2022</time>
+<time datetime="2022-08-17" class="published">17 August 2022</time>
     </dd>
 <dt class="label-intended-status">Intended Status:</dt>
 <dd class="intended-status">Standards Track</dd>
 <dt class="label-expires">Expires:</dt>
-<dd class="expires"><time datetime="2023-02-16">16 February 2023</time></dd>
+<dd class="expires"><time datetime="2023-02-18">18 February 2023</time></dd>
 <dt class="label-authors">Authors:</dt>
 <dd class="authors">
 <div class="author">
@@ -1137,7 +1138,7 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
         time. It is inappropriate to use Internet-Drafts as reference
         material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
 <p id="section-boilerplate.1-4">
-        This Internet-Draft will expire on 16 February 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+        This Internet-Draft will expire on 18 February 2023.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="copyright">
@@ -1928,10 +1929,9 @@ struct {
         <h3 id="name-queries">
 <a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-queries" class="section-name selfRef">Queries</a>
         </h3>
-<p id="section-4.1-1">DAP is designed to give the Collector control over which measurements are
-included in a batch for aggregation. However, since reports are uploaded to the
-Leader, the Collector cannot choose the batch directly. Instead, it issues a "query" used
-by the Aggregators to guide batch selection.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1-1">Aggregated results are computed based on sets of report, called batches. The Collector
+influences which reports are used in a batch via a "query." The Aggregators use this query
+to carry out the aggregation flow and produce aggregate shares encrypted to the Collector.<a href="#section-4.1-1" class="pilcrow">¶</a></p>
 <p id="section-4.1-2">This document defines the following query types:<a href="#section-4.1-2" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-3">
 <pre>
@@ -1943,8 +1943,8 @@ enum {
 } QueryType;
 </pre><a href="#section-4.1-3" class="pilcrow">¶</a>
 </div>
-<p id="section-4.1-4">Additional query types can be defined as needed. A query includes parameters
-used by the Aggregators to select a given batch of measurements specific to the
+<p id="section-4.1-4">Future specifications can introduce new query types as needed. A query includes parameters
+used by the Aggregators to select a batch of reports specific to the
 given query type:<a href="#section-4.1-4" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.1-5">
 <pre>
@@ -1995,8 +1995,8 @@ struct {
 <a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-time-interval-queries" class="section-name selfRef">Time-interval Queries</a>
           </h4>
 <p id="section-4.1.1-1">The first query type, <code>time-interval</code>, is designed to support applications in
-which some process is observed over a long period of time. The Collector
-specifies a "batch interval" that determines the time range for measurements
+which measurements are collected over a long period of time. The Collector
+specifies a "batch interval" that determines the time range for reports
 included in the batch: For each measurement in the batch, the time at which that
 measurement was generated (see <a href="#upload-flow" class="xref">Section 4.3</a>) must fall within the batch
 interval specified by the Collector.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
@@ -2037,7 +2037,7 @@ Collector needs the ability to strictly control the sample size. This is
 particularly important for controlling the amount of noise added to measurements
 by Clients (or added to aggregate shares by Aggregators) in order to achieve
 differential privacy.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-4.1.2-2">For this query type, the Aggregators batch measurements into arbitrary batches
+<p id="section-4.1.2-2">For this query type, the Aggregators group reports into arbitrary batches
 such that each batch has roughly the same number of reports. The configuration
 includes parameters <code>min_batch_size</code> and <code>max_batch_size</code> that determine,
 respectively, the minimum and maximum number of measurements per batch.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
@@ -3085,7 +3085,7 @@ included with the query, the Aggregator checks that both
 <code>time_precision</code> and that <code>batch_interval.duration &gt;= time_precision</code>.<a href="#section-4.5.5-3.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.5.5-3.2">
-              <p id="section-4.5.5-3.2.1">For fixed-size tasks, the batch is assocaited with a "batch ID" selected by
+              <p id="section-4.5.5-3.2.1">For fixed-size tasks, the batch is associated with a "batch ID" selected by
 the Leader. Thus the Aggregator needs to check that the query is associated
 with a known batch ID:<a href="#section-4.5.5-3.2.1" class="pilcrow">¶</a></p>
 <ul class="normal">
