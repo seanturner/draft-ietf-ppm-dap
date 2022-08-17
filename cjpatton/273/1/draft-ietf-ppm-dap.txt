@@ -636,8 +636,22 @@ struct {
        }
    } QueryConfig;
 
-   The parameters pertaining to each query configuration are described
-   in the relevant subsection below.
+   All query types have the following configuration parameters in
+   common:
+
+   *  min_batch_size - The smallest number of reports the batch is
+      allowed to include.  In a sense, this parameter controls the
+      degree of privacy that will be obtained: The larger the minimum
+      batch size, the higher degree of privacy.  However, this
+      ultimately depends on the application and the nature of the
+      reports and aggregation function.
+
+   *  time_precision - Clients use this value to truncate their report
+      timestamps; see Section 4.3.  Additional semantics may apply,
+      depending on the query type.  (See Section 4.5.5 for details.)
+
+   The parameters pertaining to specific query types are described in
+   the relevant subsection below.
 
 4.1.1.  Time-interval Queries
 
@@ -647,20 +661,6 @@ struct {
    time range for reports included in the batch: For each report in the
    batch, the time at which that report was generated (see Section 4.3)
    must fall within the batch interval specified by the Collector.
-
-   The configuration of this query type specifies two paramters:
-
-   *  min_batch_size - Is the smallest number of reports the batch is
-      allowed to include.  In a sense, this parameter controls the
-      degree of privacy that will be obtained: The larger the minimum
-      batch size, the higher degree of privacy.  However, this
-      ultimately depends on the application and the nature of the
-      reports and aggregation function.
-
-   *  time_precision - The duration of the smallest permitted batch
-      interval.  Additional restrictions apply; see Section 4.5.5.  In
-      addition, Clients use this value to truncate their report
-      timestamps; see Section 4.3.
 
    Typically the Collector issues queries for which the batch intervals
    are continuous, monotonically increasing, and have the same duration.
@@ -683,17 +683,17 @@ struct {
    added to reports by Clients (or added to aggregate shares by
    Aggregators) in order to achieve differential privacy.
 
-   For this query type, the Aggregators group reports into arbitrary
-   batches such that each batch has roughly the same number of reports.
-   The configuration includes parameters min_batch_size and
-   max_batch_size that determine, respectively, the minimum and maximum
-   number of reports per batch.
-
    To get the aggregate of the next batch, the Collector issues a query
    of type next-batch.  (See FixedSizeQuery in Section 4.1.)  The
    response to this query (see Section 4.5) includes a "batch ID", which
    can be used to query the same batch later on.  This is done using the
    by-batch-id batch-query type.
+
+   For this query type, the Aggregators group reports into arbitrary
+   batches such that each batch has roughly the same number of reports.
+   In addition to the minumum batch size common to all query types, the
+   conifugration includes a "maximum batch size", max_batch_size that
+   determines maximum number of reports per batch.
 
    Implementation note: The goal for the Aggregators is to aggregate
    precisely min_batch_size reports per batch.  Doing so, however, may
