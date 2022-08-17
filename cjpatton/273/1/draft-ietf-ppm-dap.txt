@@ -1687,50 +1687,18 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
 4.5.5.  Batch Validation
 
-   Before an aggregator responds to a collect request or aggregate-share
-   request, it must first check that the request does not violate the
-   parameters associated with the DAP task.  It does so as described
-   here.
+   Before an Aggregator responds to a CollectReq or AggregateShareReq,
+   it must first check that the request does not violate the parameters
+   associated with the DAP task.  It does so as described here.
 
-   First the aggregator checks that the request respects any batch
-   "boundaries" determined by the query configuration:
-
-   *  For time-interval tasks, the query configuration specifies the
-      "minimum batch duration", which is determined by time_precision.
-      For the batch_interval included with the query, the Aggregator
-      checks that both batch_interval.start and batch_interval.duration
-      are divisible by time_precision and that batch_interval.duration
-      >= time_precision.
-
-   *  For fixed-size tasks, the batch is associated with a "batch ID"
-      selected by the Leader.  Thus the Aggregator needs to check that
-      the query is associated with a known batch ID:
-
-      -  If the query contained in the CollectReq has type by-batch-id,
-         the Leader checks that the provided batch ID corresponds to a
-         batch ID it returned in a previous CollectResp for the task.
-
-      -  The Helper checks that the batch ID provided by the leader in
-         its AggregateShareReq corresponds to a batch ID used in a
-         previous AggregateInitializeReq for the task.
-
-   If the boundary check fails, then the Aggregator MUST abort with
-   error "batchInvalid".
+   First the Aggregator checks that the batch respects any "boundaries"
+   determined by the query type.  These are described in the subsections
+   below.  If the boundary check fails, then the Aggregator MUST abort
+   with error "batchInvalid".
 
    Next, the Aggregator checks that batch contains a valid number of
-   reports.  Let X denote the set of reports in the batch:
-
-   *  For time-interval tasks, the query configuration specifies the
-      minimum batch size, min_batch_size.  The Aggregator checks that
-      len(X) >= min_batch_size.
-
-   *  For fixed-size tasks, the query configuration specifies the
-      minimum batch size, min_batch_size, and maximum batch size.  The
-      Aggregator checks that len(X) >= min_batch_size and len(X) <=
-      max_batch_size.
-
-   If the batch size check fails, then the Aggregator MUST abort with
-   error "invalidBatchSize".
+   reports, as determined by the query type.  If the size check fails,
+   then the Aggregator MUST abort with error "invalidBatchSize".
 
    Next, the Aggregator checks that the batch has not been aggregated
    too many times.  This is determined by the maximum batch lifetime,
@@ -1740,21 +1708,62 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Finally, the Aggregator checks that the batch does not contain a
    report that was included in any previous batch.  If this batch
-   intersection check fails, then the Aggregator MUST abort with error
-   "batchOverlap".
-
-   Depending on the query type, properly checking for batch
-   intersections may be prohibitively expensive for some deployments.
-   The following is sufficient (but not necessary):
-
-   *  For time-interval tasks, the Aggregator checks that the batch
-      interval does not overlap with the batch interval of any previous
-      query.  If this batch interval check fails, then the Aggregator
-      MAY abort with error "batchOverlap".
+   overlap check fails, then the Aggregator MUST abort with error
+   "batchOverlap".  For time-interval tasks, it is sufficient (but not
+   necessary) to check that the batch interval does not overlap with the
+   batch interval of any previous query.  If this batch interval check
+   fails, then the Aggregator MAY abort with error "batchOverlap".
 
    [[OPEN ISSUE: #195 tracks how we might relax this constraint to allow
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the collector much room for mistakes.]]
+
+4.5.5.1.  Time-interval Queries
+
+4.5.5.1.1.  Boundary Check
+
+   The batch boundaries are determined by the time_precision field of
+   the query configuration.  For the batch_interval included with the
+   query, the Aggregator checks that:
+
+   *  batch_interval.duration >= time_precision (this field determines,
+      effectively, the minimum batch duration)
+
+   *  both batch_interval.start and batch_interval.duration are
+      divisible by time_precision
+
+   These measures ensure that Aggregators can efficiently "pre-
+   aggregate" output shares recovered during the aggregation sub-
+   protocol.
+
+4.5.5.1.2.  Size Check
+
+   The query configuration specifies the minimum batch size,
+   min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
+   where X is the set of reports in the batch.
+
+4.5.5.2.  Fixed-size Queries
+
+4.5.5.2.1.  Boundary Check
+
+   For fixed-size tasks, the batch boundaries are defined by "batch IDs"
+   selected by the Leader.  Thus the Aggregator needs to check that the
+   query is associated with a known batch ID:
+
+   *  If the query contained in the CollectReq has type by-batch-id, the
+      Leader checks that the provided batch ID corresponds to a batch ID
+      it returned in a previous CollectResp for the task.
+
+   *  The Helper checks that the batch ID provided by the leader in its
+      AggregateShareReq corresponds to a batch ID used in a previous
+      AggregateInitializeReq for the task.
+
+4.5.5.2.2.  Size Check
+
+   The query configuration specifies the minimum batch size,
+   min_batch_size, and maximum batch size, max_batch_size.  The
+   Aggregator checks that len(X) >= min_batch_size and len(X) <=
+   max_batch_size, where X is the set of reports in the batch.
 
 4.5.6.  Anti-replay
 
