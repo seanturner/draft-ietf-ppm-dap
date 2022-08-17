@@ -589,9 +589,12 @@ struct {
       (65535)
    } QueryType;
 
-   Future specifications can introduce new query types as needed.  A
-   query includes parameters used by the Aggregators to select a batch
-   of reports specific to the given query type:
+   The time-interval query type is described in Section 4.1.1; the
+   fixed-size query type is described in Section 4.1.2.  Future
+   specifications can introduce new query types as needed.  A query
+   includes parameters used by the Aggregators to select a batch of
+   reports specific to the given query type.  A query is defined as
+   follows:
 
    enum {
        next-batch(0),
@@ -615,10 +618,11 @@ struct {
        }
    } Query;
 
-   The query is issued in-band as part of the collect sub-protocol
-   (Section 4.5).  Its content is determined by the "query type", which
-   in turn is encoded by the "query configuration" configured out-of-
-   band:
+   The parameters pertaining to each query type are described in one of
+   the subsections below.  The query is issued in-band as part of the
+   collect sub-protocol (Section 4.5).  Its content is determined by the
+   "query type", which in turn is encoded by the "query configuration"
+   configured out-of-band:
 
    struct {
        QueryType query_type;
@@ -631,6 +635,9 @@ struct {
                uint64 max_batch_size;
        }
    } QueryConfig;
+
+   The parameters pertaining to each query configuration are described
+   in the relevant subsection below.
 
 4.1.1.  Time-interval Queries
 
