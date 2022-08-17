@@ -1756,10 +1756,6 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the collector much room for mistakes.]]
 
-   [OPEN ISSUE: We might need to permit the Aggregator to drop a request
-   as needed, if for example the reports in the batch are so old that
-   the Aggregator has deleted them from storage.]
-
 4.5.6.  Anti-replay
 
    Using a client-provided report multiple times within a single batch,
