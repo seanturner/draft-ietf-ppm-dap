@@ -837,9 +837,8 @@ struct {
 
    This message is called the Client's report.  It consists of a
    "header" and the encrypted input share of each of the Aggregators.
-   The header consists of:
-
-   *  The task ID for which the report is intended.
+   The header consists of the task ID and report "metadata".  The
+   metadata consists of the following fields:
 
    *  A timestamp representing the time at which the report was
       generated.  Specifically, the time field is set to the number of

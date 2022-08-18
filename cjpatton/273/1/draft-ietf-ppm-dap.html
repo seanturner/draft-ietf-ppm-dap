@@ -2203,22 +2203,21 @@ struct {
 </pre><a href="#section-4.3.2-2" class="pilcrow">¶</a>
 </div>
 <p id="section-4.3.2-3">This message is called the Client's report. It consists of a "header" and the
-encrypted input share of each of the Aggregators. The header consists of:<a href="#section-4.3.2-3" class="pilcrow">¶</a></p>
+encrypted input share of each of the Aggregators. The header consists of the
+task ID and report "metadata". The metadata consists of the following fields:<a href="#section-4.3.2-3" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.3.2-4.1">The task ID for which the report is intended.<a href="#section-4.3.2-4.1" class="pilcrow">¶</a>
-</li>
-            <li class="normal" id="section-4.3.2-4.2">A timestamp representing the time at which the report was generated.
+<li class="normal" id="section-4.3.2-4.1">A timestamp representing the time at which the report was generated.
 Specifically, the <code>time</code> field is set to the number of seconds elapsed since
 the start of the UNIX epoch. The client <span class="bcp14">SHOULD</span> round this value down to the nearest
 multiple of <code>time_precision</code> in order to ensure that that the timestamp cannot
-be used to link a report back to the Client that generated it.<a href="#section-4.3.2-4.2" class="pilcrow">¶</a>
+be used to link a report back to the Client that generated it.<a href="#section-4.3.2-4.1" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.3.2-4.3">A nonce used by the Aggregators to ensure the report appears in at most one
+            <li class="normal" id="section-4.3.2-4.2">A nonce used by the Aggregators to ensure the report appears in at most one
 batch. (See <a href="#anti-replay" class="xref">Section 4.5.6</a>.) The Client <span class="bcp14">MUST</span> generate this by generating 16
-random bytes using a cryptographically secure random number gnerator.<a href="#section-4.3.2-4.3" class="pilcrow">¶</a>
+random bytes using a cryptographically secure random number gnerator.<a href="#section-4.3.2-4.2" class="pilcrow">¶</a>
 </li>
-            <li class="normal" id="section-4.3.2-4.4">A list of extensions to be included with the report. (See
-<a href="#upload-extensions" class="xref">Section 4.3.3</a>.)<a href="#section-4.3.2-4.4" class="pilcrow">¶</a>
+            <li class="normal" id="section-4.3.2-4.3">A list of extensions to be included with the report. (See
+<a href="#upload-extensions" class="xref">Section 4.3.3</a>.)<a href="#section-4.3.2-4.3" class="pilcrow">¶</a>
 </li>
           </ul>
 <p id="section-4.3.2-5">To generate a report, the Client first shards its measurement into input shares
