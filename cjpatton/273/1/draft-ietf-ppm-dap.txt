@@ -1739,6 +1739,9 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
       Leader checks that the provided batch ID corresponds to a batch ID
       it returned in a previous CollectResp for the task.
 
+      [OPEN ISSUE: Consider making batch IDs predictable.  See issue
+      #301.]
+
    *  The Helper checks that the batch ID provided by the leader in its
       AggregateShareReq corresponds to a batch ID used in a previous
       AggregateInitializeReq for the task.
