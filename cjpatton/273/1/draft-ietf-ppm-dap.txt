@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 18 February 2023                                     Cloudflare
+Expires: 19 February 2023                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                          17 August 2022
+                                                          18 August 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 February 2023.
+   This Internet-Draft will expire on 19 February 2023.
 
 Copyright Notice
 
@@ -622,22 +622,8 @@ struct {
    the subsections below.  The query is issued in-band as part of the
    collect sub-protocol (Section 4.5).  Its content is determined by the
    "query type", which in turn is encoded by the "query configuration"
-   configured out-of-band:
-
-   struct {
-       QueryType query_type;
-       Duration time_precision;
-       uint64 min_batch_size;
-       select (query_type) {
-           case time-interval:
-               Empty;
-           case fixed-size:
-               uint64 max_batch_size;
-       }
-   } QueryConfig;
-
-   All query types have the following configuration parameters in
-   common:
+   configured out-of-band.  All query types have the following
+   configuration parameters in common:
 
    *  min_batch_size - The smallest number of reports the batch is
       allowed to include.  In a sense, this parameter controls the
@@ -692,7 +678,7 @@ struct {
    For this query type, the Aggregators group reports into arbitrary
    batches such that each batch has roughly the same number of reports.
    In addition to the minumum batch size common to all query types, the
-   conifugration includes a "maximum batch size", max_batch_size that
+   conifugration includes a "maximum batch size", max_batch_size, that
    determines maximum number of reports per batch.
 
    Implementation note: The goal for the Aggregators is to aggregate
@@ -728,9 +714,9 @@ struct {
       Report (see Section 4.3) MUST be the same as the order in which
       aggregators appear in this list.
 
-   *  query_config: The query configuration (QueryConfig) for this task.
-      This determines the query type for batch selection and the
-      properties that all batches for this task must have.
+   *  The query configuration for this task (see Section 4.1).  This
+      determines the query type for batch selection and the properties
+      that all batches for this task must have.
 
    *  max_batch_lifetime: The maximum number of times a batch of reports
       may be queried by the Collector.
