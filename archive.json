@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-16T01:41:30.066299+00:00",
+  "timestamp": "2022-08-18T01:42:20.600285+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4914,7 +4914,7 @@
       ],
       "body": "If the collector is not interested in time and interval, but simply want to collect aggregation in a batch that meets `min_batch_size`. Then can the protocol support a 'batch-based collection' instead of current interval-based?\r\n\r\nConsider a Prio usecase, when `max_batch_lifetime == 1`, collector will only need to collect the aggregation so far, with a batch size B >= `min_batch_size`. This can be orchestrated by the leader, which can implement a counting service to track batch size for a task, once it reaches `min_batch_size`, leader sends AggregateShareReq to collect helper's `aggregate_share` and return to collector.\r\n\r\nThis requires a new id to tie agg-flow with agg-share-flow. For example, in addition to `agg_job_id`, leader can send a unique `batch_id` in every AggregateReq. At collect time, leader use the same `batch_id` to collect `output_share` in helper (helper can still proactively aggregate output_shares to `aggregate_share`, since there are no more batch windows, helper can store `aggregate_share` by `agg_job_id`, or accumulate all aggregation jobs' `output_share` to one `aggregate_share`, and store it with `batch_id`). Illustrated as following:\r\n\r\n```\r\n|<------------------------ batch_id1 ----------------->| <== AggregationShareReq\r\n|    agg_job_id1     |   agg_job_id2   |   agg_job_id3 | <== AggregateReq\r\nT0                                                    Tm <== Time\r\n```\r\nHere [T0, Tm] is the time takes to aggregate `min_batch_size` number of reports, it has no relationship with `min_batch_duration` or collector interval.\r\n\r\nAs this issue pointed out: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/195, to avoid privacy leak, each batch window must contain at least `min_batch_size` reports, otherwise attacker can find ways to slice intervals to break privacy guarantee. But if the protocol does require each batch window meets `min_batch_size`, then the collect interval itself is no longer useful, since the duration that takes to meet `min_batch_size` is the smallest duration that can be queried. Therefore, it seems to make sense to base collection entirely on batch size, not interval.\r\n",
       "createdAt": "2022-06-16T13:55:49Z",
-      "updatedAt": "2022-08-15T23:15:12Z",
+      "updatedAt": "2022-08-18T01:32:39Z",
       "closedAt": null,
       "comments": [
         {
@@ -4993,6 +4993,83 @@
           "body": "@cjpatton we should define what exactly does \"(3.) a query determines a unique batch\" means.\r\n\r\nFrom the PR:\r\n\r\n> These difficulties beg the following essential question: How important is property (3.)? Without it, the Leader is capable of sorting reports into batches as it pleases. For example:\r\nThe Leader can batch reports by User-Agent, location, and so on. This is is still possible with (3.), but this would at least force the Leader to \"throw away\" reports from clients that are not in the target group, but pertain to the query.\r\nThe Leader can do a kind of weak stuffing attack. Stuffing attacks ares still possible with (3.), but again, it would at least force the Leader to throw away any reports that pertain to the query.\r\n\r\nThis is a valid concern but since with pure interval based collection leader can still do this, I don't see what addressing this can improve. Also worth pointing out that if the task is protected by differential privacy, and client is sending information like user-agent in the clear, then the task should accept that group batches by the same user-agent is still privacy preserving as long as `min_batch_size` is met. ",
           "createdAt": "2022-08-15T23:15:12Z",
           "updatedAt": "2022-08-15T23:15:12Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks for your feedback; I have sent #300 which hopefully makes the approach I am suggesting clear. To respond to a few of the concerns raised in this issue:\r\n\r\n> 1). As @junyechen1996 and others have mentioned, the coarse-grained timestamp would prevent aggregators from effectively defining intervals in fixed-size query. For e.g. a task with timestamp precision of 1hr cannot have a dynamic interval less than 1hr. If the min_batch_size is achieved in 10min, then the use case cannot be supported, unless we throw away all reports after min_batch_size, which can be very wasteful.\r\n\r\nThe randomness is used as a timestamp tie-breaker, so a `fixed-size` task can create many batches for the same timestamp value if necessary due to rounding. I think that, if the Leader waits to allow collection of a batch to account for clock skew + timestamp truncation, no reports will ever need to be dropped.\r\n\r\n\r\n> It is the leader's responsibility to create a AggregateShareReq only when min_batch_size amount of reports has been verified successfully (I believe in interval query the leader is responsible for only creating AggregateShareReq after the current time has elapsed the current interval end). If not, then leader should initialise another {agg-init} with a new AggregationJob containing the number of ReportShares missing from min_batch_size.\r\n\r\nThis only works if the batch intervals are allowed to overlap, as you note later in your comment. Other than that, this is somewhat inefficient: a few failed report aggregations can delay a batch from being collectable until another aggregation job is run, and the Leader will only realize it needs to run another aggregation job once the prior aggregation jobs have completed. This \"extra\" aggregation job is also fairly likely to be quite small compared to the normal batch sizes in use.\r\n\r\n\r\n> On a more general term, I'd prefer we support different collect requirements explicitly and separately at this stage, once we know more about their behaviour and the challenges in implementation, we can consider unifying if necessary.\r\n\r\nThe current approach in #297 (IMO) effectively creates two similar-but-separate protocols embedded inside the top-level DAP protocol. The approach I suggest in #300 achieves the same overall goal (i.e. generate batches as soon as `min_batch_size` is hit) by adding a few small, mostly-orthogonal features to the existing protocol. In my experience, the latter approach leads to a more maintainable & extensible design.\r\n\r\n\r\n> This is a valid concern but since with pure interval based collection leader can still do this, I don't see what addressing this can improve.\r\n\r\nThe Leader can only do this if they throw away any reports that don't meet their criteria. Open issue #130 may end up with the client sending report shares directly to the leader & helper; if so, at that point the Helper will be able to detect if the Leader is dropping reports.",
+          "createdAt": "2022-08-17T03:04:28Z",
+          "updatedAt": "2022-08-17T06:31:49Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "How large is the timestamp rounding (i.e. truncation) duration? If it has to be too large the delay would be problematic; I'm not sure what is generally considered large enough to protect privacy.",
+          "createdAt": "2022-08-17T06:30:47Z",
+          "updatedAt": "2022-08-17T06:30:47Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> This is a valid concern but since with pure interval based collection leader can still do this, I don't see what addressing this can improve. \r\n\r\nThe difference is that with interval based collection the leader is restricted to splitting into:\r\n* everybody before\r\n* victim timestamp + everybody in the same `batch_interval.start` up to `batch_interval.duration` (which must be divisible by `min_batch_duration`)\r\n* everybody after\r\n\r\nWith fixed-size-batch the leader can just insert `min_batch_size-1` reports with the same timestamp as the victim and it works.",
+          "createdAt": "2022-08-17T12:24:31Z",
+          "updatedAt": "2022-08-17T12:25:00Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> How large is the timestamp rounding (i.e. truncation) duration? If it has to be too large the delay would be problematic; I'm not sure what is generally considered large enough to protect privacy.\r\n\r\nFor our use case it'll have to be hours.",
+          "createdAt": "2022-08-17T15:03:55Z",
+          "updatedAt": "2022-08-17T15:03:55Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@simon-friedberger what is the attack in this case, if we are talking about sybil attack, then I don't see what's the difference in the two types: for interval query, leader can generate fake reports with timestamp in `(batch_interval.start, batch_interval.duration)`; in fixed-size query, leader can generate fake reports with any timestamp; How the collection happens doesn't affect leader's ability to be malicious, am I missing something?",
+          "createdAt": "2022-08-17T19:04:30Z",
+          "updatedAt": "2022-08-17T19:04:30Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@branlwyd \r\n> The randomness is used as a timestamp tie-breaker, so a fixed-size task can create many batches for the same timestamp value if necessary due to rounding. I think that, if the Leader waits to allow collection of a batch to account for clock skew + timestamp truncation, no reports will ever need to be dropped.\r\n\r\nOne reason to support fixed-size collection is to deliver an aggregation result as soon as the batch size condition is met. If leader has to wait then it might defeat this purpose. In my example above, if I know the task will usually aggregate `min_batch_size` in 10min, but due to privacy constraints the most precise timestamp I can have is in 1 hour, then I'll have to wait for 1hr to get a batch which would have been available after 10min. Whether to drop the extra reports is kind of a secondary concern.\r\n\r\n> This only works if the batch intervals are allowed to overlap, as you note later in your comment. Other than that, this is somewhat inefficient: a few failed report aggregations can delay a batch from being collectable until another aggregation job is run, and the Leader will only realize it needs to run another aggregation job once the prior aggregation jobs have completed. This \"extra\" aggregation job is also fairly likely to be quite small compared to the normal batch sizes in use.\r\n\r\nTrue, but my point was the interval doesn't matter, so there's no real \"overlap\". Besides, I think it's better for privacy if the chronological order of reports are not preserved inter- or intra-batches, when slicing on time window is not required. We can work around the inefficiency above by allowing leader to collect slightly more than `min_batch_size` but still less than `max_batch_size`, to minimise the need of \"extra\" aggregation jobs. After all, verification failure should be rare unless the system is under attack.\r\n\r\n> The current approach in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297 (IMO) effectively creates two similar-but-separate protocols embedded inside the top-level DAP protocol.\r\n\r\nThat's indeed my preference, the advantage is adopters that are only interested in one query type don't need to worry about the other one so much. I'm not against unifying implementation details, but I think it's better to have two distinct sub-protocols that support the two use cases well, than one sub-protocol that has to compromise. At this point, I think I should go read your PR :)",
+          "createdAt": "2022-08-17T19:42:37Z",
+          "updatedAt": "2022-08-17T19:42:37Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think that the need to round timestamps on the order of hours likely disallows the approach in #300, since that approach may delay batches for a period of time up to the timestamp rounding factor. I'm going to retract that PR & add a few comments on #297.",
+          "createdAt": "2022-08-17T20:23:01Z",
+          "updatedAt": "2022-08-17T20:23:01Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> for interval query, leader can generate fake reports with timestamp in `(batch_interval.start, batch_interval.duration)`; in fixed-size query, leader can generate fake reports with any timestamp; How the collection happens doesn't affect leader's ability to be malicious, am I missing something?\r\n\r\n@wangshan I don't think you are. It's a minor difference in the power of the attacker. In the first case other reports in the interval have to either be dropped or will add noise. In the second the attack can be executed more precisely.\r\nAs stated on the mailing list, I don't think this has a big impact either.\r\n\r\n> One reason to support fixed-size collection is to deliver an aggregation result as soon as the batch size condition is met. If leader has to wait then it might defeat this purpose. In my example above, if I know the task will usually aggregate `min_batch_size` in 10min, but due to privacy constraints the most precise timestamp I can have is in 1 hour, then I'll have to wait for 1hr to get a batch which would have been available after 10min. Whether to drop the extra reports is kind of a secondary concern.\r\n\r\nIs this coherent? Even if the timestamp is 1 hour for privacy, the correct timestamp is probably in the last 10 minutes...",
+          "createdAt": "2022-08-17T20:39:29Z",
+          "updatedAt": "2022-08-17T20:39:29Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Is this coherent? Even if the timestamp is 1 hour for privacy, the correct timestamp is probably in the last 10 minutes...\r\n\r\nAt least one privacy violation I can think of requires knowing the clock skew between client & aggregator. Specifically, a malicious leader could bucket reports by apparent clock skew between client timestamp & server timestamp. Then if they learn a client device's clock skew, they can correlate the reports in the relevant buckets as likely having been generated by that device.\r\n\r\nRounding timestamps to a large enough degree protects against this attack, since all reports will fall into the same bucket. (Though I think if the malicious actor could control when a client submitted reports, they might be able to figure out bounds on the client's clock skew by triggering a report upload near a rounding boundary and seeing how the client rounds the timestamp.) And even if we know the report arrived at the server in the last 10 minutes, that doesn't tell us what the clock skew between client & aggregator is.\r\n\r\nThat said, I'm curious if there are other privacy violations to consider here -- has the threat model around the client timestamp been discussed somewhere already?",
+          "createdAt": "2022-08-17T21:09:16Z",
+          "updatedAt": "2022-08-17T21:09:16Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "The main concern about timestamps -- or any other report metadata -- is that it creates a fingerprinting surface that a Helper can use to control the reports that end up in the batch. Of course it should be noted that the Leader also has this capability, and more.\r\n\r\nMy primary concerns about #300 (as it's currently spelled) are more operational:\r\n1. As @wangshan mentioned, latency if `time_precision` is large. The amount of storage Aggregators need depend on this value; the larger the better.\r\n2. The PR allows us to \"borrow\" reports from a previous time interval to fill the next batch, which is good. But in order to do so, I would have to store output shares individually, rather than in aggregate, in order to be able determine at aggregation time which shares fall into the batch range. Unless I'm missing something? cc/ @branlwyd ",
+          "createdAt": "2022-08-17T23:50:37Z",
+          "updatedAt": "2022-08-17T23:56:50Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@branlwyd I originally brought this up in this issue: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/274\r\n\r\nThe threat I was referring to is the following: if there is a proxy between client and aggregator (like the one described in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/294), and the proxy is owned by the leader, (for e.g leader's edge server). Assuming we encrypt the report from client to the proxy and to aggregator (so no one other than leader sees the timestamp), if the timestamp is precise, then an attacker from leader with access to the input of the proxy can look up the time packages arrived, and figure out which client the report is coming from (maybe with help of other info like size of the package). Rounding timestamp makes this a lot harder. \r\n\r\nIn the fixed-size query case, the main purpose of the timestamp is to allow aggregators filter out very old (or very future) reports.\r\n",
+          "createdAt": "2022-08-18T01:32:39Z",
+          "updatedAt": "2022-08-18T01:32:39Z"
         }
       ]
     },
@@ -5205,15 +5282,15 @@
       "id": "I_kwDOFEJYQs5OS3bN",
       "title": "Polling collect URI changes the Leader's state",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/288",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "When the Collector issues a collect request to the Leader, the Leader responds with a URI the Collector can poll later on to get the (encrypted) aggregate result. This is done via an HTTP GET to the collect URI returned by the Leader.\r\n\r\nMy understanding is that the Leader is free to remove the aggregate results from storage thereafter. (See https://github.com/cloudflare/daphne/issues/53 for discussion.) The spec doesn't require this request to be authenticated, so it's possible for someone to cause the Leader to delete this state before the Collector has a chance to fetch it.\r\n\r\nThis issue can be solved by:\r\n1. requiring the Leader to store results for some period of time;\r\n2. making the collect URI hard to predict (e.g., by sticking a random number in the URI string); or\r\n2. requiring authentication for this endpoint.\r\n\r\n(2.) seems easiest to implement, but may be tricky to spell. Any thoughts on this?",
       "createdAt": "2022-07-21T17:17:25Z",
-      "updatedAt": "2022-08-03T18:22:15Z",
-      "closedAt": null,
+      "updatedAt": "2022-08-16T17:33:30Z",
+      "closedAt": "2022-08-16T17:33:30Z",
       "comments": [
         {
           "author": "tgeoghegan",
@@ -5230,7 +5307,7 @@
           "updatedAt": "2022-07-22T12:49:59Z"
         },
         {
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "body": "FWIW, the current DAP spec text:\r\n\r\n> The leader MUST retain a collect job's results until the collector sends an HTTP DELETE request to the collect job URI\r\n\r\nimplies (at least to my reading) that the leader must indeed retain the results until an explicit `DELETE` is sent from the collector [1]. I agree that it would be very nice if an aggregator could drop collect results eventually without requiring an explicit request from the collector to do so -- that's consistent with [Chris Wood's idea](https://github.com/cloudflare/daphne/issues/53#issuecomment-1191499038) but inconsistent (IMO) with the current specification text.\r\n\r\nIf I'm not missing anything, I can prep a small PR fixing this up.\r\n\r\n\r\n[1] To be very pedantic, following the [HTTP GET semantics](https://httpwg.org/http-core/draft-ietf-httpbis-semantics-latest.html#GET), the leader could choose to send a representation indicating that the results are gone; but strictly following the text of DAP, the leader would still be required to retain the results. Given that these results would be inaccessible from an outside observer, this is a somewhat academic distinction -- IMO another good reason to make a change here.",
           "createdAt": "2022-07-25T23:08:36Z",
@@ -5242,6 +5319,13 @@
           "body": "@cjpatton we took a change here to improve the text discussing how long leaders should hold on to collect job results, and I think questions about authentication of the collect job URIs is captured by #293. Are there any outstanding concerns about whether polling collect job URIs causes state changes?",
           "createdAt": "2022-08-03T18:22:15Z",
           "updatedAt": "2022-08-03T18:22:15Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Nope :)",
+          "createdAt": "2022-08-16T17:33:30Z",
+          "updatedAt": "2022-08-16T17:33:30Z"
         }
       ]
     },
@@ -5325,7 +5409,7 @@
       "labels": [],
       "body": "Task configuration between aggregators currently is handled out-of-band, this requires leader and helper to agree some secure method to exchange task configuration prior to upload.\r\n\r\nAn alternative is to create task in-band and on-demand from `Report` or `ReportShare` received from clients. Assuming server sends a unique task_id and all the parameters required by [Task configuration](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/blob/main/draft-ietf-ppm-dap.md#task-configuration-task-configuration) to the clients out-of-band (this is defined in client capability in current spec). Then clients can include these fields in report's `extension`, and upload them to servers along with reports. This is similar to an idea mentioned in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271.\r\n\r\nUpon receiving a Report (leader) or ReportShare (helper) with unseen tuple of (task_id, extension), the aggregators create the task on-demand, then proceed to aggregate-flow as usual.\r\n\r\nThis can be optimised to avoid checking the tuple of (task_id, extension), by letting client create `task_id` based on `extension`. For example, the client can share some text that defines the use case, communicated to them out-of-band, then create `task_id` using `hash(\"shared text\" || extension)`.  This can be particularly useful if the \"shared text\" or part of extension is only available on the client side.\r\n\r\nThere are some nice features in this method:\r\n- By sending all task parameters to clients then return to the server, we add transparency to the task that clients participate in. Client has the choice to see what data has been collected with what parameters (like `min_batch_size`, `max_batch_lifetime`, or any differential privacy parameters if that's the privacy guarantee used). For some clients these task parameters can even be hardcoded on the client side (for e.g. on a mobile device) to avoid any tempering from server.\r\n- Because `extension` is used in HPKE's AAD, malicious leader cannot change the task parameters, for e.g reducing `min_batch_size`.\r\n- A \"task\" now means the same task_id and same task parameters (including parameters for choosing VDAF). We can guarantee reports from one task will only be aggregated with one VDAF. For the same reason, if a malicious client changes the task_id or task parameters, its report will be aggregated in a different task, with other poison reports from the same malicious attack. The \"good\" reports are not polluted. \r\n- It avoids any out-of-band task orchestration between leader and helper, which isn't defined by the spec yet.\r\n- The on-demand creation is easy to implement with streaming framework that has `groupBy` operator. In fact, task as an object doesn't have to exist in aggregators, it mainly becomes an identifier to group aggregations together.\r\n\r\nThe disadvantage is added overhead in `Report` and `ReportShare`. Some optimisation can be done by moving Extension out of `ReportShare` and into `AggregateInitReq`.\r\n\r\nNote that the parameters that are not necessarily tied to a task may still need to be exchanged out-of-band between aggregators, like collector hpke config (or even aggregator's hpke config, see https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/289). Secrets that should not be know by clients, like `vdaf_verify_key` must still be exchanged out-of-band.\r\n\r\n",
       "createdAt": "2022-07-21T22:33:43Z",
-      "updatedAt": "2022-08-12T11:27:12Z",
+      "updatedAt": "2022-08-17T00:07:45Z",
       "closedAt": null,
       "comments": [
         {
@@ -5439,6 +5523,13 @@
           "body": "> Can we not implement the same check in aggregators when a task is being created on demand?\r\n\r\nThat depends, I don't think this kind of check can be codified because the aggregation system doesn't know the privacy implication of the data being processed. App usage time is probably less important than monthly income but both are just numbers to be averaged.\r\n\r\nI am fine if we want to ignore this but suggest that we clearly describe it as out of scope then.",
           "createdAt": "2022-08-12T11:27:11Z",
           "updatedAt": "2022-08-12T11:27:11Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "+1 @simon-friedberger ",
+          "createdAt": "2022-08-17T00:07:44Z",
+          "updatedAt": "2022-08-17T00:07:44Z"
         }
       ]
     },
@@ -5449,12 +5540,12 @@
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/291",
       "state": "OPEN",
       "author": "wangshan",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "The current spec doesn't explain how to retire or delete a task. For some use cases, it's useful to have a hard task deadline, when expired, the task and all its aggregations must be made inactive and eventually deleted. This can be a new Duration type task parameter called `max_task_lifetime`, or `max_task_duration` to avoid similar named but int typed `max_batch_lifetime`.\r\n\r\nOther than the practical benefit, for clients that uploads repeatedly and periodically, this can add privacy benefit to limit the number of uploads from the same client to the same task (related to https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/210).\r\n\r\nPS. I feel like \"lifetime\" is more appropriate for a deadline than a max allowed count.",
       "createdAt": "2022-07-21T22:49:10Z",
-      "updatedAt": "2022-07-29T15:07:34Z",
+      "updatedAt": "2022-08-17T21:16:34Z",
       "closedAt": null,
       "comments": [
         {
@@ -5463,6 +5554,13 @@
           "body": "This is a neat idea, especially in conjunction with the notion in #290 about clients being able to define tasks. We might think of a client sending task parameters to aggregators as implying the client's consent to those parameters, so having tasks expire and thus requiring clients to periodically re-affirm their consent to participate in a task is interesting.",
           "createdAt": "2022-07-29T15:07:34Z",
           "updatedAt": "2022-07-29T15:07:34Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I filed #299 forgetting about this issue. I think we should do this, and more see this as a minimum amount of time the aggregators must hang onto task-related data before feeling free to start discarding things. ",
+          "createdAt": "2022-08-17T21:16:34Z",
+          "updatedAt": "2022-08-17T21:16:34Z"
         }
       ]
     },
@@ -5508,7 +5606,7 @@
       ],
       "body": "If clients upload reports directly to the leader, then the leader learns things like the client's IP among other identifying metadata. This can be mitigated with the use of some kind of anonymizing proxy, like an [OHAI](https://datatracker.ietf.org/wg/ohai/documents/) server, provided the proxy is not colluding with the aggregator(s).\r\n\r\nHowever, it's not clear that every deployment will be able to use such a proxy, because the aggregators can't run it as a service, and perhaps the cost of deploying this additional actor is prohibitive.\r\n\r\nNonetheless, the protocol should discuss the privacy leaks that result from direct uploads and discuss how deployments might use anonymizing proxies.",
       "createdAt": "2022-07-28T15:19:08Z",
-      "updatedAt": "2022-08-10T20:17:36Z",
+      "updatedAt": "2022-08-17T00:12:41Z",
       "closedAt": null,
       "comments": [
         {
@@ -5533,11 +5631,18 @@
           "updatedAt": "2022-08-10T18:48:09Z"
         },
         {
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "body": "I suppose different batching strategies could either require protocol support or not:\r\n1) Something like `ReportList` surely requires protocol support.\r\n2) OTOH, an `/upload` endpoint could be implemented as accepting a number of concurrent requests, then writing them all back to durable storage in a single batch/transaction (however that maps back to the durable storage system), before responding to any of the requests.\r\n\r\n(1) requires protocol support, but helps even if the performance-limiting factor is e.g. all of the TLS handshakes, message parsing, or some other artifact of receiving many small messages over TLS.\r\n\r\n(2) would give many of the advantages of batching without requiring protocol support, and would help most if the underlying performance limits are due to the limits of the durable storage system in use.",
           "createdAt": "2022-08-10T20:17:36Z",
           "updatedAt": "2022-08-10T20:17:36Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "+1 to adding text about the benefits of anonymization, and adding explicit reference to OHTTP (and maybe MASQUE).",
+          "createdAt": "2022-08-17T00:12:41Z",
+          "updatedAt": "2022-08-17T00:12:41Z"
         }
       ]
     },
@@ -5546,15 +5651,15 @@
       "id": "I_kwDOFEJYQs5O2Jsl",
       "title": "Code points for VDAFs?",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/295",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Right now the task config consists of:\r\n> A unique identifier for the VDAF instance used for the task, including the\r\n> type of measurement associated with the task.\r\n\r\nIf memory serves, this text predates the CFRG's adoption of the draft. It might be appropriate this point to pick codepoints for:\r\n* Prio3Aes128Count\r\n* Prio3Aes128Sum\r\n* Prio3Aes128Histogram\r\n* Poplar1\r\n\r\nDo folks have an opinion about where these codepoints should live? Following HPKE's lead, we would define them in the VDAF draft. We can prioritize this for VDAF-03, or decide that it's too early to worry about this.",
       "createdAt": "2022-07-30T00:33:42Z",
-      "updatedAt": "2022-08-04T19:19:37Z",
-      "closedAt": null,
+      "updatedAt": "2022-08-17T00:08:00Z",
+      "closedAt": "2022-08-17T00:08:00Z",
       "comments": [
         {
           "author": "tgeoghegan",
@@ -5569,6 +5674,13 @@
           "body": "I agree with @tgeoghegan.",
           "createdAt": "2022-08-04T19:19:37Z",
           "updatedAt": "2022-08-04T19:19:37Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "SGTM. We need codepoints in the VDAF draft for other reasons (see https://github.com/cfrg/draft-irtf-cfrg-vdaf/issues/102), so we can use those if/when needed by DAP. if you want to help move this along, please have a look at https://github.com/cfrg/draft-irtf-cfrg-vdaf/pull/104.",
+          "createdAt": "2022-08-16T17:38:44Z",
+          "updatedAt": "2022-08-16T17:38:44Z"
         }
       ]
     },
@@ -5595,16 +5707,26 @@
       "id": "I_kwDOFEJYQs5Pt9UJ",
       "title": "Add concept of \"minimum task lifetime\"",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/299",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "Aggregators should keep task data around for as long as the task requires. Afterwards, they can garbage collect as needed.",
       "createdAt": "2022-08-12T16:47:41Z",
-      "updatedAt": "2022-08-12T16:47:41Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2022-08-17T21:16:44Z",
+      "closedAt": "2022-08-17T21:16:44Z",
+      "comments": [
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Closing in favor of #291.",
+          "createdAt": "2022-08-17T21:16:44Z",
+          "updatedAt": "2022-08-17T21:16:44Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -34956,13 +35078,13 @@
       "labels": [],
       "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-interval` query type.\r\n\r\nAdds a query type, `fixed-size`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-08-15T20:16:31Z",
+      "updatedAt": "2022-08-17T23:39:38Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/273/1",
-      "headRefOid": "06b4c249065191a5cb8c0cdbbfb08f87f4fed217",
+      "headRefOid": "6f409544af6bc8fec8acea8425b583af78efdbee",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -36103,6 +36225,354 @@
               "updatedAt": "2022-08-15T18:34:15Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AHJAL",
+          "commit": {
+            "abbreviatedOid": "06b4c24"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "This is good. I have some requests for editorial changes, as well as some protocol questions, but it's pretty close to being ready.",
+          "createdAt": "2022-08-17T12:14:31Z",
+          "updatedAt": "2022-08-17T12:48:09Z",
+          "comments": [
+            {
+              "originalPosition": 35,
+              "body": "```suggestion\r\nAggregated results are computed based on sets of report, called batches. The Collector\r\ninfluences which reports are used in a batch via a \"query.\" The Aggregators use this query\r\nto carry out the aggregation flow and produce aggregate shares encrypted to the Collector.\r\n```",
+              "createdAt": "2022-08-17T12:14:31Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 48,
+              "body": "```suggestion\r\nFuture specifications can introduce new query types as needed. A query includes parameters\r\n```",
+              "createdAt": "2022-08-17T12:14:56Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 49,
+              "body": "```suggestion\r\nused by the Aggregators to select a batch of reports specific to the\r\n```",
+              "createdAt": "2022-08-17T12:15:42Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 56,
+              "body": "Why not split these out into two separate query types, rather than a single query type with different parameters? ",
+              "createdAt": "2022-08-17T12:16:36Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 91,
+              "body": "We need to define what all these fields mean. For example, what is the `time_precision` field?",
+              "createdAt": "2022-08-17T12:18:01Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 97,
+              "body": "```suggestion\r\nwhich measurements are collected over a long period of time. The Collector\r\n```",
+              "createdAt": "2022-08-17T12:18:25Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 98,
+              "body": "```suggestion\r\nspecifies a \"batch interval\" that determines the time range for reports\r\n```",
+              "createdAt": "2022-08-17T12:18:35Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 98,
+              "body": "s/measurement/report generally everywhere we are actually operating on reports. ",
+              "createdAt": "2022-08-17T12:18:56Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 111,
+              "body": "```suggestion\r\n- `min_batch_interval` - The duration of the smallest permitted batch interval.\r\n```",
+              "createdAt": "2022-08-17T12:19:52Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 111,
+              "body": "Since `time_precision` is confusing to me.",
+              "createdAt": "2022-08-17T12:20:04Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 134,
+              "body": "```suggestion\r\nFor this query type, the Aggregators group reports into arbitrary batches\r\n```",
+              "createdAt": "2022-08-17T12:20:58Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 142,
+              "body": "What's the use case for querying by-batch-id again in the future? Poplar?",
+              "createdAt": "2022-08-17T12:24:56Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 105,
+              "body": "Why is this a query-specific parameter and not something that applies to _all_ types of queries?",
+              "createdAt": "2022-08-17T12:26:09Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 219,
+              "body": "If we're going to refer to the header, why not actually introduce a header struct?\r\n\r\n```\r\nstruct {\r\n    TaskID task_id;\r\n    Time time;\r\n    Nonce nonce;\r\n    Extension extensions<0..2^16-1>;\r\n} ReportHeader;\r\n```",
+              "createdAt": "2022-08-17T12:27:10Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 219,
+              "body": "Also, this change seems unrelated to the query type change. Is it possible to apply it in a separate PR?",
+              "createdAt": "2022-08-17T12:27:42Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 436,
+              "body": "Let's use the open issue to track resolution to this. I'm not convinced that we want to abandon (3) just yet.",
+              "createdAt": "2022-08-17T12:40:38Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 681,
+              "body": "```suggestion\r\n* For fixed-size tasks, the batch is associated with a \"batch ID\" selected by\r\n```",
+              "createdAt": "2022-08-17T12:41:50Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 687,
+              "body": "Why would the Collector not be able to opportunistically query by batch ID? What if the IDs were monotonically increasing and the Collector just wanted to iterate over the batches?",
+              "createdAt": "2022-08-17T12:45:35Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 640,
+              "body": "Can we refactor this such that there are subsections for each type of query? I know that there's some shared logic, but the mixed time/fixed-size validation steps is a bit hard to parse, especially if I'm only implementing one of them.",
+              "createdAt": "2022-08-17T12:46:57Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            },
+            {
+              "originalPosition": 730,
+              "body": "Definitely. Why is this even an open issue?",
+              "createdAt": "2022-08-17T12:47:25Z",
+              "updatedAt": "2022-08-17T12:48:09Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AJhO2",
+          "commit": {
+            "abbreviatedOid": "017c549"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T18:45:47Z",
+          "updatedAt": "2022-08-17T20:19:40Z",
+          "comments": [
+            {
+              "originalPosition": 49,
+              "body": "I was trying to avoid the word \"report\", which is not defined until later. But, meh, we can work this out in the future.",
+              "createdAt": "2022-08-17T18:45:48Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 56,
+              "body": "What this enum is meant to express is that there are two \"subtypes\" for the fixed-size query type: One for getting the \"next batch\" and another for querying a previous batch.\r\n\r\nI suppose we could pull these \"subtypes\" up into the `QueryType` enum, but then you have the problem that there is a many-to-one relationship between query types and query configs. I worry this would create a corner cases we'd have to address in text. (E.g., \"if the query type doesn't match the query config for the task, then abort.\")\r\n\r\nPerhaps there is another alternative?",
+              "createdAt": "2022-08-17T18:49:03Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 98,
+              "body": "Reports and measurements have a 1:1 correspondence, so I figured this would be clear. Note that we don't define \"report\" at this point in the text.",
+              "createdAt": "2022-08-17T18:51:42Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 111,
+              "body": "I wanted a term that applies to all query types, in particular because it's used to truncate the report timestamp in all query types. (For time-interval queries, it's also used as the minimum batch duration.) ",
+              "createdAt": "2022-08-17T18:56:12Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 219,
+              "body": "The header would be\r\n```\r\nstruct {\r\n  TaskID task_id;\r\n  ReportMetadata metadata;\r\n} ReportHeader;\r\n```\r\n`metadata` needs to be defined because it's sent with each `ReportShare` in the agg flow. Given the small delta between header and metadata (just the task ID), I figured it wouldn't be worth it. \r\n\r\nHmm, you're right this change is technically separable. It wasn't in an earlier version of this PR in which the structure of the metadata depended on the query type. (Previously we had included the timestamp only for time-interval queries.) I can split this out if you insist, but it would require a bit of work. If it's all the same to you, I would prefer to keep as-is. ",
+              "createdAt": "2022-08-17T19:07:00Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 730,
+              "body": "I realized while working on this PR that we should spell this out, if we haven't already. I figured this could happen in a future PR. Maybe I should just file an issue rather than leave this here?",
+              "createdAt": "2022-08-17T19:08:23Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 91,
+              "body": "I've added a line to punt to the relevant subsection. Will this suffice?\r\n> The parameters pertaining to each query configuration are described in the relevant the subsection below.",
+              "createdAt": "2022-08-17T20:10:54Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 142,
+              "body": "Yup!",
+              "createdAt": "2022-08-17T20:11:10Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 687,
+              "body": "We kicked this around a bit. It seems like this could get tricky. For example, there would need to be a mechanism to ensure that that queries are issued in order: Imagine the collector picks batch id = 10,000, then batch id = 1.\r\n\r\nOn balance, explicit batch IDs picked by the leader seemed simpler.",
+              "createdAt": "2022-08-17T20:18:21Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            },
+            {
+              "originalPosition": 640,
+              "body": "Good idea, I will work on this now.",
+              "createdAt": "2022-08-17T20:19:37Z",
+              "updatedAt": "2022-08-17T20:19:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AKE--",
+          "commit": {
+            "abbreviatedOid": "06b4c24"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T20:22:20Z",
+          "updatedAt": "2022-08-17T20:22:20Z",
+          "comments": [
+            {
+              "originalPosition": 105,
+              "body": "It does, I just didn't spell it that way. I'll take another crack.",
+              "createdAt": "2022-08-17T20:22:20Z",
+              "updatedAt": "2022-08-17T20:22:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AKMyC",
+          "commit": {
+            "abbreviatedOid": "1241355"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T20:52:31Z",
+          "updatedAt": "2022-08-17T20:52:31Z",
+          "comments": [
+            {
+              "originalPosition": 730,
+              "body": "Yup, this appears to be redundant: see https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/180. Thanks @tgeoghegan!",
+              "createdAt": "2022-08-17T20:52:31Z",
+              "updatedAt": "2022-08-17T20:52:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AKK6D",
+          "commit": {
+            "abbreviatedOid": "b416f78"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T20:45:17Z",
+          "updatedAt": "2022-08-17T21:33:46Z",
+          "comments": [
+            {
+              "originalPosition": 436,
+              "body": "I've retracted #300 since it induces a delay in collection up to the timestamp rounding factor, and the timestamp rounding factor will be on the order of hours in practice.\r\n\r\nI think something like Tim's suggestion to bind aggregation jobs to batches at time of collect request (rather than aggregate initialization) may work to avoid the issues around needing to stop generating aggregation jobs at batch boundaries until we've confirmed the current batch has enough reports, though even with this there are cases where mapping aggregation jobs to batches (while hitting our `{min,max}_batch_size` requirements & without allowing batches to overlap in time) is quite tricky.",
+              "createdAt": "2022-08-17T20:56:23Z",
+              "updatedAt": "2022-08-17T21:33:46Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AKZxS",
+          "commit": {
+            "abbreviatedOid": "b416f78"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T21:51:36Z",
+          "updatedAt": "2022-08-17T21:51:36Z",
+          "comments": [
+            {
+              "originalPosition": 65,
+              "body": "What is the idempotency story for `next-batch` requests? I think achieving idempotency requires the interaction to look something like this:\r\n\r\n1. Collector issues `next-batch` collect request to Leader, receives collect job URI. Collector notes that the collect job URI needs to be collected to its own durable storage.\r\n2. Collector polls collect job URI until the Leader gives a completed collect response, records the aggregation value & that the collect job is complete to its own durable storage.\r\n\r\nIf that's accurate, I think that we should spell out that `next-batch` returns the same collect job until the Collector actually collects the job--I think this isn't spelled out currently, and if we don't have those semantics, repeated `next-batch` requests might cause batches to be dropped if recording the collect job URI to the Collector's durable storage fails.\r\n\r\nAlso, if it's acceptable to allow batch IDs to be enumerable (e.g. a counter, as suggested by others), I think a simpler idempotent design would be to have the Collector track which batch ID is next itself, and change `next-batch` to something like `max-batch` to allow Collectors to \"start up\" without knowing what the next batch is. This approach would simplify the Collector's state updates.",
+              "createdAt": "2022-08-17T21:51:36Z",
+              "updatedAt": "2022-08-17T21:51:50Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AKabS",
+          "commit": {
+            "abbreviatedOid": "06b4c24"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T21:55:08Z",
+          "updatedAt": "2022-08-17T21:55:08Z",
+          "comments": [
+            {
+              "originalPosition": 640,
+              "body": "Done, please have a look.",
+              "createdAt": "2022-08-17T21:55:08Z",
+              "updatedAt": "2022-08-17T21:55:08Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AKpQj",
+          "commit": {
+            "abbreviatedOid": "06b4c24"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T23:34:41Z",
+          "updatedAt": "2022-08-17T23:34:41Z",
+          "comments": [
+            {
+              "originalPosition": 105,
+              "body": "I've lifted the parameters that apply to all query types to supersection.",
+              "createdAt": "2022-08-17T23:34:41Z",
+              "updatedAt": "2022-08-17T23:34:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AKp2t",
+          "commit": {
+            "abbreviatedOid": "b416f78"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T23:39:38Z",
+          "updatedAt": "2022-08-17T23:39:38Z",
+          "comments": [
+            {
+              "originalPosition": 65,
+              "body": "> What is the idempotency story for `next-batch` requests? I think achieving idempotency requires the interaction to look something like this:\r\n> \r\n>     1. Collector issues `next-batch` collect request to Leader, receives collect job URI. Collector notes that the collect job URI needs to be collected to its own durable storage.\r\n> \r\n>     2. Collector polls collect job URI until the Leader gives a completed collect response, records the aggregation value & that the collect job is complete to its own durable storage.\r\n\r\nThis is accurate.\r\n\r\n> If that's accurate, I think that we should spell out that `next-batch` returns the same collect job until the Collector actually collects the job--I think this isn't spelled out currently, and if we don't have those semantics, repeated `next-batch` requests might cause batches to be dropped if recording the collect job URI to the Collector's durable storage fails.\r\n\r\nEach `next-batch` query would correspond to a different batch, and thus a different collect job. If the Collector queues up a bunch of collect jobs, then each job would still correspond to a different batch, right?\r\n\r\n\r\n> Also, if it's acceptable to allow batch IDs to be enumerable (e.g. a counter, as suggested by others), I think a simpler idempotent design would be to have the Collector track which batch ID is next itself, and change `next-batch` to something like `max-batch` to allow Collectors to \"start up\" without knowing what the next batch is. This approach would simplify the Collector's state updates.\r\n\r\n",
+              "createdAt": "2022-08-17T23:39:38Z",
+              "updatedAt": "2022-08-17T23:39:38Z"
+            }
+          ]
         }
       ]
     },
@@ -36145,6 +36615,85 @@
           "createdAt": "2022-08-02T17:25:48Z",
           "updatedAt": "2022-08-02T17:25:48Z",
           "comments": []
+        }
+      ]
+    },
+    {
+      "number": 300,
+      "id": "PR_kwDOFEJYQs49Sehq",
+      "title": "[retracted] Merge \"fixed-interval\" & \"fixed-size\" task types (mostly).",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/300",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "# PR is retracted, please don't review.\r\n\r\n([Reasoning for retracting PR](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/300#issuecomment-1218456857))\r\n\r\nAlmost all functionality & message wire formats are the same for the two\r\ntask types again. The largest point of divergence is in the batch\r\nvalidation implemented by the leader & helper: this validation is used\r\nto enforce the desired properties on each batch (having a fixed interval\r\nof time or including a fixed number of reports, respectively).\r\n\r\nSee [motivating discussion](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/273#issuecomment-1213552532) in #273.",
+      "createdAt": "2022-08-17T02:42:04Z",
+      "updatedAt": "2022-08-17T20:56:36Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "cjpatton/273/1",
+      "baseRefOid": "06b4c249065191a5cb8c0cdbbfb08f87f4fed217",
+      "headRepository": "branlwyd/draft-ietf-ppm-dap",
+      "headRefName": "bran/273/batch-intervals-for-everyone",
+      "headRefOid": "39f4d101443f5ba832b12d04eb640dae0a790740",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Based on https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/273#issuecomment-1218133868 & the goal to have `fixed-size` batches be collected as soon as they are available, I am retracting this PR: it introduces a delay in collection which may be as long as the timestamp rounding factor, which per the linked comment may be on the order of hours.\r\n\r\nBringing this back to draft for now in case some of the text is useful, but please hold off on reviewing.",
+          "createdAt": "2022-08-17T20:24:41Z",
+          "updatedAt": "2022-08-17T20:24:41Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5AJZF5",
+          "commit": {
+            "abbreviatedOid": "39f4d10"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-17T18:17:05Z",
+          "updatedAt": "2022-08-17T18:38:35Z",
+          "comments": [
+            {
+              "originalPosition": 173,
+              "body": "Too informal for an RFC\r\n```suggestion\r\n  of reports are generated and validated by the leader and helper for this task. It\r\n```",
+              "createdAt": "2022-08-17T18:17:06Z",
+              "updatedAt": "2022-08-17T18:38:35Z"
+            },
+            {
+              "originalPosition": 341,
+              "body": "```suggestion\r\nhaving a zero `time` and all-zero `nonce`, the Leader will choose a batch\r\n```",
+              "createdAt": "2022-08-17T18:19:04Z",
+              "updatedAt": "2022-08-17T18:38:35Z"
+            },
+            {
+              "originalPosition": 525,
+              "body": "Do you mean time_precision here, or something else?\r\n```suggestion\r\ndivisible by `time_precision`, and that\r\n```",
+              "createdAt": "2022-08-17T18:20:59Z",
+              "updatedAt": "2022-08-17T18:38:35Z"
+            },
+            {
+              "originalPosition": 543,
+              "body": "I'm fairly sure we'll still need a bit of flexibility.\r\n```suggestion\r\nthat `N <= max_batch_size`. If the batch size check fails, then the Aggregator\r\n```",
+              "createdAt": "2022-08-17T18:25:25Z",
+              "updatedAt": "2022-08-17T18:38:35Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "(Just to check that I understand:) A batch `batch1` is \"valid\" if:\r\n1. (Total ordering) `batch1.start.time < batch1.end.time` or `batch1.start.time == batch1.end.time` and `batch1.start.nonce < batch1.end.nonce`\r\n2. (Non-overlapping) There is no prior batch `batch0` that intersects with `batch1`, i.e., there is at least one nonce contained in both batches\r\n3. (Boundary aligned) `batch1.start.time` and `batch1.start.end` are both equal to `0 (mod time_precision)`\r\n\r\nAnything I'm missing?",
+              "createdAt": "2022-08-17T18:38:01Z",
+              "updatedAt": "2022-08-17T18:38:35Z"
+            }
+          ]
         }
       ]
     }
