@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 4 February 2023                                      Cloudflare
+Expires: 20 February 2023                                     Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                           3 August 2022
+                                                          19 August 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 4 February 2023.
+   This Internet-Draft will expire on 20 February 2023.
 
 Copyright Notice
 
@@ -88,21 +88,24 @@ Table of Contents
      3.1.  Errors
      3.2.  HTTPS Sender Authentication
    4.  Protocol Definition
-     4.1.  Task Configuration
-     4.2.  Uploading Reports
-       4.2.1.  HPKE Configuration Request
-       4.2.2.  Upload Request
-       4.2.3.  Upload Extensions
-     4.3.  Verifying and Aggregating Reports
-       4.3.1.  Aggregate Initialization
-       4.3.2.  Aggregate Continuation
-     4.4.  Collecting Results
-       4.4.1.  Collection Initialization
-       4.4.2.  Collection Aggregation
-       4.4.3.  Collection Finalization
-       4.4.4.  Aggregate Share Encryption
-       4.4.5.  Validating Batch Parameters
-       4.4.6.  Anti-replay
+     4.1.  Queries
+       4.1.1.  Time-interval Queries
+       4.1.2.  Fixed-size Queries
+     4.2.  Task Configuration
+     4.3.  Uploading Reports
+       4.3.1.  HPKE Configuration Request
+       4.3.2.  Upload Request
+       4.3.3.  Upload Extensions
+     4.4.  Verifying and Aggregating Reports
+       4.4.1.  Aggregate Initialization
+       4.4.2.  Aggregate Continuation
+     4.5.  Collecting Results
+       4.5.1.  Collection Initialization
+       4.5.2.  Collection Aggregation
+       4.5.3.  Collection Finalization
+       4.5.4.  Aggregate Share Encryption
+       4.5.5.  Batch Validation
+       4.5.6.  Anti-replay
    5.  Operational Considerations
      5.1.  Protocol participant capabilities
        5.1.1.  Client capabilities
@@ -428,50 +431,50 @@ Table of Contents
    following standard tokens for use in the "type" field (within the DAP
    URN namespace "urn:ietf:params:ppm:dap:error:"):
 
-     +============================+==================================+
-     | Type                       | Description                      |
-     +============================+==================================+
-     | unrecognizedMessage        | The message type for a response  |
-     |                            | was incorrect or the payload was |
-     |                            | malformed.                       |
-     +----------------------------+----------------------------------+
-     | unrecognizedTask           | An endpoint received a message   |
-     |                            | with an unknown task ID.         |
-     +----------------------------+----------------------------------+
-     | unrecognizedAggregationJob | An endpoint received a message   |
-     |                            | with an unknown aggregation job  |
-     |                            | ID.                              |
-     +----------------------------+----------------------------------+
-     | outdatedConfig             | The message was generated using  |
-     |                            | an outdated configuration.       |
-     +----------------------------+----------------------------------+
-     | reportTooLate              | Report could not be processed    |
-     |                            | because it arrived too late.     |
-     +----------------------------+----------------------------------+
-     | reportTooEarly             | Report could not be processed    |
-     |                            | because its timestamp is too far |
-     |                            | in the future.                   |
-     +----------------------------+----------------------------------+
-     | batchInvalid               | A collect or aggregate-share     |
-     |                            | request was made with invalid    |
-     |                            | batch parameters.                |
-     +----------------------------+----------------------------------+
-     | insufficientBatchSize      | There are not enough reports in  |
-     |                            | the batch interval to satisfy    |
-     |                            | the task's minimum batch size.   |
-     +----------------------------+----------------------------------+
-     | batchLifetimeExceeded      | The batch lifetime has been      |
-     |                            | exceeded for one or more reports |
-     |                            | included in the batch interval.  |
-     +----------------------------+----------------------------------+
-     | batchMismatch              | Aggregators disagree on the      |
-     |                            | report shares that were          |
-     |                            | aggregated in a batch.           |
-     +----------------------------+----------------------------------+
-     | unauthorizedRequest        | Authentication of an HTTP        |
-     |                            | request failed (see              |
-     |                            | Section 3.2).                    |
-     +----------------------------+----------------------------------+
+      +============================+================================+
+      | Type                       | Description                    |
+      +============================+================================+
+      | unrecognizedMessage        | The message type for a         |
+      |                            | response was incorrect or the  |
+      |                            | payload was malformed.         |
+      +----------------------------+--------------------------------+
+      | unrecognizedTask           | An endpoint received a message |
+      |                            | with an unknown task ID.       |
+      +----------------------------+--------------------------------+
+      | unrecognizedAggregationJob | An endpoint received a message |
+      |                            | with an unknown aggregation    |
+      |                            | job ID.                        |
+      +----------------------------+--------------------------------+
+      | outdatedConfig             | The message was generated      |
+      |                            | using an outdated              |
+      |                            | configuration.                 |
+      +----------------------------+--------------------------------+
+      | reportTooLate              | Report could not be processed  |
+      |                            | because it arrived too late.   |
+      +----------------------------+--------------------------------+
+      | reportTooEarly             | Report could not be processed  |
+      |                            | because its timestamp is too   |
+      |                            | far in the future.             |
+      +----------------------------+--------------------------------+
+      | batchInvalid               | A collect or aggregate-share   |
+      |                            | request was made with invalid  |
+      |                            | batch parameters.              |
+      +----------------------------+--------------------------------+
+      | invalidBatchSize           | There are an invalid number of |
+      |                            | reports in the batch.          |
+      +----------------------------+--------------------------------+
+      | batchLifetimeExceeded      | The batch lifetime has been    |
+      |                            | exceeded for one or more       |
+      |                            | reports included in the batch. |
+      +----------------------------+--------------------------------+
+      | batchMismatch              | Aggregators disagree on the    |
+      |                            | report shares that were        |
+      |                            | aggregated in a batch.         |
+      +----------------------------+--------------------------------+
+      | unauthorizedRequest        | Authentication of an HTTP      |
+      |                            | request failed (see            |
+      |                            | Section 3.2).                  |
+      +----------------------------+--------------------------------+
 
                                   Table 1
 
@@ -482,7 +485,7 @@ Table of Contents
    errors.  The "instance" value MUST be the endpoint to which the
    request was targeted.  The problem document MUST also include a
    "taskid" member which contains the associated DAP task ID (this value
-   is always known, see Section 4.1), encoded in Base 64 using the URL
+   is always known, see Section 4.2), encoded in Base 64 using the URL
    and filename safe alphabet with no padding defined in sections 5 and
    3.2 of [RFC4648].
 
@@ -509,7 +512,7 @@ Table of Contents
    Auth-Token" header in its HTTP request containing the API token.
 
    To authenticate the request, the receiver looks up the token for the
-   sender as determined by the task configuration.  (See Section 4.1.)
+   sender as determined by the task configuration.  (See Section 4.2.)
    If the value of the "DAP-Auth-Token" header does not match the token,
    then the receiver MUST abort with error "unauthorizedRequest" and
    HTTP status code 403 Forbidden.
@@ -525,12 +528,12 @@ Table of Contents
    DAP has three major interactions which need to be defined:
 
    *  Uploading reports from the client to the aggregators, specified in
-      Section 4.2
-
-   *  Computing the results of a given measurement, specified in
       Section 4.3
 
-   *  Collecting aggregated results, specified in Section 4.4
+   *  Computing the results of a given measurement, specified in
+      Section 4.4
+
+   *  Collecting aggregated results, specified in Section 4.5
 
    We start with some basic type definitions used in other messages.
 
@@ -548,12 +551,8 @@ struct {
   Duration duration;
 } Interval;
 
-/* A nonce used to uniquely identify a report in the context of a DAP task. It
-includes the timestamp of the current batch and a random 16-byte value. */
-struct {
-  Time time;
-  uint8 rand[16];
-} Nonce;
+/* A nonce used to uniquely identify a report in the context of a DAP task. */
+Nonce uint8[16];
 
 /* The various roles in the DAP protocol. */
 enum {
@@ -573,7 +572,129 @@ struct {
   opaque payload<1..2^32-1>; // ciphertext
 } HpkeCiphertext;
 
-4.1.  Task Configuration
+4.1.  Queries
+
+   Aggregated results are computed based on sets of report, called
+   batches.  The Collector influences which reports are used in a batch
+   via a "query."  The Aggregators use this query to carry out the
+   aggregation flow and produce aggregate shares encrypted to the
+   Collector.
+
+   This document defines the following query types:
+
+   enum {
+      reserved(0), // Reserved for testing purposes
+      time-interval(1),
+      fixed-size(2),
+      (65535)
+   } QueryType;
+
+   The time-interval query type is described in Section 4.1.1; the
+   fixed-size query type is described in Section 4.1.2.  Future
+   specifications can introduce new query types as needed.  A query
+   includes parameters used by the Aggregators to select a batch of
+   reports specific to the given query type.  A query is defined as
+   follows:
+
+   enum {
+       next-batch(0),
+       by-batch-id(1),
+   } FixedSizeQueryType;
+
+   opaque BatchId[32];
+
+   struct {
+       FixedSizeQueryType fixed_size_query_type;
+       select (fixed_size_query_type) {
+           next-batch:  Empty;
+           by-batch-id: BatchId batch_id;
+       }
+   } FixedSizeQuery;
+
+   struct {
+       select (query_type) { // determined by query configuration
+           case time-interval: Interval batch_interval;
+           case fixed-size: FixedSizeQuery fixed_size_query;
+       }
+   } Query;
+
+   The parameters pertaining to each query type are described in one of
+   the subsections below.  The query is issued in-band as part of the
+   collect sub-protocol (Section 4.5).  Its content is determined by the
+   "query type", which in turn is encoded by the "query configuration"
+   configured out-of-band.  All query types have the following
+   configuration parameters in common:
+
+   *  min_batch_size - The smallest number of reports the batch is
+      allowed to include.  In a sense, this parameter controls the
+      degree of privacy that will be obtained: The larger the minimum
+      batch size, the higher degree of privacy.  However, this
+      ultimately depends on the application and the nature of the
+      reports and aggregation function.
+
+   *  time_precision - Clients use this value to truncate their report
+      timestamps; see Section 4.3.  Additional semantics may apply,
+      depending on the query type.  (See Section 4.5.5 for details.)
+
+   The parameters pertaining to specific query types are described in
+   the relevant subsection below.
+
+4.1.1.  Time-interval Queries
+
+   The first query type, time-interval, is designed to support
+   applications in which reports are collected over a long period of
+   time.  The Collector specifies a "batch interval" that determines the
+   time range for reports included in the batch: For each report in the
+   batch, the time at which that report was generated (see Section 4.3)
+   must fall within the batch interval specified by the Collector.
+
+   Typically the Collector issues queries for which the batch intervals
+   are continuous, monotonically increasing, and have the same duration.
+   For example, the sequence of batch intervals.  For example, the
+   sequence of batch intervals (1659544000, 1000), (1659545000, 1000),
+   (1659545000, 1000), (1659546000, 1000) satisfies these conditions.
+   (The first element of the pair denotes the start of the batch
+   interval and the second denotes the duration.)  Of course, there are
+   cases in which Collector may need to issue queries out-of-order.  For
+   example, a previous batch might need to be queried again with a
+   different aggregation parameter (e.g, for Poplar1).  In addition, the
+   Collector may need to vary the duration to adjust to changing report
+   upload rates.
+
+4.1.2.  Fixed-size Queries
+
+   The fixed-size query type is used to support applications in which
+   the Collector needs the ability to strictly control the sample size.
+   This is particularly important for controlling the amount of noise
+   added to reports by Clients (or added to aggregate shares by
+   Aggregators) in order to achieve differential privacy.
+
+   To get the aggregate of the next batch, the Collector issues a query
+   of type next-batch.  (See FixedSizeQuery in Section 4.1.)  The
+   response to this query (see Section 4.5) includes a "batch ID", which
+   can be used to query the same batch later on.  This is done using the
+   by-batch-id batch-query type.
+
+   For this query type, the Aggregators group reports into arbitrary
+   batches such that each batch has roughly the same number of reports.
+   In addition to the minumum batch size common to all query types, the
+   conifugration includes a "maximum batch size", max_batch_size, that
+   determines maximum number of reports per batch.
+
+   Implementation note: The goal for the Aggregators is to aggregate
+   precisely min_batch_size reports per batch.  Doing so, however, may
+   be challenging for Leader deployments in which multiple, independent
+   nodes running the aggregate sub-protocol (see Section 4.4) need to be
+   coordinated.  The maximum batch size is intended to allow room for
+   error.  Typically the difference between the minimum and maximum
+   batch size will be a small fraction of the target batch size for each
+   batch.
+
+   [OPEN ISSUE: It may be feasible to require a fixed batch size, i.e.,
+   min_batch_size == max_batch_size.  We should know better once we've
+   had some implementation/deployment experience.]
+
+4.2.  Task Configuration
 
    Prior to the start of execution of the protocol, each participant
    must agree on the configuration for each task.  A task is uniquely
@@ -590,19 +711,15 @@ struct {
       aggregator's API endpoints can be found.  Each endpoint's list
       MUST be in the same order.  The leader's endpoint MUST be the
       first in the list.  The order of the encrypted_input_shares in a
-      Report (see Section 4.2) MUST be the same as the order in which
+      Report (see Section 4.3) MUST be the same as the order in which
       aggregators appear in this list.
 
+   *  The query configuration for this task (see Section 4.1).  This
+      determines the query type for batch selection and the properties
+      that all batches for this task must have.
+
    *  max_batch_lifetime: The maximum number of times a batch of reports
-      may be used in collect requests.
-
-   *  min_batch_size: The minimum number of reports that appear in a
-      batch.
-
-   *  min_batch_duration: The minimum time difference between the oldest
-      and newest report in a batch.  This defines the boundaries with
-      which the batch interval of each collect request must be aligned.
-      (See Section 4.4.5.)
+      may be queried by the Collector.
 
    *  A unique identifier for the VDAF instance used for the task,
       including the type of measurement associated with the task.
@@ -612,12 +729,12 @@ struct {
    parameters:
 
    *  collector_config: The [HPKE] configuration of the collector
-      (described in Section 4.2.1); see Section 6 for information about
+      (described in Section 4.3.1); see Section 6 for information about
       the HPKE configuration algorithms.
 
    *  vdaf_verify_key: The VDAF verification key shared by the
       aggregators.  This key is used in the aggregation sub-protocol
-      (Section 4.3).  [OPEN ISSUE: The manner in which this key is
+      (Section 4.4).  [OPEN ISSUE: The manner in which this key is
       distributed may be relevant to the VDAF's security.  See
       issue#161.]
 
@@ -629,12 +746,12 @@ struct {
    Finally, the collector is configured with the HPKE secret key
    corresponding to collector_hpke_config.
 
-4.2.  Uploading Reports
+4.3.  Uploading Reports
 
    Clients periodically upload reports to the leader, which then
    distributes the individual shares to each helper.
 
-4.2.1.  HPKE Configuration Request
+4.3.1.  HPKE Configuration Request
 
    Before the client can upload its report to the leader, it must know
    the HPKE configuration of each aggregator.  See Section 6 for
@@ -700,59 +817,61 @@ struct {
    old keys for at least twice the cache lifetime in order to avoid
    rejecting reports.
 
-4.2.2.  Upload Request
+4.3.2.  Upload Request
 
    Clients upload reports by using an HTTP POST to [leader]/upload,
    where [leader] is the first entry in the task's aggregator endpoints.
    The payload is structured as follows:
 
    struct {
+       Time time;
+       Nonce nonce;
+       Extension extensions<0..2^16-1>;
+   } ReportMetadata;
+
+   struct {
      TaskID task_id;
-     Nonce nonce;
-     Extension extensions<0..2^16-1>;
+     ReportMetadata metadata;
      HpkeCiphertext encrypted_input_shares<1..2^32-1>;
    } Report;
 
-   This message is called the client's report.  It contains the
-   following fields:
+   This message is called the Client's report.  It consists of a
+   "header" and the encrypted input share of each of the Aggregators.
+   The header consists of the task ID and report "metadata".  The
+   metadata consists of the following fields:
 
-   *  task_id is the task ID of the task for which the report is
-      intended.
+   *  A timestamp representing the time at which the report was
+      generated.  Specifically, the time field is set to the number of
+      seconds elapsed since the start of the UNIX epoch.  The client
+      SHOULD round this value down to the nearest multiple of
+      time_precision in order to ensure that that the timestamp cannot
+      be used to link a report back to the Client that generated it.
 
-   *  nonce is the report nonce generated by the client.  This field is
-      used by the aggregators to ensure the report appears in at most
-      one batch.  (See Section 4.4.6.)
+   *  A nonce used by the Aggregators to ensure the report appears in at
+      most one batch.  (See Section 4.5.6.)  The Client MUST generate
+      this by generating 16 random bytes using a cryptographically
+      secure random number gnerator.
 
-   *  extensions is a list of extensions to be included in the Upload
-      flow; see Section 4.2.3.
+   *  A list of extensions to be included with the report.  (See
+      Section 4.3.3.)
 
-   *  encrypted_input_shares contains the encrypted input shares of each
-      of the aggregators.  The order in which the encrypted input shares
-      appear MUST match the order of the task's aggregator_endpoints
-      (i.e., the first share should be the leader's, the second share
-      should be for the first helper, and so on).
+   To generate a report, the Client first shards its measurement into
+   input shares as specified by the VDAF.  It then encrypts each input
+   share as follows:
 
-   To generate the report, the client begins by initializing the report
-   nonce.  Specifically, the client first sets Nonce.rand to 16 random
-   bytes output from a cryptographically secure random number generator.
-   It then sets Nonce.time to the number of seconds elapsed since the
-   start of the UNIX epoch, rounded down to the nearest multiple of
-   min_batch_duration.  This truncation is done to ensure that the
-   report's timestamp cannot be used to link the report back to the
-   originating client.
-
-   The client then finishes the report generation by sharding its
-   measurement into a sequence of input shares as specified by the VDAF
-   in use.  To encrypt an input share, the client generates an [HPKE]
-   ciphertext for the aggregator by running
-
-enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
-    task_id || nonce || extensions, input_share)
+   enc, payload = SealBase(pk,
+       "dap-01 input share" || 0x01 || server_role,
+       task_id || metadata, input_share)
 
    where pk is the aggregator's public key; server_role is the Role of
-   the intended recipient (0x02 for the leader and 0x03 for the helper);
-   task_id, nonce, and extensions are the corresponding fields of
-   Report; and input_share is the aggregator's input share.
+   the intended recipient (0x02 for the leader and 0x03 for the helper),
+   task_id is the task ID, metadata is the report metadata, and
+   input_share is the Aggregator's input share.
+
+   The order of the encrypted input shares appear MUST match the order
+   of the task's aggregator_endpoints.  That is, the first share should
+   be the leader's, the second share should be for the first helper, and
+   so on.
 
    The leader responds to well-formed requests to [leader]/upload with
    HTTP status code 200 OK and an empty body.  Malformed requests are
@@ -768,12 +887,11 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
    Report.  If this retried report does not succeed, clients MUST abort
    and discontinue retrying.
 
-   The leader MUST ignore any report whose nonce contains a timestamp
-   that falls in a batch interval for which it has received at least one
-   collect request from the collector.  (See Section 4.4.)  Otherwise,
-   comparing the aggregate result to the previous aggregate result may
-   result in a privacy violation.  (Note that the helpers enforce this
-   as well; see Section 4.4.)  In addition, the leader SHOULD abort the
+   The Leader MUST ignore any report pertaining to a batch that has
+   already been collected.  (See Section 4.4.1.4 for details.)
+   Otherwise, comparing the aggregate result to the previous aggregate
+   result may result in a privacy violation.  (Note that the Helpers
+   enforce this as well.)  In addition, the leader SHOULD abort the
    upload protocol and alert the client with error "reportTooLate".
 
    Leaders can buffer reports while waiting to aggregate them.  The
@@ -783,7 +901,7 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
    rejects a report for this reason, it SHOULD abort the upload protocol
    and alert the client with error "reportTooEarly".
 
-4.2.3.  Upload Extensions
+4.3.3.  Upload Extensions
 
    Each Report carries a list of extensions that clients may use to
    convey additional, authenticated information in the report.  [OPEN
@@ -806,7 +924,7 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
    "extension_type" indicates the type of extension, and
    "extension_data" contains information specific to the extension.
 
-4.3.  Verifying and Aggregating Reports
+4.4.  Verifying and Aggregating Reports
 
    Once a set of clients have uploaded their reports to the leader, the
    leader can send them to the helpers to be verified and aggregated.
@@ -880,7 +998,7 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
    *  Completion: Finish the aggregate flow, yielding an output share
       corresponding for each input report share in the batch.
 
-4.3.1.  Aggregate Initialization
+4.4.1.  Aggregate Initialization
 
    The leader begins an aggregation job by choosing a set of candidate
    reports that pertain to the same DAP task and a unique job ID.  The
@@ -908,11 +1026,12 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
      hpke-unknown-config-id(3),
      hpke-decrypt-error(4),
      vdaf-prep-error(5),
+     batch-saturated(6),
    } ReportShareError;
 
    The leader and helper initialization behavior is detailed below.
 
-4.3.1.1.  Leader Initialization
+4.4.1.1.  Leader Initialization
 
    The leader begins the aggregate initialization phase with the set of
    candidate report shares as follows:
@@ -923,12 +1042,12 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
        secure pseudorandom number generator.
 
    2.  Decrypt the input share for each report share as described in
-       Section 4.3.1.3.
+       Section 4.4.1.3.
 
    3.  Check that the resulting input share is valid as described in
-       Section 4.3.1.4.
+       Section 4.4.1.4.
 
-   4.  Initialize VDAF preparation as described in Section 4.3.1.5.
+   4.  Initialize VDAF preparation as described in Section 4.4.1.5.
 
    If any step yields an invalid report share, the leader removes the
    report share from the set of candidate reports.  Once the leader has
@@ -938,8 +1057,7 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
    AggregateInitializeReq message is structured as follows:
 
    struct {
-     Nonce nonce;
-     Extension extensions<0..2^16-1>;
+     ReportMetadata metadata;
      HpkeCiphertext encrypted_input_share;
    } ReportShare;
 
@@ -947,25 +1065,51 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
      TaskID task_id;
      AggregationJobID job_id;
      opaque agg_param<0..2^16-1>;
+     select (query_type) { // determined by task configuration
+       time-interval: Empty;
+       fixed-size: BatchId batch_id;
+     }
      ReportShare report_shares<1..2^32-1>;
    } AggregateInitializeReq;
 
-   [[OPEN ISSUE: consider sending report shares separately (in parallel)
-   to the aggregate instructions.  RIght now, aggregation parameters and
+   [[OPEN ISSUE: Consider sending report shares separately (in parallel)
+   to the aggregate instructions.  Right now, aggregation parameters and
    the corresponding report shares are sent at the same time, but this
-   may not be strictly necessary. ]]
+   may not be strictly necessary.]]
 
-   The nonce and extensions fields of each ReportShare match that in the
-   Report uploaded by the client.  The encrypted_input_share field is
-   the HpkeCiphertext whose index in Report.encrypted_input_shares is
-   equal to the index of the aggregator in the task's
-   aggregator_endpoints to which the AggregateInitializeReq is being
-   sent.  The agg_param field is an opaque, VDAF-specific aggregation
-   parameter provided during a collection flow.  The job_id parameter
-   contains the leader's chosen AggregationJobID.
+   This message consists of:
 
-   [[OPEN ISSUE: Check that this handling of agg_param is appropriate
-   when the definition of Poplar is done.]]
+   *  The ID of the task for which the reports will be aggregated.
+
+   *  The aggregation job ID.
+
+   *  The opaque, VDAF-specific aggregation parameter provided during
+      the collection flow (agg_param),
+
+      [[OPEN ISSUE: Check that this handling of agg_param is appropriate
+      when the definition of Poplar is done.]]
+
+   *  Information used by the Aggregators to determine how to aggregate
+      each report:
+
+      -  For fixed-size tasks, the Leader specifies a "batch ID" that
+         determines the batch to which each report for this aggregation
+         job belongs.
+
+         [OPEN ISSUE: For fixed-size tasks, the Leader is in complete
+         control over which batch a report is included in.  For time-
+         interval tasks, the Client has some control, since the
+         timestamp determines which batch window it falls in.  Is this
+         desirable from a privacy perspective?  If not, it might be
+         simpler to drop the timestamp altogether and have the agg init
+         request specify the batch window instead.]
+
+   *  The sequence of report shares to aggregate.  The
+      encrypted_input_share field of the report share is the
+      HpkeCiphertext whose index in Report.encrypted_input_shares is
+      equal to the index of the aggregator in the task's
+      aggregator_endpoints to which the AggregateInitializeReq is being
+      sent.
 
    Let [aggregator] denote the helper's API endpoint.  The leader sends
    a POST request to [aggregator]/aggregate with its
@@ -973,7 +1117,7 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
    "message/dap-aggregate-initialize-req".  In addition, this request
    MUST be authenticated as described in Section 3.2.
 
-4.3.1.2.  Helper Initialization
+4.4.1.2.  Helper Initialization
 
    Each helper begins their portion of the aggregate initialization
    phase with the set of candidate report shares obtained in an
@@ -990,13 +1134,13 @@ enc, payload = SealBase(pk, "dap-01 input share" || 0x01 || server_role,
    AggregateInitializeReq.report_shares as follows:
 
    1.  Decrypt the input share for each report share as described in
-       Section 4.3.1.3.
+       Section 4.4.1.3.
 
    2.  Check that the resulting input share is valid as described in
-       Section 4.3.1.4.
+       Section 4.4.1.4.
 
    3.  Initialize VDAF preparation and initial outputs as described in
-       Section 4.3.1.5.
+       Section 4.4.1.5.
 
    [[OPEN ISSUE: consider moving the helper nonce check into #input-
    share-batch-validation]]
@@ -1048,11 +1192,11 @@ struct {
    [[OPEN ISSUE: the leader behavior here is sort of bizarre -- to whom
    does it abort?]]
 
-4.3.1.3.  Input Share Decryption
+4.4.1.3.  Input Share Decryption
 
-   Each report share has a corresponding task ID, nonce, list of
-   extensions, and encrypted input share.  Let task_id, nonce,
-   extensions, and encrypted_input_share denote these values,
+   Each report share has a corresponding task ID, report metadata
+   (timestamp, nonce, and extensions), and encrypted input share.  Let
+   task_id, metadata, and encrypted_input_share denote these values,
    respectively.  Given these values, an aggregator decrypts the input
    share as follows.  First, the aggregator looks up the HPKE config and
    corresponding secret key indicated by
@@ -1060,9 +1204,9 @@ struct {
    report share as invalid with the error hpke-unknown-config-id.
    Otherwise, it decrypts the payload with the following procedure:
 
-input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
-    0x01 || server_role, task_id || nonce || extensions,
-    encrypted_input_share.payload)
+   input_share = OpenBase(encrypted_input_share.enc, sk,
+       "dap-01 input share" || 0x01 || server_role,
+       task_id || metadata, encrypted_input_share.payload)
 
    where sk is the HPKE secret key, and server_role is the role of the
    aggregator (0x02 for the leader and 0x03 for the helper).  If
@@ -1070,7 +1214,7 @@ input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
    with the error hpke-decrypt-error.  Otherwise, it outputs the
    resulting input_share.
 
-4.3.1.4.  Input Share Validation
+4.4.1.4.  Input Share Validation
 
    Validating an input share will either succeed or fail.  In the case
    of failure, the input share is marked as invalid with a corresponding
@@ -1080,21 +1224,31 @@ input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
 
    1.  Check if the report has never been aggregated but is contained by
        a batch that has been collected.  If this check fails, the input
-       share is marked as invalid with the error batch-collected.  This
-       prevents additional reports from being aggregated after its batch
-       has already been collected.
+       share MUST be marked as invalid with the error batch-collected.
+       This prevents additional reports from being aggregated after its
+       batch has already been collected.
 
    2.  Check if the report has already been aggregated with this
-       aggregation parameter.  If this check fails, the input share is
-       marked as invalid with the error report-replayed.  This is the
+       aggregation parameter.  If this check fails, the input share MUST
+       be marked as invalid with the error report-replayed.  This is the
        case if the report was used in a previous aggregate request and
        is therefore a replay.  An aggregator may also choose to mark an
        input share as invalid with the error report-dropped under the
-       conditions prescribed in Section 4.4.6.
+       conditions prescribed in Section 4.5.6.
 
-   If both checks succeed, the input share is not marked as invalid.
+   3.  Depending on the query type for the task, additional checks may
+       be applicable:
 
-4.3.1.5.  Input Share Preparation
+       *  For fixed-size tasks, the Aggregators need to ensure that each
+          batch is roughly the same size.  If the number of reports
+          aggregated for the current batch exceeds the maximum batch
+          size (per the task configuration), the Aggregator MAY mark the
+          input share as invalid with the error "batch-saturated".  Note
+          that this behavior is not strictly enforced here but during
+          the collect sub-protocol.  (See Section 4.5.5.)  If both
+          checks succeed, the input share is not marked as invalid.
+
+4.4.1.5.  Input Share Preparation
 
    Input share preparation consists of running the preparation-state
    initialization algorithm for the VDAF associated with the task and
@@ -1105,7 +1259,7 @@ input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
        invalid.
 
    2.  An output share, in which case the aggregator stores the output
-       share for future collection as described in Section 4.4.
+       share for future collection as described in Section 4.5.
 
    3.  An initial VDAF state and preparation message, denoted
        (prep_state, prep_msg).
@@ -1131,7 +1285,7 @@ input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
    aggregator's output share.  Otherwise, out is the pair (prep_state,
    prep_msg).
 
-4.3.2.  Aggregate Continuation
+4.4.2.  Aggregate Continuation
 
    In the continuation phase, the leader drives the VDAF preparation of
    each share in the candidate report set until the underlying VDAF
@@ -1140,7 +1294,7 @@ input_share = OpenBase(encrypted_input_share.enc, sk, "dap-01 input share" ||
    interaction depending on the underlying VDAF.  Each round trip is
    initiated by the leader.
 
-4.3.2.1.  Leader Continuation
+4.4.2.1.  Leader Continuation
 
    The leader begins each round of continuation for a report share based
    on its locally computed prepare message and the previous PrepareStep
@@ -1163,7 +1317,7 @@ out = VDAF.prep_next(prep_state, inbound)
    as invalid.  Otherwise it interprets out as follows.  If this is the
    last round of the VDAF, then out is the aggregator's output share, in
    which case the aggregator finishes and stores its output share for
-   further processing as described in Section 4.4.  Otherwise, out is
+   further processing as described in Section 4.5.  Otherwise, out is
    the pair (new_state, prep_msg), where new_state is its updated state
    and prep_msg is its next VDAF message (which will be leader_outbound
    in the next round of continuation).  For the latter case, the helper
@@ -1185,7 +1339,7 @@ out = VDAF.prep_next(prep_state, inbound)
    "message/dap-aggregate-continue-req".  In addition, this request MUST
    be authenticated as described in Section 3.2.
 
-4.3.2.2.  Helper Continuation
+4.4.2.2.  Helper Continuation
 
    The helper continues with preparation for a report share by combining
    the leader's input message in AggregateContinueReq and its current
@@ -1196,7 +1350,7 @@ out = VDAF.prep_next(prep_state, inbound)
        invalid.
 
    2.  An output share, in which case the helper stores the output share
-       for future collection as described in Section 4.4.
+       for future collection as described in Section 4.5.
 
    3.  An updated VDAF state and preparation message, denoted
        (prep_state, prep_msg).
@@ -1211,7 +1365,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    *  If finished, then mark the report as finished and reply with a
       finished PrepareStep to the leader.  The helper then stores the
-      output share and awaits for collection; see Section 4.4.
+      output share and awaits for collection; see Section 4.5.
 
    Otherwise, preparation continues.  In this case, the helper computes
    its updated state and output message as follows:
@@ -1246,26 +1400,27 @@ out = VDAF.prep_next(prep_state, inbound)
    [[OPEN ISSUE: consider relaxing this ordering constraint.  See
    issue#217.]]
 
-4.4.  Collecting Results
+4.5.  Collecting Results
 
-   In this phase, the collector requests aggregate shares from each
-   aggregator and then locally combines them to yield a single,
-   aggregate output.  In particular, the collector asks the leader to
-   collect and return the results for a given DAP task over a given time
-   period.  The aggregate shares are encrypted to the collector so that
-   it can decrypt and combine them to yield the aggregate output.  This
-   entire process is composed of two interactions:
+   In this phase, the Collector requests aggregate shares from each
+   aggregator and then locally combines them to yield a single aggregate
+   result.  In particular, the Collector issues a query to the Leader
+   (Section 4.1), which the Aggregators use to select a batch of reports
+   to aggregate.  Each emits an aggregate share encrypted to the
+   Collector so that it can decrypt and combine them to yield the
+   aggregate result.  This entire process is composed of two
+   interactions:
 
    1.  Collect request and response between the collector and leader,
-       specified in Section 4.4.1
+       specified in Section 4.5.1
 
    2.  Aggregate share request and response between the leader and each
-       aggregator, specified in Section 4.4.2
+       aggregator, specified in Section 4.5.2
 
    Once complete, the collector computes the final aggregate result as
-   specified in Section 4.4.3.
+   specified in Section 4.5.3.
 
-4.4.1.  Collection Initialization
+4.5.1.  Collection Initialization
 
    To initiate collection, the collector issues a POST request to
    [leader]/collect, where [leader] is the leader's endpoint URL.  The
@@ -1278,7 +1433,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    struct {
      TaskID task_id;
-     Interval batch_interval;
+     Query query;
      opaque agg_param<0..2^16-1>; // VDAF aggregation parameter
    } CollectReq;
 
@@ -1286,30 +1441,30 @@ out = VDAF.prep_next(prep_state, inbound)
 
    *  task_id, the DAP task ID.
 
-   *  batch_interval, the request's batch interval.
+   *  query, the Collector's query.
 
    *  agg_param, an aggregation parameter for the VDAF being executed.
       This is the same value as in AggregateInitializeReq (see
-      Section 4.3.1.1).
+      Section 4.4.1.1).
 
    Depending on the VDAF scheme and how the leader is configured, the
-   leader and helper may already have prepared all the reports falling
-   within batch_interval and be ready to return the aggregate shares
-   right away, but this cannot be guaranteed.  In fact, for some VDAFs,
-   it is not be possible to begin preparing inputs until the collector
-   provides the aggregation parameter in the CollectReq.  For these
-   reasons, collect requests are handled asynchronously.
+   leader and helper may already have prepared a sufficient number of
+   reports satisfying the query and be ready to return the aggregate
+   shares right away, but this cannot be guaranteed.  In fact, for some
+   VDAFs, it is not be possible to begin preparing inputs until the
+   collector provides the aggregation parameter in the CollectReq.  For
+   these reasons, collect requests are handled asynchronously.
 
    Upon receipt of a CollectReq, the leader begins by checking that the
    request meets the requirements of the batch parameters using the
-   procedure in Section 4.4.5.  If so, it immediately sends the
+   procedure in Section 4.5.5.  If so, it immediately sends the
    collector a response with HTTP status 303 See Other and a Location
    header containing a URI identifying the collect job that can be
    polled by the collector, called the "collect job URI".
 
    The leader then begins working with the helper to prepare the shares
-   falling into CollectReq.batch_interval (or continues this process,
-   depending on the VDAF) as described in Section 4.3.
+   satisfying the query (or continues this process, depending on the
+   VDAF) as described in Section 4.4.
 
    After receiving the response to its CollectReq, the collector makes
    an HTTP GET request to the collect job URI to check on the status of
@@ -1320,21 +1475,31 @@ out = VDAF.prep_next(prep_state, inbound)
 
    If the leader has not yet obtained an aggregator share from each
    aggregator, the leader invokes the aggregate share request flow
-   described in Section 4.4.2.  Otherwise, when all aggregator shares
+   described in Section 4.5.2.  Otherwise, when all aggregator shares
    are successfully obtained, the leader responds to subsequent HTTP GET
    requests to the collect job's URI with HTTP status code 200 OK and a
    body consisting of a CollectResp:
 
    struct {
+     select (query_type) { // determined by task configuration
+       time-interval: Empty;
+       fixed-size: BatchId batch_id;
+     }
      uint64 report_count;
      HpkeCiphertext encrypted_agg_shares<1..2^32-1>;
    } CollectResp;
 
-   *  report_count is the number of reports included in the aggregation.
+   This structure includes the following:
 
-   *  encrypted_agg_shares is the vector of encrypted aggregate shares.
-      They MUST appear in the same order as the aggregator endpoints
-      list of the task parameters.
+   *  information used to bind the aggregate result to the query.  For
+      fixed-size tasks, this includes the batch ID assigned to the batch
+      by the Leader.
+
+   *  The number of reports included in the batch.
+
+   *  The vector of encrypted aggregate shares.  They MUST appear in the
+      same order as the aggregator endpoints list of the task
+      parameters.
 
    If obtaining aggregate shares fails, then the leader responds to
    subsequent HTTP GET requests to the collect job URI with an HTTP
@@ -1352,50 +1517,68 @@ out = VDAF.prep_next(prep_state, inbound)
    (see issue#57).  For example, how does a leader respond to a collect
    request if the helper drops out?]
 
-4.4.2.  Collection Aggregation
+4.5.2.  Collection Aggregation
 
    The leader obtains each helper's encrypted aggregate share in order
    to respond to the collector's collect response.  To do this, the
    leader first computes a checksum over the set of output shares
-   included in the batch window identified by the collect request.  The
-   checksum is computed by taking the SHA256 hash of each nonce from the
-   client reports included in the aggregation, then combining the hash
-   values with a bitwise-XOR operation.
+   included in the batch.  The checksum is computed by taking the SHA256
+   hash of each nonce from the client reports included in the
+   aggregation, then combining the hash values with a bitwise-XOR
+   operation.
 
    Then, for each aggregator endpoint [aggregator] in the parameters
-   associated with CollectReq.task_id (see Section 4.4) except its own,
+   associated with CollectReq.task_id (see Section 4.5) except its own,
    the leader sends a POST request to [aggregator]/aggregate_share with
    the following message:
 
    struct {
+     select (query_type) { // determined by task configuration
+       time-interval: Interval batch_interval;
+       fixed-size: BatchId batch_id;
+     }
+   } BatchSelector;
+
+   struct {
      TaskID task_id;
-     Interval batch_interval;
+     BatchSelector batch_selector;
      opaque agg_param<0..2^16-1>;
      uint64 report_count;
      opaque checksum[32];
    } AggregateShareReq;
 
-   *  task_id is the task ID associated with the DAP parameters.
+   The message contains the following parameters:
 
-   *  batch_interval is the batch interval of the request.
+   *  The task ID.
 
-   *  agg_param, an aggregation parameter for the VDAF being executed.
-      This is the same value as in AggregateInitializeReq (see
-      Section 4.3.1.1) and in CollectReq (see Section 4.4.1).
+   *  The "batch seletor", which encodes parameters used to determine
+      the batch being aggregated.  The value depends on the query type
+      for the task:
 
-   *  report_count is the number of reports included in the aggregation.
+      -  For time-interval tasks, the request specifies the batch
+         interval.
 
-   *  checksum is the checksum computed over the set of client reports.
+      -  For fixed-size tasks, the request specifies the batch ID.
+
+   *  The opaque aggregation parameter for the VDAF beging executed.
+      This value MUST match the same value in the the
+      AggregateInitializeReq message sent in at least one run of the
+      aggregate sub-protocol.  (See Section 4.4.1.1). and in CollectReq
+      (see Section 4.5.1).
+
+   *  The number number of reports included in the batch.
+
+   *  The batch checksum.
 
    This request MUST be authenticated as described in Section 3.2.  To
    handle the leader's request, the helper first ensures that the
    request meets the requirements for batch parameters following the
-   procedure in Section 4.4.5.
+   procedure in Section 4.5.5.
 
-   Next, it computes a checksum based on its view of the output shares
-   included in the batch window, and checks that the report_count and
-   checksum included in the request match its computed values.  If not,
-   then it MUST abort with error "batchMismatch".
+   Next, it computes a checksum based on the reports that satisfy the
+   query, and checks that the report_count and checksum included in the
+   request match its computed values.  If not, then it MUST abort with
+   error "batchMismatch".
 
    Next, it computes the aggregate share agg_share corresponding to the
    set of output shares, denoted out_shares, for the batch interval, as
@@ -1406,11 +1589,11 @@ out = VDAF.prep_next(prep_state, inbound)
    Note that for most VDAFs, it is possible to aggregate output shares
    as they arrive rather than wait until the batch is collected.  To do
    so however, it is necessary to enforce the batch parameters as
-   described in Section 4.4.5 so that the aggregator knows which
+   described in Section 4.5.5 so that the aggregator knows which
    aggregate share to update.
 
    The helper then encrypts agg_share under the collector's HPKE public
-   key as described in Section 4.4.4, yielding encrypted_agg_share.
+   key as described in Section 4.5.4, yielding encrypted_agg_share.
    Encryption prevents the leader from learning the actual result, as it
    only has its own aggregate share and cannot compute the helper's.
 
@@ -1428,25 +1611,25 @@ out = VDAF.prep_next(prep_state, inbound)
    encrypted_agg_share computed above.
 
    After receiving the helper's response, the leader uses the
-   HpkeCiphertext to respond to a collect request (see Section 4.4).
+   HpkeCiphertext to respond to a collect request (see Section 4.5).
 
-   After issuing an aggregate-share request for a given batch interval,
-   it is an error for the leader to issue any more aggregate or
-   aggregate-init requests for additional reports in the batch interval.
-   These reports will be rejected by helpers as described Section 4.3.1.
+   After issuing an aggregate-share request for a given query, it is an
+   error for the leader to issue any more aggregation jobs for
+   additional reports that satisfy the query.  These reports will be
+   rejected by helpers as described Section 4.4.1.
 
    Before completing the collect request, the leader also computes its
    own aggregate share agg_share by aggregating all of the prepared
    output shares that fall within the batch interval.  Finally, it
    encrypts it under the collector's HPKE public key as described in
-   Section 4.4.4.
+   Section 4.5.4.
 
-4.4.3.  Collection Finalization
+4.5.3.  Collection Finalization
 
    Once the collector has received a successful collect response from
    the leader, it can decrypt the aggregate shares and produce an
    aggregate result.  The collector decrypts each aggregate share as
-   described in Section 4.4.4.  If the collector successfully decrypts
+   described in Section 4.5.4.  If the collector successfully decrypts
    all aggregate shares, the collector then unshards the aggregate
    shares into an aggregate result using the VDAF's agg_shares_to_result
    algorithm.  In particular, let agg_shares denote the ordered sequence
@@ -1456,13 +1639,13 @@ out = VDAF.prep_next(prep_state, inbound)
 
    agg_result = VDAF.agg_shares_to_result(agg_param, agg_shares)
 
-4.4.4.  Aggregate Share Encryption
+4.5.4.  Aggregate Share Encryption
 
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
 
 enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
-  AggregateShareReq.task_id || AggregateShareReq.batch_interval, agg_share)
+  AggregateShareReq.task_id || AggregateShareReq.batch_selector, agg_share)
 
    where pk is the HPKE public key encoded by the collector's HPKE key,
    server_role is 0x02 for the leader and 0x03 for a helper.
@@ -1473,55 +1656,104 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    decryption works as follows:
 
   agg_share = OpenBase(enc_share.enc, sk, "dap-01 aggregate share" ||
-      server_role || 0x00, task_id || batch_interval, enc_share.payload)
+      server_role || 0x00, task_id || batch_selector, enc_share.payload)
 
    where sk is the HPKE secret key, task_id is the task ID for the
    collect request, and server_role is the role of the server that sent
    the aggregate share (0x02 for the leader and 0x03 for the helper).
+   The value of batch_selector is computed by the Collector from its
+   query and the response to its query:
 
-4.4.5.  Validating Batch Parameters
+   *  For time-interval tasks, the batch selector is the batch interval
+      specified in the query.
 
-   Before an aggregator responds to a collect request or aggregate-share
-   request, it must first check that the request does not violate the
-   parameters associated with the DAP task.  It does so as described
-   here.
+   *  For fixed-size tasks, the batch selector is the batch ID assigned
+      sent in the response.
 
-   First the aggregator checks that the request's batch interval
-   respects the boundaries defined by the DAP task's parameters.
-   Namely, it checks that both batch_interval.start and
-   batch_interval.duration are divisible by min_batch_duration and that
-   batch_interval.duration >= min_batch_duration.  Unless both these
-   conditions are true, the aggregator MUST abort and alert its peer
+4.5.5.  Batch Validation
+
+   Before an Aggregator responds to a CollectReq or AggregateShareReq,
+   it must first check that the request does not violate the parameters
+   associated with the DAP task.  It does so as described here.
+
+   First the Aggregator checks that the batch respects any "boundaries"
+   determined by the query type.  These are described in the subsections
+   below.  If the boundary check fails, then the Aggregator MUST abort
    with error "batchInvalid".
 
-   Next, the aggregator checks that the request respects the generic
-   privacy parameters of the DAP task.  Let X denote the set of reports
-   for which the aggregator has recovered a valid output share and which
-   fall in the batch interval of the request.
+   Next, the Aggregator checks that batch contains a valid number of
+   reports, as determined by the query type.  If the size check fails,
+   then the Aggregator MUST abort with error "invalidBatchSize".
 
-   *  If len(X) < min_batch_size, then the aggregator MUST abort and
-      alert its peer with "insufficientBatchSize".
+   Next, the Aggregator checks that the batch has not been aggregated
+   too many times.  This is determined by the maximum batch lifetime,
+   max_batch_lifetime.  Unless the query has been issued less than
+   max_batch_lifetime times, the Aggregator MUST abort with error
+   "batchLifetimeExceeded".
 
-   *  The aggregator keeps track of the number of times each report was
-      added to the batch of an AggregateShareReq.  If any report in X
-      was added to at least max_batch_lifetime previous batches, then
-      the aggregator MUST abort and alert the peer with
-      "batchLifetimeExceeded".
-
-   Finally, the aggregator checks that the batch interval defined by the
-   collect request satisfies one of the conditions:
-
-   1.  The batch interval does not overlap with the batch interval of
-       any prior completed collect requests.
-
-   2.  The batch interval, including its start and duration values,
-       match a prior completed collect request.
+   Finally, the Aggregator checks that the batch does not contain a
+   report that was included in any previous batch.  If this batch
+   overlap check fails, then the Aggregator MUST abort with error
+   "batchOverlap".  For time-interval tasks, it is sufficient (but not
+   necessary) to check that the batch interval does not overlap with the
+   batch interval of any previous query.  If this batch interval check
+   fails, then the Aggregator MAY abort with error "batchOverlap".
 
    [[OPEN ISSUE: #195 tracks how we might relax this constraint to allow
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the collector much room for mistakes.]]
 
-4.4.6.  Anti-replay
+4.5.5.1.  Time-interval Queries
+
+4.5.5.1.1.  Boundary Check
+
+   The batch boundaries are determined by the time_precision field of
+   the query configuration.  For the batch_interval included with the
+   query, the Aggregator checks that:
+
+   *  batch_interval.duration >= time_precision (this field determines,
+      effectively, the minimum batch duration)
+
+   *  both batch_interval.start and batch_interval.duration are
+      divisible by time_precision
+
+   These measures ensure that Aggregators can efficiently "pre-
+   aggregate" output shares recovered during the aggregation sub-
+   protocol.
+
+4.5.5.1.2.  Size Check
+
+   The query configuration specifies the minimum batch size,
+   min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
+   where X is the set of reports in the batch.
+
+4.5.5.2.  Fixed-size Queries
+
+4.5.5.2.1.  Boundary Check
+
+   For fixed-size tasks, the batch boundaries are defined by "batch IDs"
+   selected by the Leader.  Thus the Aggregator needs to check that the
+   query is associated with a known batch ID:
+
+   *  If the query contained in the CollectReq has type by-batch-id, the
+      Leader checks that the provided batch ID corresponds to a batch ID
+      it returned in a previous CollectResp for the task.
+
+      [OPEN ISSUE: Consider making batch IDs predictable.  See issue
+      #301.]
+
+   *  The Helper checks that the batch ID provided by the leader in its
+      AggregateShareReq corresponds to a batch ID used in a previous
+      AggregateInitializeReq for the task.
+
+4.5.5.2.2.  Size Check
+
+   The query configuration specifies the minimum batch size,
+   min_batch_size, and maximum batch size, max_batch_size.  The
+   Aggregator checks that len(X) >= min_batch_size and len(X) <=
+   max_batch_size, where X is the set of reports in the batch.
+
+4.5.6.  Anti-replay
 
    Using a client-provided report multiple times within a single batch,
    or using the same report in multiple batches, may allow a server to
@@ -1533,9 +1765,10 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    To detect replay attacks, each aggregator keeps track of the set of
    nonces pertaining to reports that were previously aggregated for a
    given task.  If the leader receives a report from a client whose
-   nonce is in this set, it simply ignores it.  A helper who receives an
-   encrypted input share whose nonce is in this set replies to the
-   leader with an error as described in Section 4.3.1.4.
+   nonce is in this set, it either ignores it or aborts the upload sub-
+   protocol as described in Section 4.3.  A Helper who receives an
+   encrypted input share whose nonce is in this set rejects the report
+   as described in Section 4.4.1.4.
 
    [OPEN ISSUE: This has the potential to require aggreagtors to store
    nonce sests indefinitely.  See issue#180.]
@@ -1544,11 +1777,11 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    nonce generated by the client with a nonce its peer has not yet seen.
    To prevent this, clients incorporate the nonce into the AAD for HPKE
    encryption, ensuring that the output share is only recovered if the
-   aggregator is given the correct nonce.  (See Section 4.2.2.)
+   aggregator is given the correct nonce.  (See Section 4.3.2.)
 
    Aggregators prevent the same report from being used in multiple
    batches (except as required by the protocol) by only responding to
-   valid collect requests, as described in Section 4.4.5.
+   valid collect requests, as described in Section 4.5.5.
 
 5.  Operational Considerations
 
@@ -1596,7 +1829,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
       and intra-batch replay mitigation storage, which includes some way
       of tracking batch report size.  Some of this state may be used for
       replay attack mitigation.  The replay mitigation strategy is
-      described in Section 4.4.6.
+      described in Section 4.5.6.
 
    Beyond the minimal capabilities required of helpers, leaders are
    generally required to:
@@ -1609,7 +1842,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    In addition, for each DAP task, leaders are required to:
 
    *  Implement and store state for the form of inter- and intra-batch
-      replay mitigation in Section 4.4.6; and
+      replay mitigation in Section 4.5.6; and
 
 5.1.3.  Collector capabilities
 
@@ -1683,7 +1916,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    each possible batch interval, along with the number of times the
    aggregate share was used in a batch.  This is due to the requirement
    that the batch interval respect the boundaries defined by the DAP
-   parameters.  (See Section 4.4.5.)
+   parameters.  (See Section 4.5.5.)
 
 6.  Compliance Requirements
 
@@ -1751,7 +1984,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
        have some property that is desirable to the adversary ("stats
        poisoning").  The upload sub-protocol includes an extensions
        mechanism that can be used to prevent --- or at least mitigate
-       --- these types of attacks.  See Section 4.2.3.  [OPEN ISSUE: No
+       --- these types of attacks.  See Section 4.3.3.  [OPEN ISSUE: No
        such extension has been implemented, so we're not yet sure if the
        current mechanism is sufficient.]
 
@@ -2097,31 +2330,31 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    This specification defines the following protocol messages, along
    with their corresponding media types types:
 
-   *  HpkeConfig Section 4.2.1: "application/dap-hpke-config"
+   *  HpkeConfig Section 4.3.1: "application/dap-hpke-config"
 
-   *  Report Section 4.2.2: "application/dap-report"
+   *  Report Section 4.3.2: "application/dap-report"
 
-   *  AggregateInitializeReq Section 4.4: "application/dap-aggregate-
+   *  AggregateInitializeReq Section 4.5: "application/dap-aggregate-
       initialize-req"
 
-   *  AggregateInitializeResp Section 4.4: "application/dap-aggregate-
+   *  AggregateInitializeResp Section 4.5: "application/dap-aggregate-
       initialize-resp"
 
-   *  AggregateContinueReq Section 4.4: "application/dap-aggregate-
+   *  AggregateContinueReq Section 4.5: "application/dap-aggregate-
       continue-req"
 
-   *  AggregateContinueResp Section 4.4: "application/dap-aggregate-
+   *  AggregateContinueResp Section 4.5: "application/dap-aggregate-
       continue-resp"
 
-   *  AggregateShareReq Section 4.4: "application/dap-aggregate-share-
+   *  AggregateShareReq Section 4.5: "application/dap-aggregate-share-
       req"
 
-   *  AggregateShareResp Section 4.4: "application/dap-aggregate-share-
+   *  AggregateShareResp Section 4.5: "application/dap-aggregate-share-
       resp"
 
-   *  CollectReq Section 4.4: "application/dap-collect-req"
+   *  CollectReq Section 4.5: "application/dap-collect-req"
 
-   *  CollectResp Section 4.4: "application/dap-collect-resp"
+   *  CollectResp Section 4.5: "application/dap-collect-resp"
 
    The definition for each media type is in the following subsections.
 
@@ -2147,7 +2380,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.1
+   Security considerations:  see Section 4.2
 
    Interoperability considerations:  N/A
 
@@ -2188,7 +2421,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.2.2
+   Security considerations:  see Section 4.3.2
 
    Interoperability considerations:  N/A
 
@@ -2229,7 +2462,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
@@ -2270,7 +2503,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
@@ -2311,7 +2544,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
@@ -2352,7 +2585,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
@@ -2393,7 +2626,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
@@ -2434,7 +2667,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
@@ -2475,7 +2708,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
@@ -2516,7 +2749,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Encoding considerations:  only "8bit" or "binary" is permitted
 
-   Security considerations:  see Section 4.4
+   Security considerations:  see Section 4.5
 
    Interoperability considerations:  N/A
 
