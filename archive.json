@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-18T01:42:20.600285+00:00",
+  "timestamp": "2022-08-21T01:22:47.083779+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4905,7 +4905,7 @@
       "id": "I_kwDOFEJYQs5L6ZxK",
       "title": "Collect without interval",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/273",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "wangshan",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -4914,8 +4914,8 @@
       ],
       "body": "If the collector is not interested in time and interval, but simply want to collect aggregation in a batch that meets `min_batch_size`. Then can the protocol support a 'batch-based collection' instead of current interval-based?\r\n\r\nConsider a Prio usecase, when `max_batch_lifetime == 1`, collector will only need to collect the aggregation so far, with a batch size B >= `min_batch_size`. This can be orchestrated by the leader, which can implement a counting service to track batch size for a task, once it reaches `min_batch_size`, leader sends AggregateShareReq to collect helper's `aggregate_share` and return to collector.\r\n\r\nThis requires a new id to tie agg-flow with agg-share-flow. For example, in addition to `agg_job_id`, leader can send a unique `batch_id` in every AggregateReq. At collect time, leader use the same `batch_id` to collect `output_share` in helper (helper can still proactively aggregate output_shares to `aggregate_share`, since there are no more batch windows, helper can store `aggregate_share` by `agg_job_id`, or accumulate all aggregation jobs' `output_share` to one `aggregate_share`, and store it with `batch_id`). Illustrated as following:\r\n\r\n```\r\n|<------------------------ batch_id1 ----------------->| <== AggregationShareReq\r\n|    agg_job_id1     |   agg_job_id2   |   agg_job_id3 | <== AggregateReq\r\nT0                                                    Tm <== Time\r\n```\r\nHere [T0, Tm] is the time takes to aggregate `min_batch_size` number of reports, it has no relationship with `min_batch_duration` or collector interval.\r\n\r\nAs this issue pointed out: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/195, to avoid privacy leak, each batch window must contain at least `min_batch_size` reports, otherwise attacker can find ways to slice intervals to break privacy guarantee. But if the protocol does require each batch window meets `min_batch_size`, then the collect interval itself is no longer useful, since the duration that takes to meet `min_batch_size` is the smallest duration that can be queried. Therefore, it seems to make sense to base collection entirely on batch size, not interval.\r\n",
       "createdAt": "2022-06-16T13:55:49Z",
-      "updatedAt": "2022-08-18T01:32:39Z",
-      "closedAt": null,
+      "updatedAt": "2022-08-19T21:56:19Z",
+      "closedAt": "2022-08-19T21:56:19Z",
       "comments": [
         {
           "author": "wangshan",
@@ -5542,10 +5542,12 @@
       "author": "wangshan",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "The current spec doesn't explain how to retire or delete a task. For some use cases, it's useful to have a hard task deadline, when expired, the task and all its aggregations must be made inactive and eventually deleted. This can be a new Duration type task parameter called `max_task_lifetime`, or `max_task_duration` to avoid similar named but int typed `max_batch_lifetime`.\r\n\r\nOther than the practical benefit, for clients that uploads repeatedly and periodically, this can add privacy benefit to limit the number of uploads from the same client to the same task (related to https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/210).\r\n\r\nPS. I feel like \"lifetime\" is more appropriate for a deadline than a max allowed count.",
       "createdAt": "2022-07-21T22:49:10Z",
-      "updatedAt": "2022-08-17T21:16:34Z",
+      "updatedAt": "2022-08-19T15:48:11Z",
       "closedAt": null,
       "comments": [
         {
@@ -5725,6 +5727,30 @@
           "body": "Closing in favor of #291.",
           "createdAt": "2022-08-17T21:16:44Z",
           "updatedAt": "2022-08-17T21:16:44Z"
+        }
+      ]
+    },
+    {
+      "number": 301,
+      "id": "I_kwDOFEJYQs5QEpxQ",
+      "title": "Consider making batch IDs predictable",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/301",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "For fixed-size tasks, the Leader picks a batch ID and passes it to the Collector with the CollectResp. This is so that the batch can be queried later on with a different aggregation parameter (as required for Poplar1). Alternatively, we could arrange for batch IDs to be \"predictable\" so that the Collector doesn't have to store batch IDs.\r\n\r\n\r\n_Originally posted by @chris-wood in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/297#issuecomment-1219697601_",
+      "createdAt": "2022-08-18T17:25:27Z",
+      "updatedAt": "2022-08-19T22:51:56Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "With the current `next-batch` semantics, there is the possibility that a Collector crashing at an inopportune time might lead to a batch being lost permanently.\r\n\r\nIf batch IDs were predictable, this would be fixable in a fairly straightforward manner (from a [PR comment](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297#discussion_r948460390)):\r\n\r\n> Also, if it's acceptable to allow batch IDs to be enumerable (e.g. a counter, as suggested by others), I think a simpler idempotent design would be to have the Collector track which batch ID is next itself, and change next-batch to something like max-batch to allow Collectors to \"start up\" without knowing what the next batch is.",
+          "createdAt": "2022-08-19T22:51:56Z",
+          "updatedAt": "2022-08-19T22:51:56Z"
         }
       ]
     }
@@ -35071,24 +35097,26 @@
       "id": "PR_kwDOFEJYQs48WYDT",
       "title": "Add support for fixed-size tasks",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-interval` query type.\r\n\r\nAdds a query type, `fixed-size`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-08-17T23:39:38Z",
+      "updatedAt": "2022-08-19T22:53:36Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/273/1",
-      "headRefOid": "6f409544af6bc8fec8acea8425b583af78efdbee",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "7891e4b93170e5bb7d2dc3db680cb76edbb051b9",
+      "closedAt": "2022-08-19T21:56:18Z",
+      "mergedAt": "2022-08-19T21:56:18Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108"
+      },
       "comments": [
         {
           "author": "cjpatton",
@@ -35145,6 +35173,27 @@
           "body": "FYI, I have squashed this branch into a single commit.",
           "createdAt": "2022-08-15T16:07:02Z",
           "updatedAt": "2022-08-15T16:07:02Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > Only 1 blocking comment on the constraint that Collectors can't opportunistically query for batch IDs.\r\n>\r\n> I think this point needs a bit more discussion. Can we do so in a new issue?\r\n\r\nI don't really see how this introduces edge cases. If the batch ID doesn't exist yet, the leader can just discard it. The behavior is pretty straightforward.\r\n\r\nI don't see where this has been discussed on slack. Please drop an OPEN ISSUE so we can track relaxing this constraint. ",
+          "createdAt": "2022-08-18T16:29:55Z",
+          "updatedAt": "2022-08-18T16:29:55Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "\r\n> I don't see where this has been discussed on slack. Please drop an OPEN ISSUE so we can track relaxing this constraint.\r\n\r\nDone. Filed https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/301.",
+          "createdAt": "2022-08-18T17:27:25Z",
+          "updatedAt": "2022-08-18T17:27:25Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Squashed and updated commit message.",
+          "createdAt": "2022-08-19T21:55:37Z",
+          "updatedAt": "2022-08-19T21:55:37Z"
         }
       ],
       "reviews": [
@@ -36573,6 +36622,276 @@
               "updatedAt": "2022-08-17T23:39:38Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANnXE",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:04:41Z",
+          "updatedAt": "2022-08-18T13:04:42Z",
+          "comments": [
+            {
+              "originalPosition": 56,
+              "body": "I agree that, in the current formulation, the subtypes make sense. However, I don't really see the need for the by-batch-id use case. Why would a collector want to repeatedly query the same batch? Poplar?",
+              "createdAt": "2022-08-18T13:04:41Z",
+              "updatedAt": "2022-08-18T13:04:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANnyV",
+          "commit": {
+            "abbreviatedOid": "42f9cf8"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:05:49Z",
+          "updatedAt": "2022-08-18T13:05:49Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "I agree with Brandon here. Can we describe a configuration the same way we do a task configuration?",
+              "createdAt": "2022-08-18T13:05:49Z",
+              "updatedAt": "2022-08-18T13:05:50Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANn29",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:06:01Z",
+          "updatedAt": "2022-08-18T13:06:01Z",
+          "comments": [
+            {
+              "originalPosition": 91,
+              "body": "That's fine, yeah.",
+              "createdAt": "2022-08-18T13:06:01Z",
+              "updatedAt": "2022-08-18T13:06:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANogC",
+          "commit": {
+            "abbreviatedOid": "06b4c24"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:07:43Z",
+          "updatedAt": "2022-08-18T13:07:44Z",
+          "comments": [
+            {
+              "originalPosition": 142,
+              "body": "OK, well, if we didn't have Poplar, would we still need this? I'm growing less and less convinced that Poplar will be actually usable, so I'm not sure we want to add complexity for the sake of something that will not get used.",
+              "createdAt": "2022-08-18T13:07:43Z",
+              "updatedAt": "2022-08-18T13:07:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANomU",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:08:00Z",
+          "updatedAt": "2022-08-18T13:08:00Z",
+          "comments": [
+            {
+              "originalPosition": 56,
+              "body": "(Saw the response below -- we can resolve this)",
+              "createdAt": "2022-08-18T13:08:00Z",
+              "updatedAt": "2022-08-18T13:08:00Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANpfe",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:10:20Z",
+          "updatedAt": "2022-08-18T13:10:20Z",
+          "comments": [
+            {
+              "originalPosition": 219,
+              "body": "That's a fine way to spell the header, but isn't the task ID also included in each report? In any case, we refer to this thing called a \"header\" but then don't actually define what it is. Let's either drop the word \"header\", or clarify that header == task ID + metadata. \r\n\r\n(And in the future, we need to stop landing unrelated changes in PRs like this!)",
+              "createdAt": "2022-08-18T13:10:20Z",
+              "updatedAt": "2022-08-18T13:10:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANp2z",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:11:16Z",
+          "updatedAt": "2022-08-18T13:11:16Z",
+          "comments": [
+            {
+              "originalPosition": 227,
+              "body": "Here let's say that header consists of (1) task ID and (2) metadata, and then list what the metadata consists of. That way the text is consistent with the struct.",
+              "createdAt": "2022-08-18T13:11:16Z",
+              "updatedAt": "2022-08-18T13:11:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANqU2",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:12:31Z",
+          "updatedAt": "2022-08-18T13:12:32Z",
+          "comments": [
+            {
+              "originalPosition": 640,
+              "body": "Looks good!",
+              "createdAt": "2022-08-18T13:12:31Z",
+              "updatedAt": "2022-08-18T13:12:32Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANqpV",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-18T13:13:25Z",
+          "updatedAt": "2022-08-18T13:13:26Z",
+          "comments": [
+            {
+              "originalPosition": 735,
+              "body": "I don't think this requirement is necessary. The Collector should be able to query for batches by ID opportunistically, I think.",
+              "createdAt": "2022-08-18T13:13:25Z",
+              "updatedAt": "2022-08-18T13:13:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ANq0X",
+          "commit": {
+            "abbreviatedOid": "6f40954"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "Only 1 blocking comment on the constraint that Collectors can't opportunistically query for batch IDs. ",
+          "createdAt": "2022-08-18T13:13:54Z",
+          "updatedAt": "2022-08-18T13:13:54Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AO2qq",
+          "commit": {
+            "abbreviatedOid": "6c56f18"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "> Only 1 blocking comment on the constraint that Collectors can't opportunistically query for batch IDs.\r\n\r\nI think this point needs a bit more discussion. Can we do so in a new issue?",
+          "createdAt": "2022-08-18T16:05:30Z",
+          "updatedAt": "2022-08-18T16:25:02Z",
+          "comments": [
+            {
+              "originalPosition": 80,
+              "body": "Done.",
+              "createdAt": "2022-08-18T16:05:30Z",
+              "updatedAt": "2022-08-18T16:25:02Z"
+            },
+            {
+              "originalPosition": 219,
+              "body": "The task ID is included in each `Report`, but is not sent in each `ReportShare` sent during the agg flow. OTOH the metadata is unique to each `ReportShare`, which is why I've split metadata and task ID.\r\n\r\nAgreed on minimizing PRs. Like I said, it's an artifact of a previous version of this PR. Still, I think it's a useful change. I'm happy to pull it out into a separate PR.",
+              "createdAt": "2022-08-18T16:07:59Z",
+              "updatedAt": "2022-08-18T16:25:02Z"
+            },
+            {
+              "originalPosition": 227,
+              "body": "Good idea. Done!",
+              "createdAt": "2022-08-18T16:10:17Z",
+              "updatedAt": "2022-08-18T16:25:02Z"
+            },
+            {
+              "originalPosition": 436,
+              "body": "I think that approach would drop (3.) for time-interval tasks, which at this point I prefer not to do :) Perhaps there is a version of this that'll work.",
+              "createdAt": "2022-08-18T16:12:18Z",
+              "updatedAt": "2022-08-18T16:25:02Z"
+            },
+            {
+              "originalPosition": 735,
+              "body": "I don't see a way to enable this without creating lots of corner cases. I think we need two things in order to pursue this:\r\n1. What's the motivation? Is there a reason why the current scheme is not workable for Collectors? What's the advantage of knowing the batch ID in advance, beyond not having to store it?\r\n2. A way to address corner cases like: What does the Collector do if the Leader requests batch 9999, then batch 1? If the Leader is aggregating opportunistically (like it may do for Prio), it might have to wait to starting filling batch 9999 until 1, ..., 9998 have been filled.\r\n\r\nThis point has already been discussed at some length on the slack. I'm happy to keep discussing, but could we do so in an issue so we have a chance to level set?",
+              "createdAt": "2022-08-18T16:20:32Z",
+              "updatedAt": "2022-08-18T16:25:02Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5APS9M",
+          "commit": {
+            "abbreviatedOid": "38f1c43"
+          },
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "Nice work! Ship it!",
+          "createdAt": "2022-08-18T17:36:19Z",
+          "updatedAt": "2022-08-18T17:36:19Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AVnMP",
+          "commit": {
+            "abbreviatedOid": "b416f78"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-19T22:48:58Z",
+          "updatedAt": "2022-08-19T22:48:58Z",
+          "comments": [
+            {
+              "originalPosition": 65,
+              "body": "(sorry, this comment is a little late to the party)\r\n\r\n> Each next-batch query would correspond to a different batch\r\n\r\nI see -- in that case, I think there is potential for data-loss if the Collector crashes at an inopportune time. Consider the following:\r\n\r\n1. The Leader has a batch ready to be retrieved, call it `X`.\r\n2. The Collector issues a `next-batch` request, receives a collect job corresponding to `X`.\r\n3. Before storing the collect job ID to durable storage or polling for completion, the Collector (or some relevant subcomponent) crashes & loses its state.\r\n\r\nIn this case, I think the Collector has lost batch `X` permanently: it no longer knows the relevant collect job ID, and there is no way to interact with the Leader to retrieve it since further `next-batch` requests will result in different collect jobs being returned.\r\n\r\nI think the best way to fix this might be based on the idea of making the batch IDs enumerable as suggested by #301. I'll add a comment to that issue.",
+              "createdAt": "2022-08-19T22:48:58Z",
+              "updatedAt": "2022-08-19T22:53:36Z"
+            }
+          ]
         }
       ]
     },
@@ -36623,21 +36942,21 @@
       "id": "PR_kwDOFEJYQs49Sehq",
       "title": "[retracted] Merge \"fixed-interval\" & \"fixed-size\" task types (mostly).",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/300",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
       "labels": [],
       "body": "# PR is retracted, please don't review.\r\n\r\n([Reasoning for retracting PR](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/300#issuecomment-1218456857))\r\n\r\nAlmost all functionality & message wire formats are the same for the two\r\ntask types again. The largest point of divergence is in the batch\r\nvalidation implemented by the leader & helper: this validation is used\r\nto enforce the desired properties on each batch (having a fixed interval\r\nof time or including a fixed number of reports, respectively).\r\n\r\nSee [motivating discussion](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/273#issuecomment-1213552532) in #273.",
       "createdAt": "2022-08-17T02:42:04Z",
-      "updatedAt": "2022-08-17T20:56:36Z",
+      "updatedAt": "2022-08-19T21:59:41Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "cjpatton/273/1",
-      "baseRefOid": "06b4c249065191a5cb8c0cdbbfb08f87f4fed217",
+      "baseRefOid": "7891e4b93170e5bb7d2dc3db680cb76edbb051b9",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/273/batch-intervals-for-everyone",
       "headRefOid": "39f4d101443f5ba832b12d04eb640dae0a790740",
-      "closedAt": null,
+      "closedAt": "2022-08-19T21:57:17Z",
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
@@ -36648,6 +36967,13 @@
           "body": "Based on https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/273#issuecomment-1218133868 & the goal to have `fixed-size` batches be collected as soon as they are available, I am retracting this PR: it introduces a delay in collection which may be as long as the timestamp rounding factor, which per the linked comment may be on the order of hours.\r\n\r\nBringing this back to draft for now in case some of the text is useful, but please hold off on reviewing.",
           "createdAt": "2022-08-17T20:24:41Z",
           "updatedAt": "2022-08-17T20:24:41Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks for working on this Brandon, it was useful to see this idea spelled out. A good high level goal should be to minimize the differences between various DAP \"modes\", so we should revisit in the future.",
+          "createdAt": "2022-08-19T21:59:41Z",
+          "updatedAt": "2022-08-19T21:59:41Z"
         }
       ],
       "reviews": [
