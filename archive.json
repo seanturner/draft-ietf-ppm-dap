@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-21T01:22:47.083779+00:00",
+  "timestamp": "2022-08-23T01:45:17.389587+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -5751,6 +5751,30 @@
           "body": "With the current `next-batch` semantics, there is the possibility that a Collector crashing at an inopportune time might lead to a batch being lost permanently.\r\n\r\nIf batch IDs were predictable, this would be fixable in a fairly straightforward manner (from a [PR comment](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297#discussion_r948460390)):\r\n\r\n> Also, if it's acceptable to allow batch IDs to be enumerable (e.g. a counter, as suggested by others), I think a simpler idempotent design would be to have the Collector track which batch ID is next itself, and change next-batch to something like max-batch to allow Collectors to \"start up\" without knowing what the next batch is.",
           "createdAt": "2022-08-19T22:51:56Z",
           "updatedAt": "2022-08-19T22:51:56Z"
+        }
+      ]
+    },
+    {
+      "number": 302,
+      "id": "I_kwDOFEJYQs5QPXo6",
+      "title": "Privacy Preserving measurement protocol",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/302",
+      "state": "CLOSED",
+      "author": "Qhassanx",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "",
+      "createdAt": "2022-08-22T10:54:02Z",
+      "updatedAt": "2022-08-22T16:20:40Z",
+      "closedAt": "2022-08-22T16:20:40Z",
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "(closing as there is no content in this bug; @Qhassanx please feel free to add a description & reopen if desired)",
+          "createdAt": "2022-08-22T16:20:40Z",
+          "updatedAt": "2022-08-22T16:20:40Z"
         }
       ]
     }
