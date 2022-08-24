@@ -1190,20 +1190,6 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
 <ul class="compact toc ulBare ulEmpty">
 <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
                 <p id="section-toc.1-1.3.2.1.1"><a href="#section-3.1" class="xref">3.1</a>.  <a href="#name-request-authentication" class="xref">Request Authentication</a></p>
-<ul class="compact toc ulBare ulEmpty">
-<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.1">
-                    <p id="section-toc.1-1.3.2.1.2.1.1"><a href="#section-3.1.1" class="xref">3.1.1</a>.  <a href="#name-client-to-aggregator" class="xref">Client to aggregator</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.2">
-                    <p id="section-toc.1-1.3.2.1.2.2.1"><a href="#section-3.1.2" class="xref">3.1.2</a>.  <a href="#name-inter-aggregator" class="xref">Inter-aggregator</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.3">
-                    <p id="section-toc.1-1.3.2.1.2.3.1"><a href="#section-3.1.3" class="xref">3.1.3</a>.  <a href="#name-collector-to-leader" class="xref">Collector to leader</a></p>
-</li>
-                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1.2.4">
-                    <p id="section-toc.1-1.3.2.1.2.4.1"><a href="#section-3.1.4" class="xref">3.1.4</a>.  <a href="#name-collector-to-helper" class="xref">Collector to helper</a></p>
-</li>
-                </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.2">
                 <p id="section-toc.1-1.3.2.2.1"><a href="#section-3.2" class="xref">3.2</a>.  <a href="#name-errors" class="xref">Errors</a></p>
@@ -1239,6 +1225,9 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3.2.3">
                     <p id="section-toc.1-1.4.2.3.2.3.1"><a href="#section-4.3.3" class="xref">4.3.3</a>.  <a href="#name-upload-extensions" class="xref">Upload Extensions</a></p>
 </li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.3.2.4">
+                    <p id="section-toc.1-1.4.2.3.2.4.1"><a href="#section-4.3.4" class="xref">4.3.4</a>.  <a href="#name-upload-message-security" class="xref">Upload Message Security</a></p>
+</li>
                 </ul>
 </li>
               <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4">
@@ -1249,6 +1238,9 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4.2.2">
                     <p id="section-toc.1-1.4.2.4.2.2.1"><a href="#section-4.4.2" class="xref">4.4.2</a>.  <a href="#name-aggregate-continuation" class="xref">Aggregate Continuation</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.4.2.3">
+                    <p id="section-toc.1-1.4.2.4.2.3.1"><a href="#section-4.4.3" class="xref">4.4.3</a>.  <a href="#name-aggregate-message-security" class="xref">Aggregate Message Security</a></p>
 </li>
                 </ul>
 </li>
@@ -1268,10 +1260,13 @@ revealing any individual user's data.<a href="#section-abstract-1" class="pilcro
                     <p id="section-toc.1-1.4.2.5.2.4.1"><a href="#section-4.5.4" class="xref">4.5.4</a>.  <a href="#name-aggregate-share-encryption" class="xref">Aggregate Share Encryption</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5.2.5">
-                    <p id="section-toc.1-1.4.2.5.2.5.1"><a href="#section-4.5.5" class="xref">4.5.5</a>.  <a href="#name-batch-validation" class="xref">Batch Validation</a></p>
+                    <p id="section-toc.1-1.4.2.5.2.5.1"><a href="#section-4.5.5" class="xref">4.5.5</a>.  <a href="#name-collect-message-security" class="xref">Collect Message Security</a></p>
 </li>
                   <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5.2.6">
-                    <p id="section-toc.1-1.4.2.5.2.6.1"><a href="#section-4.5.6" class="xref">4.5.6</a>.  <a href="#name-anti-replay" class="xref">Anti-replay</a></p>
+                    <p id="section-toc.1-1.4.2.5.2.6.1"><a href="#section-4.5.6" class="xref">4.5.6</a>.  <a href="#name-batch-validation" class="xref">Batch Validation</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.5.2.7">
+                    <p id="section-toc.1-1.4.2.5.2.7.1"><a href="#section-4.5.7" class="xref">4.5.7</a>.  <a href="#name-anti-replay" class="xref">Anti-replay</a></p>
 </li>
                 </ul>
 </li>
@@ -1776,8 +1771,7 @@ HTTPS provides server authentication and confidentiality. Use of HTTPS is
 <a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-request-authentication" class="section-name selfRef">Request Authentication</a>
         </h3>
 <p id="section-3.1-1">DAP is made up of several sub-protocols in which different subsets of the
-protocol's participants interact with each other. In this section we enumerate
-those interactions and their security requirements.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+protocol's participants interact with each other.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 <p id="section-3.1-2">In those cases where a channel between two participants is tunneled through
 another protocol participant, DAP mandates the use of authenticated encryption
 using <span>[<a href="#HPKE" class="xref">HPKE</a>]</span> to ensure that only the intended recipient can see a
@@ -1789,97 +1783,6 @@ any DAP protocol message. This allows organizations deploying DAP to use
 existing well-known HTTP authentication mechanisms that they already supports.
 Discovering what authentication mechanisms are supported by a DAP participant
 is outside of this document's scope.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
-<div id="client-to-aggregator">
-<section id="section-3.1.1">
-          <h4 id="name-client-to-aggregator">
-<a href="#section-3.1.1" class="section-number selfRef">3.1.1. </a><a href="#name-client-to-aggregator" class="section-name selfRef">Client to aggregator</a>
-          </h4>
-<p id="section-3.1.1-1">Clients upload reports to aggregators, as detailed in <a href="#upload-flow" class="xref">Section 4.3</a>. The
-contents of each input share must be kept confidential from everyone but the
-client and the aggregator it is being sent to and clients must be able to
-authenticate the aggregator they upload to.<a href="#section-3.1.1-1" class="pilcrow">¶</a></p>
-<p id="section-3.1.1-2">The HTTPS channel provides confidentiality between the client and the leader,
-but this is not sufficient since the helper's report shares are relayed through
-the leader. Confidentiality of report shares is achieved by encrypting each
-report share to a public key held by the respective aggregator. Clients fetch
-the public keys from each aggregator over HTTPS, allowing them to authenticate
-the server.<a href="#section-3.1.1-2" class="pilcrow">¶</a></p>
-<p id="section-3.1.1-3">Aggregators <span class="bcp14">MAY</span> require clients to authenticate when uploading reports. This is
-an effective mitigation against Sybil attacks in deployments where it is
-practical for each client to have an identity provisioned (e.g., a user logged
-into an online service or a hardware device programmed with an identity). If it
-is used, client authentication <span class="bcp14">MUST</span> use a scheme that meets the requirements in
-<a href="#request-authentication" class="xref">Section 3.1</a>.<a href="#section-3.1.1-3" class="pilcrow">¶</a></p>
-<p id="section-3.1.1-4">In some deployments, it will not be practical to require clients to authenticate
-(e.g., a widely distributed application that does not require its users to login
-to any service), so client authentication is not mandatory in DAP. In the
-absence of client authentication, implementations <span class="bcp14">SHOULD</span> deploy some mitigation
-against Sybil attacks.<a href="#section-3.1.1-4" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="inter-aggregator">
-<section id="section-3.1.2">
-          <h4 id="name-inter-aggregator">
-<a href="#section-3.1.2" class="section-number selfRef">3.1.2. </a><a href="#name-inter-aggregator" class="section-name selfRef">Inter-aggregator</a>
-          </h4>
-<p id="section-3.1.2-1">The leader and helper aggregators communicate to prepare input shares, as
-detailed in <a href="#aggregate-flow" class="xref">Section 4.4</a>, and to aggregate output shares into aggregate
-shares, as detailed in <a href="#collect-aggregate" class="xref">Section 4.5.2</a>. These messages must be
-confidential and mutually authenticated.<a href="#section-3.1.2-1" class="pilcrow">¶</a></p>
-<p id="section-3.1.2-2">The aggregate sub-protocol is driven by the leader acting as an HTTPS client,
-making requests to the helper's HTTPS server. HTTPS provides confidentiality and
-authenticates the helper to the leader.<a href="#section-3.1.2-2" class="pilcrow">¶</a></p>
-<p id="section-3.1.2-3">Leaders <span class="bcp14">MUST</span> authenticate their requests to helpers using a scheme that meets
-the requirements in <a href="#request-authentication" class="xref">Section 3.1</a>.<a href="#section-3.1.2-3" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="collector-to-leader">
-<section id="section-3.1.3">
-          <h4 id="name-collector-to-leader">
-<a href="#section-3.1.3" class="section-number selfRef">3.1.3. </a><a href="#name-collector-to-leader" class="section-name selfRef">Collector to leader</a>
-          </h4>
-<p id="section-3.1.3-1">The collector makes requests to the leader in order to obtain aggregate shares,
-as detailed in <a href="#collect-flow" class="xref">Section 4.5</a>). Collect sub-protocol messages must be
-confidential and mutually authenticated.<a href="#section-3.1.3-1" class="pilcrow">¶</a></p>
-<p id="section-3.1.3-2">HTTPS provides confidentiality and authenticates the leader to the collector.
-Additionally, the leader encrypts its aggregate share to a public key held by
-the collector.<a href="#section-3.1.3-2" class="pilcrow">¶</a></p>
-<p id="section-3.1.3-3">Collectors <span class="bcp14">MUST</span> authenticate their requests to leaders using a scheme that meets
-the requirements in <a href="#request-authentication" class="xref">Section 3.1</a>.<a href="#section-3.1.3-3" class="pilcrow">¶</a></p>
-<p id="section-3.1.3-4">[[OPEN ISSUE: collector public key is currently in the task parameters, but this
-will have to change #102]]<a href="#section-3.1.3-4" class="pilcrow">¶</a></p>
-</section>
-</div>
-<div id="collector-to-helper">
-<section id="section-3.1.4">
-          <h4 id="name-collector-to-helper">
-<a href="#section-3.1.4" class="section-number selfRef">3.1.4. </a><a href="#name-collector-to-helper" class="section-name selfRef">Collector to helper</a>
-          </h4>
-<p id="section-3.1.4-1">The collector and helper never directly communicate with each other, but the
-helper does transmit an aggregate share to the collector through the leader, as
-detailed in <a href="#collect-aggregate" class="xref">Section 4.5.2</a>. The aggregate share must be confidential from
-everyone but the helper and the collector.<a href="#section-3.1.4-1" class="pilcrow">¶</a></p>
-<p id="section-3.1.4-2">Confidentiality is achieved by having the helper encrypt its aggregate share to
-a public key held by the collector.<a href="#section-3.1.4-2" class="pilcrow">¶</a></p>
-<p id="section-3.1.4-3">There is no authentication between the collector and the helper. This allows the
-leader to:<a href="#section-3.1.4-3" class="pilcrow">¶</a></p>
-<ul class="normal">
-<li class="normal" id="section-3.1.4-4.1">Send collect parameters to the helper that do not reflect the parameters
-chosen by the collector<a href="#section-3.1.4-4.1" class="pilcrow">¶</a>
-</li>
-            <li class="normal" id="section-3.1.4-4.2">Discard the aggregate share computed by the helper and then fabricate
-aggregate shares that combine into an arbitrary aggregate result<a href="#section-3.1.4-4.2" class="pilcrow">¶</a>
-</li>
-          </ul>
-<p id="section-3.1.4-5">These are both attacks on soundness, which we already assume to hold only if
-both aggregators are honest, which puts these malicious-leader attacks out of
-scope.<a href="#section-3.1.4-5" class="pilcrow">¶</a></p>
-<p id="section-3.1.4-6">[[OPEN ISSUE: Should we have authentication in either direction between the
-helper and the collector? #155]]
-[[OPEN ISSUE: DAP and/or VDAF should spell out what "soundness" and "privacy"
-mean]]<a href="#section-3.1.4-6" class="pilcrow">¶</a></p>
-</section>
-</div>
 </section>
 </div>
 <div id="errors">
@@ -2090,7 +1993,7 @@ reports and aggregation function.<a href="#section-4.1-7.1" class="pilcrow">¶</
           <li class="normal" id="section-4.1-7.2">
             <code>time_precision</code> - Clients use this value to truncate their report timestamps;
 see <a href="#upload-flow" class="xref">Section 4.3</a>. Additional semantics may apply, depending on the query
-type. (See <a href="#batch-validation" class="xref">Section 4.5.5</a> for details.)<a href="#section-4.1-7.2" class="pilcrow">¶</a>
+type. (See <a href="#batch-validation" class="xref">Section 4.5.6</a> for details.)<a href="#section-4.1-7.2" class="pilcrow">¶</a>
 </li>
         </ul>
 <p id="section-4.1-8">The parameters pertaining to specific query types are described in the relevant
@@ -2307,7 +2210,7 @@ multiple of <code>time_precision</code> in order to ensure that that the timesta
 be used to link a report back to the Client that generated it.<a href="#section-4.3.2-4.1" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.3.2-4.2">A nonce used by the Aggregators to ensure the report appears in at most one
-batch. (See <a href="#anti-replay" class="xref">Section 4.5.6</a>.) The Client <span class="bcp14">MUST</span> generate this by generating 16
+batch. (See <a href="#anti-replay" class="xref">Section 4.5.7</a>.) The Client <span class="bcp14">MUST</span> generate this by generating 16
 random bytes using a cryptographically secure random number gnerator.<a href="#section-4.3.2-4.2" class="pilcrow">¶</a>
 </li>
             <li class="normal" id="section-4.3.2-4.3">A list of extensions to be included with the report. (See
@@ -2378,6 +2281,32 @@ encoded value of the following form:<a href="#section-4.3.3-1" class="pilcrow">�
 </div>
 <p id="section-4.3.3-3">"extension_type" indicates the type of extension, and "extension_data" contains
 information specific to the extension.<a href="#section-4.3.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="upload-message-security">
+<section id="section-4.3.4">
+          <h4 id="name-upload-message-security">
+<a href="#section-4.3.4" class="section-number selfRef">4.3.4. </a><a href="#name-upload-message-security" class="section-name selfRef">Upload Message Security</a>
+          </h4>
+<p id="section-4.3.4-1">The contents of each input share must be kept confidential from everyone but the
+client and the aggregator it is being sent to and clients must be able to
+authenticate the aggregator they upload to.<a href="#section-4.3.4-1" class="pilcrow">¶</a></p>
+<p id="section-4.3.4-2">HTTPS provides confidentiality between the client and the leader, but this is
+not sufficient since the helper's report shares are relayed through the leader.
+Confidentiality of report shares is achieved by encrypting each report share to
+a public key held by the respective aggregator. Clients fetch the public keys
+from each aggregator over HTTPS, allowing them to authenticate the server.<a href="#section-4.3.4-2" class="pilcrow">¶</a></p>
+<p id="section-4.3.4-3">Aggregators <span class="bcp14">MAY</span> require clients to authenticate when uploading reports. This is
+an effective mitigation against Sybil attacks in deployments where it is
+practical for each client to have an identity provisioned (e.g., a user logged
+into an online service or a hardware device programmed with an identity). If it
+is used, client authentication <span class="bcp14">MUST</span> use a scheme that meets the requirements in
+<a href="#request-authentication" class="xref">Section 3.1</a>.<a href="#section-4.3.4-3" class="pilcrow">¶</a></p>
+<p id="section-4.3.4-4">In some deployments, it will not be practical to require clients to authenticate
+(e.g., a widely distributed application that does not require its users to login
+to any service), so client authentication is not mandatory in DAP. In the
+absence of client authentication, implementations <span class="bcp14">SHOULD</span> deploy some mitigation
+against Sybil attacks.<a href="#section-4.3.4-4" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -2690,7 +2619,7 @@ parameter. If this check fails, the input share <span class="bcp14">MUST</span> 
 with the error <code>report-replayed</code>. This is the case if the report was used in
 a previous aggregate request and is therefore a replay. An aggregator may
 also choose to mark an input share as invalid with the error
-<code>report-dropped</code> under the conditions prescribed in <a href="#anti-replay" class="xref">Section 4.5.6</a>.<a href="#section-4.4.1.4-3.2" class="pilcrow">¶</a>
+<code>report-dropped</code> under the conditions prescribed in <a href="#anti-replay" class="xref">Section 4.5.7</a>.<a href="#section-4.4.1.4-3.2" class="pilcrow">¶</a>
 </li>
               <li id="section-4.4.1.4-3.3">
                 <p id="section-4.4.1.4-3.3.1">Depending on the query type for the task, additional checks may be applicable:<a href="#section-4.4.1.4-3.3.1" class="pilcrow">¶</a></p>
@@ -2700,7 +2629,7 @@ roughly the same size. If the number of reports aggregated for the current
 batch exceeds the maximum batch size (per the task configuration), the
 Aggregator <span class="bcp14">MAY</span> mark the input share as invalid with the error
 "batch-saturated". Note that this behavior is not strictly enforced here
-but during the collect sub-protocol. (See <a href="#batch-validation" class="xref">Section 4.5.5</a>.)
+but during the collect sub-protocol. (See <a href="#batch-validation" class="xref">Section 4.5.6</a>.)
 If both checks succeed, the input share is not marked as invalid.<a href="#section-4.4.1.4-3.3.2.1" class="pilcrow">¶</a>
 </li>
                 </ul>
@@ -2865,6 +2794,19 @@ The helper then awaits the next message from the leader.<a href="#section-4.4.2.
 </div>
 </section>
 </div>
+<div id="aggregate-message-security">
+<section id="section-4.4.3">
+          <h4 id="name-aggregate-message-security">
+<a href="#section-4.4.3" class="section-number selfRef">4.4.3. </a><a href="#name-aggregate-message-security" class="section-name selfRef">Aggregate Message Security</a>
+          </h4>
+<p id="section-4.4.3-1">Aggregate sub-protocol messages must be confidential and mutually authenticated.<a href="#section-4.4.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.4.3-2">The aggregate sub-protocol is driven by the leader acting as an HTTPS client,
+making requests to the helper's HTTPS server. HTTPS provides confidentiality and
+authenticates the helper to the leader.<a href="#section-4.4.3-2" class="pilcrow">¶</a></p>
+<p id="section-4.4.3-3">Leaders <span class="bcp14">MUST</span> authenticate their requests to helpers using a scheme that meets
+the requirements in <a href="#request-authentication" class="xref">Section 3.1</a>.<a href="#section-4.4.3-3" class="pilcrow">¶</a></p>
+</section>
+</div>
 </section>
 </div>
 <div id="collect-flow">
@@ -2929,7 +2871,7 @@ inputs until the collector provides the aggregation parameter in the
 <code>CollectReq</code>. For these reasons, collect requests are handled asynchronously.<a href="#section-4.5.1-6" class="pilcrow">¶</a></p>
 <p id="section-4.5.1-7">Upon receipt of a <code>CollectReq</code>, the leader begins by checking that the request
 meets the requirements of the batch parameters using the procedure in
-<a href="#batch-validation" class="xref">Section 4.5.5</a>. If so, it immediately sends the collector a
+<a href="#batch-validation" class="xref">Section 4.5.6</a>. If so, it immediately sends the collector a
 response with HTTP status 303 See Other and a Location header containing a URI
 identifying the collect job that can be polled by the collector, called the
 "collect job URI".<a href="#section-4.5.1-7" class="pilcrow">¶</a></p>
@@ -3041,7 +2983,7 @@ least one run of the aggregate sub-protocol. (See <a href="#leader-init" class="
           </ul>
 <p id="section-4.5.2-6">To handle the leader's request, the helper first ensures that the request meets
 the requirements for batch parameters following the procedure in
-<a href="#batch-validation" class="xref">Section 4.5.5</a>.<a href="#section-4.5.2-6" class="pilcrow">¶</a></p>
+<a href="#batch-validation" class="xref">Section 4.5.6</a>.<a href="#section-4.5.2-6" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-7">Next, it computes a checksum based on the reports that satisfy the query, and
 checks that the <code>report_count</code> and <code>checksum</code> included in the request match its
 computed values. If not, then it <span class="bcp14">MUST</span> abort with error "batchMismatch".<a href="#section-4.5.2-7" class="pilcrow">¶</a></p>
@@ -3055,7 +2997,7 @@ agg_share = VDAF.out_shares_to_agg_share(agg_param, out_shares)
 <p id="section-4.5.2-10">Note that for most VDAFs, it is possible to aggregate output shares as they
 arrive rather than wait until the batch is collected. To do so however, it is
 necessary to enforce the batch parameters as described in
-<a href="#batch-validation" class="xref">Section 4.5.5</a> so that the aggregator knows which aggregate
+<a href="#batch-validation" class="xref">Section 4.5.6</a> so that the aggregator knows which aggregate
 share to update.<a href="#section-4.5.2-10" class="pilcrow">¶</a></p>
 <p id="section-4.5.2-11">The helper then encrypts <code>agg_share</code> under the collector's HPKE public
 key as described in <a href="#aggregate-share-encrypt" class="xref">Section 4.5.4</a>, yielding <code>encrypted_agg_share</code>.
@@ -3146,108 +3088,146 @@ response.<a href="#section-4.5.4-7.2" class="pilcrow">¶</a>
           </ul>
 </section>
 </div>
-<div id="batch-validation">
+<div id="collect-message-security">
 <section id="section-4.5.5">
-          <h4 id="name-batch-validation">
-<a href="#section-4.5.5" class="section-number selfRef">4.5.5. </a><a href="#name-batch-validation" class="section-name selfRef">Batch Validation</a>
+          <h4 id="name-collect-message-security">
+<a href="#section-4.5.5" class="section-number selfRef">4.5.5. </a><a href="#name-collect-message-security" class="section-name selfRef">Collect Message Security</a>
           </h4>
-<p id="section-4.5.5-1">Before an Aggregator responds to a CollectReq or AggregateShareReq, it must
+<p id="section-4.5.5-1">Collect sub-protocol messages must be confidential and mutually authenticated.<a href="#section-4.5.5-1" class="pilcrow">¶</a></p>
+<p id="section-4.5.5-2">HTTPS provides confidentiality and authenticates the leader to the collector.
+Additionally, the leader encrypts its aggregate share to a public key held by
+the collector.<a href="#section-4.5.5-2" class="pilcrow">¶</a></p>
+<p id="section-4.5.5-3">Collectors <span class="bcp14">MUST</span> authenticate their requests to leaders using a scheme that meets
+the requirements in <a href="#request-authentication" class="xref">Section 3.1</a>.<a href="#section-4.5.5-3" class="pilcrow">¶</a></p>
+<p id="section-4.5.5-4">[[OPEN ISSUE: collector public key is currently in the task parameters, but this
+will have to change #102]]<a href="#section-4.5.5-4" class="pilcrow">¶</a></p>
+<p id="section-4.5.5-5">The collector and helper never directly communicate with each other, but the
+helper does transmit an aggregate share to the collector through the leader, as
+detailed in <a href="#collect-aggregate" class="xref">Section 4.5.2</a>. The aggregate share must be confidential from
+everyone but the helper and the collector.<a href="#section-4.5.5-5" class="pilcrow">¶</a></p>
+<p id="section-4.5.5-6">Confidentiality is achieved by having the helper encrypt its aggregate share to
+a public key held by the collector.<a href="#section-4.5.5-6" class="pilcrow">¶</a></p>
+<p id="section-4.5.5-7">There is no authentication between the collector and the helper. This allows the
+leader to:<a href="#section-4.5.5-7" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.5.5-8.1">Send collect parameters to the helper that do not reflect the parameters
+chosen by the collector<a href="#section-4.5.5-8.1" class="pilcrow">¶</a>
+</li>
+            <li class="normal" id="section-4.5.5-8.2">Discard the aggregate share computed by the helper and then fabricate
+aggregate shares that combine into an arbitrary aggregate result<a href="#section-4.5.5-8.2" class="pilcrow">¶</a>
+</li>
+          </ul>
+<p id="section-4.5.5-9">These are both attacks on soundness, which we already assume to hold only if
+both aggregators are honest, which puts these malicious-leader attacks out of
+scope.<a href="#section-4.5.5-9" class="pilcrow">¶</a></p>
+<p id="section-4.5.5-10">[[OPEN ISSUE: Should we have authentication in either direction between the
+helper and the collector? #155]]
+[[OPEN ISSUE: DAP and/or VDAF should spell out what "soundness" and "privacy"
+mean]]<a href="#section-4.5.5-10" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="batch-validation">
+<section id="section-4.5.6">
+          <h4 id="name-batch-validation">
+<a href="#section-4.5.6" class="section-number selfRef">4.5.6. </a><a href="#name-batch-validation" class="section-name selfRef">Batch Validation</a>
+          </h4>
+<p id="section-4.5.6-1">Before an Aggregator responds to a CollectReq or AggregateShareReq, it must
 first check that the request does not violate the parameters associated with the
-DAP task. It does so as described here.<a href="#section-4.5.5-1" class="pilcrow">¶</a></p>
-<p id="section-4.5.5-2">First the Aggregator checks that the batch respects any "boundaries" determined
+DAP task. It does so as described here.<a href="#section-4.5.6-1" class="pilcrow">¶</a></p>
+<p id="section-4.5.6-2">First the Aggregator checks that the batch respects any "boundaries" determined
 by the query type. These are described in the subsections below. If the boundary
-check fails, then the Aggregator <span class="bcp14">MUST</span> abort with error "batchInvalid".<a href="#section-4.5.5-2" class="pilcrow">¶</a></p>
-<p id="section-4.5.5-3">Next, the Aggregator checks that batch contains a valid number of reports, as
+check fails, then the Aggregator <span class="bcp14">MUST</span> abort with error "batchInvalid".<a href="#section-4.5.6-2" class="pilcrow">¶</a></p>
+<p id="section-4.5.6-3">Next, the Aggregator checks that batch contains a valid number of reports, as
 determined by the query type. If the size check fails, then the Aggregator <span class="bcp14">MUST</span>
-abort with error "invalidBatchSize".<a href="#section-4.5.5-3" class="pilcrow">¶</a></p>
-<p id="section-4.5.5-4">Next, the Aggregator checks that the batch has not been aggregated too many
+abort with error "invalidBatchSize".<a href="#section-4.5.6-3" class="pilcrow">¶</a></p>
+<p id="section-4.5.6-4">Next, the Aggregator checks that the batch has not been aggregated too many
 times. This is determined by the maximum batch lifetime, <code>max_batch_lifetime</code>.
 Unless the query has been issued less than <code>max_batch_lifetime</code> times, the
-Aggregator <span class="bcp14">MUST</span> abort with error "batchLifetimeExceeded".<a href="#section-4.5.5-4" class="pilcrow">¶</a></p>
-<p id="section-4.5.5-5">Finally, the Aggregator checks that the batch does not contain a report that was
+Aggregator <span class="bcp14">MUST</span> abort with error "batchLifetimeExceeded".<a href="#section-4.5.6-4" class="pilcrow">¶</a></p>
+<p id="section-4.5.6-5">Finally, the Aggregator checks that the batch does not contain a report that was
 included in any previous batch. If this batch overlap check fails, then the
 Aggregator <span class="bcp14">MUST</span> abort with error "batchOverlap". For time-interval tasks, it is
 sufficient (but not necessary) to check that the batch interval does not overlap
 with the batch interval of any previous query. If this batch interval check
-fails, then the Aggregator <span class="bcp14">MAY</span> abort with error "batchOverlap".<a href="#section-4.5.5-5" class="pilcrow">¶</a></p>
-<p id="section-4.5.5-6">[[OPEN ISSUE: #195 tracks how we might relax this constraint to allow for more
+fails, then the Aggregator <span class="bcp14">MAY</span> abort with error "batchOverlap".<a href="#section-4.5.6-5" class="pilcrow">¶</a></p>
+<p id="section-4.5.6-6">[[OPEN ISSUE: #195 tracks how we might relax this constraint to allow for more
 collect query flexibility. As of now, this is quite rigid and doesn't give the
-collector much room for mistakes.]]<a href="#section-4.5.5-6" class="pilcrow">¶</a></p>
+collector much room for mistakes.]]<a href="#section-4.5.6-6" class="pilcrow">¶</a></p>
 <div id="time-interval-batch-validation">
-<section id="section-4.5.5.1">
+<section id="section-4.5.6.1">
             <h5 id="name-time-interval-queries-2">
-<a href="#section-4.5.5.1" class="section-number selfRef">4.5.5.1. </a><a href="#name-time-interval-queries-2" class="section-name selfRef">Time-interval Queries</a>
+<a href="#section-4.5.6.1" class="section-number selfRef">4.5.6.1. </a><a href="#name-time-interval-queries-2" class="section-name selfRef">Time-interval Queries</a>
             </h5>
 <div id="boundary-check">
-<section id="section-4.5.5.1.1">
+<section id="section-4.5.6.1.1">
               <h6 id="name-boundary-check">
-<a href="#section-4.5.5.1.1" class="section-number selfRef">4.5.5.1.1. </a><a href="#name-boundary-check" class="section-name selfRef">Boundary Check</a>
+<a href="#section-4.5.6.1.1" class="section-number selfRef">4.5.6.1.1. </a><a href="#name-boundary-check" class="section-name selfRef">Boundary Check</a>
               </h6>
-<p id="section-4.5.5.1.1-1">The batch boundaries are determined by the <code>time_precision</code> field of the query
+<p id="section-4.5.6.1.1-1">The batch boundaries are determined by the <code>time_precision</code> field of the query
 configuration. For the <code>batch_interval</code> included with the query, the Aggregator
-checks that:<a href="#section-4.5.5.1.1-1" class="pilcrow">¶</a></p>
+checks that:<a href="#section-4.5.6.1.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.5.1.1-2.1">
+<li class="normal" id="section-4.5.6.1.1-2.1">
                   <code>batch_interval.duration &gt;= time_precision</code> (this field determines,
-effectively, the minimum batch duration)<a href="#section-4.5.5.1.1-2.1" class="pilcrow">¶</a>
+effectively, the minimum batch duration)<a href="#section-4.5.6.1.1-2.1" class="pilcrow">¶</a>
 </li>
-                <li class="normal" id="section-4.5.5.1.1-2.2">both <code>batch_interval.start</code> and <code>batch_interval.duration</code> are divisible by
-<code>time_precision</code><a href="#section-4.5.5.1.1-2.2" class="pilcrow">¶</a>
+                <li class="normal" id="section-4.5.6.1.1-2.2">both <code>batch_interval.start</code> and <code>batch_interval.duration</code> are divisible by
+<code>time_precision</code><a href="#section-4.5.6.1.1-2.2" class="pilcrow">¶</a>
 </li>
               </ul>
-<p id="section-4.5.5.1.1-3">These measures ensure that Aggregators can efficiently "pre-aggregate" output
-shares recovered during the aggregation sub-protocol.<a href="#section-4.5.5.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.5.6.1.1-3">These measures ensure that Aggregators can efficiently "pre-aggregate" output
+shares recovered during the aggregation sub-protocol.<a href="#section-4.5.6.1.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="size-check">
-<section id="section-4.5.5.1.2">
+<section id="section-4.5.6.1.2">
               <h6 id="name-size-check">
-<a href="#section-4.5.5.1.2" class="section-number selfRef">4.5.5.1.2. </a><a href="#name-size-check" class="section-name selfRef">Size Check</a>
+<a href="#section-4.5.6.1.2" class="section-number selfRef">4.5.6.1.2. </a><a href="#name-size-check" class="section-name selfRef">Size Check</a>
               </h6>
-<p id="section-4.5.5.1.2-1">The query configuration specifies the minimum batch size, <code>min_batch_size</code>. The
+<p id="section-4.5.6.1.2-1">The query configuration specifies the minimum batch size, <code>min_batch_size</code>. The
 Aggregator checks that <code>len(X) &gt;= min_batch_size</code>, where <code>X</code> is the set of
-reports in the batch.<a href="#section-4.5.5.1.2-1" class="pilcrow">¶</a></p>
+reports in the batch.<a href="#section-4.5.6.1.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
 </div>
 <div id="fixed-size-batch-validation">
-<section id="section-4.5.5.2">
+<section id="section-4.5.6.2">
             <h5 id="name-fixed-size-queries-2">
-<a href="#section-4.5.5.2" class="section-number selfRef">4.5.5.2. </a><a href="#name-fixed-size-queries-2" class="section-name selfRef">Fixed-size Queries</a>
+<a href="#section-4.5.6.2" class="section-number selfRef">4.5.6.2. </a><a href="#name-fixed-size-queries-2" class="section-name selfRef">Fixed-size Queries</a>
             </h5>
 <div id="boundary-check-1">
-<section id="section-4.5.5.2.1">
+<section id="section-4.5.6.2.1">
               <h6 id="name-boundary-check-2">
-<a href="#section-4.5.5.2.1" class="section-number selfRef">4.5.5.2.1. </a><a href="#name-boundary-check-2" class="section-name selfRef">Boundary Check</a>
+<a href="#section-4.5.6.2.1" class="section-number selfRef">4.5.6.2.1. </a><a href="#name-boundary-check-2" class="section-name selfRef">Boundary Check</a>
               </h6>
-<p id="section-4.5.5.2.1-1">For fixed-size tasks, the batch boundaries are defined by "batch IDs" selected
+<p id="section-4.5.6.2.1-1">For fixed-size tasks, the batch boundaries are defined by "batch IDs" selected
 by the Leader. Thus the Aggregator needs to check that the query is associated
-with a known batch ID:<a href="#section-4.5.5.2.1-1" class="pilcrow">¶</a></p>
+with a known batch ID:<a href="#section-4.5.6.2.1-1" class="pilcrow">¶</a></p>
 <ul class="normal">
-<li class="normal" id="section-4.5.5.2.1-2.1">
-                  <p id="section-4.5.5.2.1-2.1.1">If the query contained in the CollectReq has type <code>by-batch-id</code>, the
+<li class="normal" id="section-4.5.6.2.1-2.1">
+                  <p id="section-4.5.6.2.1-2.1.1">If the query contained in the CollectReq has type <code>by-batch-id</code>, the
 Leader checks that the provided batch ID corresponds to a batch ID it
-returned in a previous CollectResp for the task.<a href="#section-4.5.5.2.1-2.1.1" class="pilcrow">¶</a></p>
-<p id="section-4.5.5.2.1-2.1.2">
-[OPEN ISSUE: Consider making batch IDs predictable. See issue #301.]<a href="#section-4.5.5.2.1-2.1.2" class="pilcrow">¶</a></p>
+returned in a previous CollectResp for the task.<a href="#section-4.5.6.2.1-2.1.1" class="pilcrow">¶</a></p>
+<p id="section-4.5.6.2.1-2.1.2">
+[OPEN ISSUE: Consider making batch IDs predictable. See issue #301.]<a href="#section-4.5.6.2.1-2.1.2" class="pilcrow">¶</a></p>
 </li>
-                <li class="normal" id="section-4.5.5.2.1-2.2">The Helper checks that the batch ID provided by the leader in its
+                <li class="normal" id="section-4.5.6.2.1-2.2">The Helper checks that the batch ID provided by the leader in its
 AggregateShareReq corresponds to a batch ID used in a previous
-AggregateInitializeReq for the task.<a href="#section-4.5.5.2.1-2.2" class="pilcrow">¶</a>
+AggregateInitializeReq for the task.<a href="#section-4.5.6.2.1-2.2" class="pilcrow">¶</a>
 </li>
               </ul>
 </section>
 </div>
 <div id="size-check-1">
-<section id="section-4.5.5.2.2">
+<section id="section-4.5.6.2.2">
               <h6 id="name-size-check-2">
-<a href="#section-4.5.5.2.2" class="section-number selfRef">4.5.5.2.2. </a><a href="#name-size-check-2" class="section-name selfRef">Size Check</a>
+<a href="#section-4.5.6.2.2" class="section-number selfRef">4.5.6.2.2. </a><a href="#name-size-check-2" class="section-name selfRef">Size Check</a>
               </h6>
-<p id="section-4.5.5.2.2-1">The query configuration specifies the minimum batch size, <code>min_batch_size</code>, and
+<p id="section-4.5.6.2.2-1">The query configuration specifies the minimum batch size, <code>min_batch_size</code>, and
 maximum batch size, <code>max_batch_size</code>. The Aggregator checks that <code>len(X) &gt;=
 min_batch_size</code> and <code>len(X) &lt;= max_batch_size</code>, where <code>X</code> is the set of reports
-in the batch.<a href="#section-4.5.5.2.2-1" class="pilcrow">¶</a></p>
+in the batch.<a href="#section-4.5.6.2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -3255,31 +3235,31 @@ in the batch.<a href="#section-4.5.5.2.2-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="anti-replay">
-<section id="section-4.5.6">
+<section id="section-4.5.7">
           <h4 id="name-anti-replay">
-<a href="#section-4.5.6" class="section-number selfRef">4.5.6. </a><a href="#name-anti-replay" class="section-name selfRef">Anti-replay</a>
+<a href="#section-4.5.7" class="section-number selfRef">4.5.7. </a><a href="#name-anti-replay" class="section-name selfRef">Anti-replay</a>
           </h4>
-<p id="section-4.5.6-1">Using a client-provided report multiple times within a single batch, or using
+<p id="section-4.5.7-1">Using a client-provided report multiple times within a single batch, or using
 the same report in multiple batches, may allow a server to learn information
 about the client's measurement, violating the privacy goal of DAP. To
 prevent such replay attacks, this specification requires the aggregators to
-detect and filter out replayed reports.<a href="#section-4.5.6-1" class="pilcrow">¶</a></p>
-<p id="section-4.5.6-2">To detect replay attacks, each aggregator keeps track of the set of nonces
+detect and filter out replayed reports.<a href="#section-4.5.7-1" class="pilcrow">¶</a></p>
+<p id="section-4.5.7-2">To detect replay attacks, each aggregator keeps track of the set of nonces
 pertaining to reports that were previously aggregated for a given task. If the
 leader receives a report from a client whose nonce is in this set, it either
 ignores it or aborts the upload sub-protocol as described in <a href="#upload-flow" class="xref">Section 4.3</a>. A
 Helper who receives an encrypted input share whose nonce is in this set rejects
-the report as described in <a href="#input-share-batch-validation" class="xref">Section 4.4.1.4</a>.<a href="#section-4.5.6-2" class="pilcrow">¶</a></p>
-<p id="section-4.5.6-3">[OPEN ISSUE: This has the potential to require aggreagtors to store nonce sests
-indefinitely. See issue#180.]<a href="#section-4.5.6-3" class="pilcrow">¶</a></p>
-<p id="section-4.5.6-4">A malicious aggregator may attempt to force a replay by replacing the nonce
+the report as described in <a href="#input-share-batch-validation" class="xref">Section 4.4.1.4</a>.<a href="#section-4.5.7-2" class="pilcrow">¶</a></p>
+<p id="section-4.5.7-3">[OPEN ISSUE: This has the potential to require aggreagtors to store nonce sests
+indefinitely. See issue#180.]<a href="#section-4.5.7-3" class="pilcrow">¶</a></p>
+<p id="section-4.5.7-4">A malicious aggregator may attempt to force a replay by replacing the nonce
 generated by the client with a nonce its peer has not yet seen. To prevent this,
 clients incorporate the nonce into the AAD for HPKE encryption, ensuring that
 the output share is only recovered if the aggregator is given the correct nonce.
-(See <a href="#upload-request" class="xref">Section 4.3.2</a>.)<a href="#section-4.5.6-4" class="pilcrow">¶</a></p>
-<p id="section-4.5.6-5">Aggregators prevent the same report from being used in multiple batches (except
+(See <a href="#upload-request" class="xref">Section 4.3.2</a>.)<a href="#section-4.5.7-4" class="pilcrow">¶</a></p>
+<p id="section-4.5.7-5">Aggregators prevent the same report from being used in multiple batches (except
 as required by the protocol) by only responding to valid collect requests, as
-described in <a href="#batch-validation" class="xref">Section 4.5.5</a>.<a href="#section-4.5.6-5" class="pilcrow">¶</a></p>
+described in <a href="#batch-validation" class="xref">Section 4.5.6</a>.<a href="#section-4.5.7-5" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>
@@ -3339,7 +3319,7 @@ protocol.<a href="#section-5.1.2-2.2" class="pilcrow">¶</a>
 <li class="normal" id="section-5.1.2-4.1">Implement some form of batch-to-report index, as well as inter- and
 intra-batch replay mitigation storage, which includes some way of tracking
 batch report size. Some of this state may be used for replay attack
-mitigation. The replay mitigation strategy is described in <a href="#anti-replay" class="xref">Section 4.5.6</a>.<a href="#section-5.1.2-4.1" class="pilcrow">¶</a>
+mitigation. The replay mitigation strategy is described in <a href="#anti-replay" class="xref">Section 4.5.7</a>.<a href="#section-5.1.2-4.1" class="pilcrow">¶</a>
 </li>
           </ul>
 <p id="section-5.1.2-5">Beyond the minimal capabilities required of helpers, leaders are generally
@@ -3354,7 +3334,7 @@ shares from helpers.<a href="#section-5.1.2-6.2" class="pilcrow">¶</a>
 <p id="section-5.1.2-7">In addition, for each DAP task, leaders are required to:<a href="#section-5.1.2-7" class="pilcrow">¶</a></p>
 <ul class="normal">
 <li class="normal" id="section-5.1.2-8.1">Implement and store state for the form of inter- and intra-batch replay
-mitigation in <a href="#anti-replay" class="xref">Section 4.5.6</a>; and<a href="#section-5.1.2-8.1" class="pilcrow">¶</a>
+mitigation in <a href="#anti-replay" class="xref">Section 4.5.7</a>; and<a href="#section-5.1.2-8.1" class="pilcrow">¶</a>
 </li>
           </ul>
 </section>
@@ -3435,7 +3415,7 @@ is only run once per report, each aggregator only needs to store its
 aggregate share for each possible batch interval, along with the number of times
 the aggregate share was used in a batch. This is due to the requirement that the
 batch interval respect the boundaries defined by the DAP parameters. (See
-<a href="#batch-validation" class="xref">Section 4.5.5</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
+<a href="#batch-validation" class="xref">Section 4.5.6</a>.)<a href="#section-5.4.1-1" class="pilcrow">¶</a></p>
 </section>
 </div>
 </section>

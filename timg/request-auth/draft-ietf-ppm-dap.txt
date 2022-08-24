@@ -86,10 +86,6 @@ Table of Contents
      2.2.  Validating Inputs
    3.  Message Transport
      3.1.  Request Authentication
-       3.1.1.  Client to aggregator
-       3.1.2.  Inter-aggregator
-       3.1.3.  Collector to leader
-       3.1.4.  Collector to helper
      3.2.  Errors
    4.  Protocol Definition
      4.1.  Queries
@@ -100,16 +96,19 @@ Table of Contents
        4.3.1.  HPKE Configuration Request
        4.3.2.  Upload Request
        4.3.3.  Upload Extensions
+       4.3.4.  Upload Message Security
      4.4.  Verifying and Aggregating Reports
        4.4.1.  Aggregate Initialization
        4.4.2.  Aggregate Continuation
+       4.4.3.  Aggregate Message Security
      4.5.  Collecting Results
        4.5.1.  Collection Initialization
        4.5.2.  Collection Aggregation
        4.5.3.  Collection Finalization
        4.5.4.  Aggregate Share Encryption
-       4.5.5.  Batch Validation
-       4.5.6.  Anti-replay
+       4.5.5.  Collect Message Security
+       4.5.6.  Batch Validation
+       4.5.7.  Anti-replay
    5.  Operational Considerations
      5.1.  Protocol participant capabilities
        5.1.1.  Client capabilities
@@ -422,9 +421,7 @@ Table of Contents
 3.1.  Request Authentication
 
    DAP is made up of several sub-protocols in which different subsets of
-   the protocol's participants interact with each other.  In this
-   section we enumerate those interactions and their security
-   requirements.
+   the protocol's participants interact with each other.
 
    In those cases where a channel between two participants is tunneled
    through another protocol participant, DAP mandates the use of
@@ -439,93 +436,6 @@ Table of Contents
    authentication mechanisms that they already supports.  Discovering
    what authentication mechanisms are supported by a DAP participant is
    outside of this document's scope.
-
-3.1.1.  Client to aggregator
-
-   Clients upload reports to aggregators, as detailed in Section 4.3.
-   The contents of each input share must be kept confidential from
-   everyone but the client and the aggregator it is being sent to and
-   clients must be able to authenticate the aggregator they upload to.
-
-   The HTTPS channel provides confidentiality between the client and the
-   leader, but this is not sufficient since the helper's report shares
-   are relayed through the leader.  Confidentiality of report shares is
-   achieved by encrypting each report share to a public key held by the
-   respective aggregator.  Clients fetch the public keys from each
-   aggregator over HTTPS, allowing them to authenticate the server.
-
-   Aggregators MAY require clients to authenticate when uploading
-   reports.  This is an effective mitigation against Sybil attacks in
-   deployments where it is practical for each client to have an identity
-   provisioned (e.g., a user logged into an online service or a hardware
-   device programmed with an identity).  If it is used, client
-   authentication MUST use a scheme that meets the requirements in
-   Section 3.1.
-
-   In some deployments, it will not be practical to require clients to
-   authenticate (e.g., a widely distributed application that does not
-   require its users to login to any service), so client authentication
-   is not mandatory in DAP.  In the absence of client authentication,
-   implementations SHOULD deploy some mitigation against Sybil attacks.
-
-3.1.2.  Inter-aggregator
-
-   The leader and helper aggregators communicate to prepare input
-   shares, as detailed in Section 4.4, and to aggregate output shares
-   into aggregate shares, as detailed in Section 4.5.2.  These messages
-   must be confidential and mutually authenticated.
-
-   The aggregate sub-protocol is driven by the leader acting as an HTTPS
-   client, making requests to the helper's HTTPS server.  HTTPS provides
-   confidentiality and authenticates the helper to the leader.
-
-   Leaders MUST authenticate their requests to helpers using a scheme
-   that meets the requirements in Section 3.1.
-
-3.1.3.  Collector to leader
-
-   The collector makes requests to the leader in order to obtain
-   aggregate shares, as detailed in Section 4.5).  Collect sub-protocol
-   messages must be confidential and mutually authenticated.
-
-   HTTPS provides confidentiality and authenticates the leader to the
-   collector.  Additionally, the leader encrypts its aggregate share to
-   a public key held by the collector.
-
-   Collectors MUST authenticate their requests to leaders using a scheme
-   that meets the requirements in Section 3.1.
-
-   [[OPEN ISSUE: collector public key is currently in the task
-   parameters, but this will have to change #102]]
-
-3.1.4.  Collector to helper
-
-   The collector and helper never directly communicate with each other,
-   but the helper does transmit an aggregate share to the collector
-   through the leader, as detailed in Section 4.5.2.  The aggregate
-   share must be confidential from everyone but the helper and the
-   collector.
-
-   Confidentiality is achieved by having the helper encrypt its
-   aggregate share to a public key held by the collector.
-
-   There is no authentication between the collector and the helper.
-   This allows the leader to:
-
-   *  Send collect parameters to the helper that do not reflect the
-      parameters chosen by the collector
-
-   *  Discard the aggregate share computed by the helper and then
-      fabricate aggregate shares that combine into an arbitrary
-      aggregate result
-
-   These are both attacks on soundness, which we already assume to hold
-   only if both aggregators are honest, which puts these malicious-
-   leader attacks out of scope.
-
-   [[OPEN ISSUE: Should we have authentication in either direction
-   between the helper and the collector? #155]] [[OPEN ISSUE: DAP and/or
-   VDAF should spell out what "soundness" and "privacy" mean]]
 
 3.2.  Errors
 
@@ -721,7 +631,7 @@ struct {
 
    *  time_precision - Clients use this value to truncate their report
       timestamps; see Section 4.3.  Additional semantics may apply,
-      depending on the query type.  (See Section 4.5.5 for details.)
+      depending on the query type.  (See Section 4.5.6 for details.)
 
    The parameters pertaining to specific query types are described in
    the relevant subsection below.
@@ -927,7 +837,7 @@ struct {
       be used to link a report back to the Client that generated it.
 
    *  A nonce used by the Aggregators to ensure the report appears in at
-      most one batch.  (See Section 4.5.6.)  The Client MUST generate
+      most one batch.  (See Section 4.5.7.)  The Client MUST generate
       this by generating 16 random bytes using a cryptographically
       secure random number gnerator.
 
@@ -1002,6 +912,33 @@ struct {
 
    "extension_type" indicates the type of extension, and
    "extension_data" contains information specific to the extension.
+
+4.3.4.  Upload Message Security
+
+   The contents of each input share must be kept confidential from
+   everyone but the client and the aggregator it is being sent to and
+   clients must be able to authenticate the aggregator they upload to.
+
+   HTTPS provides confidentiality between the client and the leader, but
+   this is not sufficient since the helper's report shares are relayed
+   through the leader.  Confidentiality of report shares is achieved by
+   encrypting each report share to a public key held by the respective
+   aggregator.  Clients fetch the public keys from each aggregator over
+   HTTPS, allowing them to authenticate the server.
+
+   Aggregators MAY require clients to authenticate when uploading
+   reports.  This is an effective mitigation against Sybil attacks in
+   deployments where it is practical for each client to have an identity
+   provisioned (e.g., a user logged into an online service or a hardware
+   device programmed with an identity).  If it is used, client
+   authentication MUST use a scheme that meets the requirements in
+   Section 3.1.
+
+   In some deployments, it will not be practical to require clients to
+   authenticate (e.g., a widely distributed application that does not
+   require its users to login to any service), so client authentication
+   is not mandatory in DAP.  In the absence of client authentication,
+   implementations SHOULD deploy some mitigation against Sybil attacks.
 
 4.4.  Verifying and Aggregating Reports
 
@@ -1312,7 +1249,7 @@ struct {
        case if the report was used in a previous aggregate request and
        is therefore a replay.  An aggregator may also choose to mark an
        input share as invalid with the error report-dropped under the
-       conditions prescribed in Section 4.5.6.
+       conditions prescribed in Section 4.5.7.
 
    3.  Depending on the query type for the task, additional checks may
        be applicable:
@@ -1323,7 +1260,7 @@ struct {
           size (per the task configuration), the Aggregator MAY mark the
           input share as invalid with the error "batch-saturated".  Note
           that this behavior is not strictly enforced here but during
-          the collect sub-protocol.  (See Section 4.5.5.)  If both
+          the collect sub-protocol.  (See Section 4.5.6.)  If both
           checks succeed, the input share is not marked as invalid.
 
 4.4.1.5.  Input Share Preparation
@@ -1477,6 +1414,18 @@ out = VDAF.prep_next(prep_state, inbound)
    [[OPEN ISSUE: consider relaxing this ordering constraint.  See
    issue#217.]]
 
+4.4.3.  Aggregate Message Security
+
+   Aggregate sub-protocol messages must be confidential and mutually
+   authenticated.
+
+   The aggregate sub-protocol is driven by the leader acting as an HTTPS
+   client, making requests to the helper's HTTPS server.  HTTPS provides
+   confidentiality and authenticates the helper to the leader.
+
+   Leaders MUST authenticate their requests to helpers using a scheme
+   that meets the requirements in Section 3.1.
+
 4.5.  Collecting Results
 
    In this phase, the Collector requests aggregate shares from each
@@ -1533,7 +1482,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    Upon receipt of a CollectReq, the leader begins by checking that the
    request meets the requirements of the batch parameters using the
-   procedure in Section 4.5.5.  If so, it immediately sends the
+   procedure in Section 4.5.6.  If so, it immediately sends the
    collector a response with HTTP status 303 See Other and a Location
    header containing a URI identifying the collect job that can be
    polled by the collector, called the "collect job URI".
@@ -1648,7 +1597,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    To handle the leader's request, the helper first ensures that the
    request meets the requirements for batch parameters following the
-   procedure in Section 4.5.5.
+   procedure in Section 4.5.6.
 
    Next, it computes a checksum based on the reports that satisfy the
    query, and checks that the report_count and checksum included in the
@@ -1664,7 +1613,7 @@ out = VDAF.prep_next(prep_state, inbound)
    Note that for most VDAFs, it is possible to aggregate output shares
    as they arrive rather than wait until the batch is collected.  To do
    so however, it is necessary to enforce the batch parameters as
-   described in Section 4.5.5 so that the aggregator knows which
+   described in Section 4.5.6 so that the aggregator knows which
    aggregate share to update.
 
    The helper then encrypts agg_share under the collector's HPKE public
@@ -1745,7 +1694,49 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    *  For fixed-size tasks, the batch selector is the batch ID assigned
       sent in the response.
 
-4.5.5.  Batch Validation
+4.5.5.  Collect Message Security
+
+   Collect sub-protocol messages must be confidential and mutually
+   authenticated.
+
+   HTTPS provides confidentiality and authenticates the leader to the
+   collector.  Additionally, the leader encrypts its aggregate share to
+   a public key held by the collector.
+
+   Collectors MUST authenticate their requests to leaders using a scheme
+   that meets the requirements in Section 3.1.
+
+   [[OPEN ISSUE: collector public key is currently in the task
+   parameters, but this will have to change #102]]
+
+   The collector and helper never directly communicate with each other,
+   but the helper does transmit an aggregate share to the collector
+   through the leader, as detailed in Section 4.5.2.  The aggregate
+   share must be confidential from everyone but the helper and the
+   collector.
+
+   Confidentiality is achieved by having the helper encrypt its
+   aggregate share to a public key held by the collector.
+
+   There is no authentication between the collector and the helper.
+   This allows the leader to:
+
+   *  Send collect parameters to the helper that do not reflect the
+      parameters chosen by the collector
+
+   *  Discard the aggregate share computed by the helper and then
+      fabricate aggregate shares that combine into an arbitrary
+      aggregate result
+
+   These are both attacks on soundness, which we already assume to hold
+   only if both aggregators are honest, which puts these malicious-
+   leader attacks out of scope.
+
+   [[OPEN ISSUE: Should we have authentication in either direction
+   between the helper and the collector? #155]] [[OPEN ISSUE: DAP and/or
+   VDAF should spell out what "soundness" and "privacy" mean]]
+
+4.5.6.  Batch Validation
 
    Before an Aggregator responds to a CollectReq or AggregateShareReq,
    it must first check that the request does not violate the parameters
@@ -1778,9 +1769,9 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the collector much room for mistakes.]]
 
-4.5.5.1.  Time-interval Queries
+4.5.6.1.  Time-interval Queries
 
-4.5.5.1.1.  Boundary Check
+4.5.6.1.1.  Boundary Check
 
    The batch boundaries are determined by the time_precision field of
    the query configuration.  For the batch_interval included with the
@@ -1796,15 +1787,15 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    aggregate" output shares recovered during the aggregation sub-
    protocol.
 
-4.5.5.1.2.  Size Check
+4.5.6.1.2.  Size Check
 
    The query configuration specifies the minimum batch size,
    min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
    where X is the set of reports in the batch.
 
-4.5.5.2.  Fixed-size Queries
+4.5.6.2.  Fixed-size Queries
 
-4.5.5.2.1.  Boundary Check
+4.5.6.2.1.  Boundary Check
 
    For fixed-size tasks, the batch boundaries are defined by "batch IDs"
    selected by the Leader.  Thus the Aggregator needs to check that the
@@ -1821,14 +1812,14 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
       AggregateShareReq corresponds to a batch ID used in a previous
       AggregateInitializeReq for the task.
 
-4.5.5.2.2.  Size Check
+4.5.6.2.2.  Size Check
 
    The query configuration specifies the minimum batch size,
    min_batch_size, and maximum batch size, max_batch_size.  The
    Aggregator checks that len(X) >= min_batch_size and len(X) <=
    max_batch_size, where X is the set of reports in the batch.
 
-4.5.6.  Anti-replay
+4.5.7.  Anti-replay
 
    Using a client-provided report multiple times within a single batch,
    or using the same report in multiple batches, may allow a server to
@@ -1856,7 +1847,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Aggregators prevent the same report from being used in multiple
    batches (except as required by the protocol) by only responding to
-   valid collect requests, as described in Section 4.5.5.
+   valid collect requests, as described in Section 4.5.6.
 
 5.  Operational Considerations
 
@@ -1904,7 +1895,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
       and intra-batch replay mitigation storage, which includes some way
       of tracking batch report size.  Some of this state may be used for
       replay attack mitigation.  The replay mitigation strategy is
-      described in Section 4.5.6.
+      described in Section 4.5.7.
 
    Beyond the minimal capabilities required of helpers, leaders are
    generally required to:
@@ -1917,7 +1908,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    In addition, for each DAP task, leaders are required to:
 
    *  Implement and store state for the form of inter- and intra-batch
-      replay mitigation in Section 4.5.6; and
+      replay mitigation in Section 4.5.7; and
 
 5.1.3.  Collector capabilities
 
@@ -1991,7 +1982,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    each possible batch interval, along with the number of times the
    aggregate share was used in a batch.  This is due to the requirement
    that the batch interval respect the boundaries defined by the DAP
-   parameters.  (See Section 4.5.5.)
+   parameters.  (See Section 4.5.6.)
 
 6.  Compliance Requirements
 
