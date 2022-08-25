@@ -3015,12 +3015,15 @@ decrypts each aggregate share as described in <a href="#aggregate-share-encrypt"
 If the collector successfully decrypts all aggregate shares, the collector
 then unshards the aggregate shares into an aggregate result using the VDAF's
 <code>agg_shares_to_result</code> algorithm. In particular, let <code>agg_shares</code> denote the
-ordered sequence of aggregator shares, ordered by aggregator index, and let
-<code>agg_param</code> be the opaque aggregation parameter. The final aggregate result
-is computed as follows:<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
+ordered sequence of aggregator shares, ordered by aggregator index, let
+<code>report_count</code> denote the reprot count sent by the Leader, and let <code>agg_param</code>
+be the opaque aggregation parameter. The final aggregate result is computed as
+follows:<a href="#section-4.5.3-1" class="pilcrow">¶</a></p>
 <div class="alignLeft art-text artwork" id="section-4.5.3-2">
 <pre>
-agg_result = VDAF.agg_shares_to_result(agg_param, agg_shares)
+agg_result = VDAF.agg_shares_to_result(agg_param,
+                                       agg_shares,
+                                       report_count)
 </pre><a href="#section-4.5.3-2" class="pilcrow">¶</a>
 </div>
 </section>

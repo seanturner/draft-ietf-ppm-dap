@@ -1641,11 +1641,14 @@ out = VDAF.prep_next(prep_state, inbound)
    all aggregate shares, the collector then unshards the aggregate
    shares into an aggregate result using the VDAF's agg_shares_to_result
    algorithm.  In particular, let agg_shares denote the ordered sequence
-   of aggregator shares, ordered by aggregator index, and let agg_param
-   be the opaque aggregation parameter.  The final aggregate result is
-   computed as follows:
+   of aggregator shares, ordered by aggregator index, let report_count
+   denote the reprot count sent by the Leader, and let agg_param be the
+   opaque aggregation parameter.  The final aggregate result is computed
+   as follows:
 
-   agg_result = VDAF.agg_shares_to_result(agg_param, agg_shares)
+   agg_result = VDAF.agg_shares_to_result(agg_param,
+                                          agg_shares,
+                                          report_count)
 
 4.5.4.  Aggregate Share Encryption
 
