@@ -1773,16 +1773,17 @@ HTTPS provides server authentication and confidentiality. Use of HTTPS is
 <p id="section-3.1-1">DAP is made up of several sub-protocols in which different subsets of the
 protocol's participants interact with each other.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
 <p id="section-3.1-2">In those cases where a channel between two participants is tunneled through
-another protocol participant, DAP mandates the use of authenticated encryption
+another protocol participant, DAP mandates the use of public-key encryption
 using <span>[<a href="#HPKE" class="xref">HPKE</a>]</span> to ensure that only the intended recipient can see a
 message in the clear.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
 <p id="section-3.1-3">In other cases, DAP requires HTTPS client authentication. Any authentication
 scheme that is composable with HTTP is allowed. For example, <span>[<a href="#OAuth2" class="xref">OAuth2</a>]</span>
 credentials are presented in an Authorization HTTP header, which can be added to
-any DAP protocol message. This allows organizations deploying DAP to use
-existing well-known HTTP authentication mechanisms that they already support.
-Discovering what authentication mechanisms are supported by a DAP participant
-is outside of this document's scope.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+any DAP protocol message, or TLS client certificates are another viable
+solution. This allows organizations deploying DAP to use existing well-known
+HTTP authentication mechanisms that they already support. Discovering what
+authentication mechanisms are supported by a DAP participant is outside of this
+document's scope.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
 </section>
 </div>
 <div id="errors">
