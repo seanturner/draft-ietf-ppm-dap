@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-23T01:45:17.389587+00:00",
+  "timestamp": "2022-08-25T01:42:11.636456+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -4491,7 +4491,7 @@
       "labels": [],
       "body": "The server only supplies one config, so what happens if the server would support X22519 and P-256? We can fix this by having the server supply multiple configs.",
       "createdAt": "2022-05-12T15:38:26Z",
-      "updatedAt": "2022-06-27T19:31:33Z",
+      "updatedAt": "2022-08-24T18:50:27Z",
       "closedAt": null,
       "comments": [
         {
@@ -4500,6 +4500,13 @@
           "body": "This is probably a good idea. We could just change the payload of the response to `GET /hpke_config` to a sequence of `HpkeConfig` messages rather than one.",
           "createdAt": "2022-06-27T19:31:33Z",
           "updatedAt": "2022-06-27T19:31:33Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "As mentioned in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/303#discussion_r954175414, it might be useful to allow the client to advertise which algorithms it supports. This would increase the likelihood of successfully negotiating an a HPKE suite that both parties support.",
+          "createdAt": "2022-08-24T18:50:27Z",
+          "updatedAt": "2022-08-24T18:50:27Z"
         }
       ]
     },
@@ -5200,7 +5207,7 @@
       ],
       "body": "Issue #261 touched on how task and job parameters are conveyed between aggregators across request and response messages. This issue tracks the more general question of how we convey these parameters. They could be conveyed in application messages as they are now, in URLs as query parameters, or even headers. \r\n\r\n@mnot, if you have cycles, I'd be very interested to hear what you think.\r\n\r\n_Originally posted by @BranLwyd in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/261#issuecomment-1132242994_",
       "createdAt": "2022-06-23T16:28:54Z",
-      "updatedAt": "2022-08-03T18:26:23Z",
+      "updatedAt": "2022-08-24T20:13:30Z",
       "closedAt": null,
       "comments": [
         {
@@ -5258,6 +5265,13 @@
           "body": "At IETF 114's PPM session, we discussed rewriting the HTTP API to be more resource oriented and align with the relevant BCPs ([slides 8-9](https://datatracker.ietf.org/meeting/114/materials/slides-114-ppm-whats-new-for-dap-00)). As I noted above, I'd like to get that done for the next draft, so I've retitled this issue to focus it on the work I plan to do.",
           "createdAt": "2022-08-03T18:26:23Z",
           "updatedAt": "2022-08-03T18:26:23Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "There are numerous places in DAP where we mandate specific HTTP status codes in responses, but [RFC 9205 recommends against this](https://httpwg.org/specs/rfc9205.html#using-http-status-codes). We should revisit prescriptions about responses and make sure that any protocol-critical error information is conveyed in a problem document type, and otherwise allow implementations to use whatever 4xx or 5xx HTTP status they want.\r\n\r\nRFC 9205 also suggests [a format for example HTTP messages](https://httpwg.org/specs/rfc9205.html#specifying-the-use-of-http), which we should use where possible.",
+          "createdAt": "2022-08-24T20:13:30Z",
+          "updatedAt": "2022-08-24T20:13:30Z"
         }
       ]
     },
@@ -5409,7 +5423,7 @@
       "labels": [],
       "body": "Task configuration between aggregators currently is handled out-of-band, this requires leader and helper to agree some secure method to exchange task configuration prior to upload.\r\n\r\nAn alternative is to create task in-band and on-demand from `Report` or `ReportShare` received from clients. Assuming server sends a unique task_id and all the parameters required by [Task configuration](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/blob/main/draft-ietf-ppm-dap.md#task-configuration-task-configuration) to the clients out-of-band (this is defined in client capability in current spec). Then clients can include these fields in report's `extension`, and upload them to servers along with reports. This is similar to an idea mentioned in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/271.\r\n\r\nUpon receiving a Report (leader) or ReportShare (helper) with unseen tuple of (task_id, extension), the aggregators create the task on-demand, then proceed to aggregate-flow as usual.\r\n\r\nThis can be optimised to avoid checking the tuple of (task_id, extension), by letting client create `task_id` based on `extension`. For example, the client can share some text that defines the use case, communicated to them out-of-band, then create `task_id` using `hash(\"shared text\" || extension)`.  This can be particularly useful if the \"shared text\" or part of extension is only available on the client side.\r\n\r\nThere are some nice features in this method:\r\n- By sending all task parameters to clients then return to the server, we add transparency to the task that clients participate in. Client has the choice to see what data has been collected with what parameters (like `min_batch_size`, `max_batch_lifetime`, or any differential privacy parameters if that's the privacy guarantee used). For some clients these task parameters can even be hardcoded on the client side (for e.g. on a mobile device) to avoid any tempering from server.\r\n- Because `extension` is used in HPKE's AAD, malicious leader cannot change the task parameters, for e.g reducing `min_batch_size`.\r\n- A \"task\" now means the same task_id and same task parameters (including parameters for choosing VDAF). We can guarantee reports from one task will only be aggregated with one VDAF. For the same reason, if a malicious client changes the task_id or task parameters, its report will be aggregated in a different task, with other poison reports from the same malicious attack. The \"good\" reports are not polluted. \r\n- It avoids any out-of-band task orchestration between leader and helper, which isn't defined by the spec yet.\r\n- The on-demand creation is easy to implement with streaming framework that has `groupBy` operator. In fact, task as an object doesn't have to exist in aggregators, it mainly becomes an identifier to group aggregations together.\r\n\r\nThe disadvantage is added overhead in `Report` and `ReportShare`. Some optimisation can be done by moving Extension out of `ReportShare` and into `AggregateInitReq`.\r\n\r\nNote that the parameters that are not necessarily tied to a task may still need to be exchanged out-of-band between aggregators, like collector hpke config (or even aggregator's hpke config, see https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/289). Secrets that should not be know by clients, like `vdaf_verify_key` must still be exchanged out-of-band.\r\n\r\n",
       "createdAt": "2022-07-21T22:33:43Z",
-      "updatedAt": "2022-08-17T00:07:45Z",
+      "updatedAt": "2022-08-24T21:35:27Z",
       "closedAt": null,
       "comments": [
         {
@@ -5530,6 +5544,13 @@
           "body": "+1 @simon-friedberger ",
           "createdAt": "2022-08-17T00:07:44Z",
           "updatedAt": "2022-08-17T00:07:44Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Hi folks, just wanted to update people here that @wangshan will be working on an extension (DAP's first!) to specify a mechanism for in-band task provisioning. I think the goal will be to get folks feedback in time for IETF 115 so that we can consider adopting the draft as a WG item.",
+          "createdAt": "2022-08-24T21:35:14Z",
+          "updatedAt": "2022-08-24T21:35:27Z"
         }
       ]
     },
@@ -5547,7 +5568,7 @@
       ],
       "body": "The current spec doesn't explain how to retire or delete a task. For some use cases, it's useful to have a hard task deadline, when expired, the task and all its aggregations must be made inactive and eventually deleted. This can be a new Duration type task parameter called `max_task_lifetime`, or `max_task_duration` to avoid similar named but int typed `max_batch_lifetime`.\r\n\r\nOther than the practical benefit, for clients that uploads repeatedly and periodically, this can add privacy benefit to limit the number of uploads from the same client to the same task (related to https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/210).\r\n\r\nPS. I feel like \"lifetime\" is more appropriate for a deadline than a max allowed count.",
       "createdAt": "2022-07-21T22:49:10Z",
-      "updatedAt": "2022-08-19T15:48:11Z",
+      "updatedAt": "2022-08-23T14:58:01Z",
       "closedAt": null,
       "comments": [
         {
@@ -5563,6 +5584,13 @@
           "body": "I filed #299 forgetting about this issue. I think we should do this, and more see this as a minimum amount of time the aggregators must hang onto task-related data before feeling free to start discarding things. ",
           "createdAt": "2022-08-17T21:16:34Z",
           "updatedAt": "2022-08-17T21:16:34Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I'm writing a PR for this feature, I realised there are two things this issue is trying to cover:\r\n\r\n1. The period that indicates a task is allowing participation. This is mainly a client-facing feature and is a **max** time.\r\n\r\n2. The **minimum** amount of time the aggregators must hang onto task-related data. This is more of an aggregator related feature.\r\n\r\nFor 1.  If we send task parameters to client for transparency, then client SHOULD check this timestamp before sending any queries to aggregators. To prevent malicious client from sending data to out of date task, aggregators should check the timestamp on these endpoint too. But this brings a lot of other issues: clock screw between client and aggregator, and clock screw between aggregators. On the collector side, aggregator cannot reject collect queries since the collect flow is asynchronous. Especially for interval based query and max_batch_lifetime > 1, collector may query a batch after the task itself is no longer active.\r\n\r\nBased on the current draft text, I agree with @chris-wood  that `max_task_lifetime` should be more about 2. It's more about retention of the task data and does not require any timestamp check on the task at each endpoint.   ",
+          "createdAt": "2022-08-23T14:58:01Z",
+          "updatedAt": "2022-08-23T14:58:01Z"
         }
       ]
     },
@@ -5694,15 +5722,25 @@
       "state": "OPEN",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "cjpatton"
+      ],
       "labels": [
         "draft-02"
       ],
       "body": "This will be VDAF-02 or 03, depending on when we need to cut DAP-02.",
       "createdAt": "2022-07-30T01:26:45Z",
-      "updatedAt": "2022-07-30T01:26:45Z",
+      "updatedAt": "2022-08-24T22:46:21Z",
       "closedAt": null,
-      "comments": []
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "VDAF-03 is out, I will send a PR by end of week. https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/03/",
+          "createdAt": "2022-08-24T22:46:09Z",
+          "updatedAt": "2022-08-24T22:46:09Z"
+        }
+      ]
     },
     {
       "number": 299,
@@ -5738,11 +5776,15 @@
       "state": "OPEN",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
-      "labels": [],
+      "assignees": [
+        "cjpatton"
+      ],
+      "labels": [
+        "draft-02"
+      ],
       "body": "For fixed-size tasks, the Leader picks a batch ID and passes it to the Collector with the CollectResp. This is so that the batch can be queried later on with a different aggregation parameter (as required for Poplar1). Alternatively, we could arrange for batch IDs to be \"predictable\" so that the Collector doesn't have to store batch IDs.\r\n\r\n\r\n_Originally posted by @chris-wood in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/297#issuecomment-1219697601_",
       "createdAt": "2022-08-18T17:25:27Z",
-      "updatedAt": "2022-08-19T22:51:56Z",
+      "updatedAt": "2022-08-24T21:33:26Z",
       "closedAt": null,
       "comments": [
         {
@@ -5751,6 +5793,20 @@
           "body": "With the current `next-batch` semantics, there is the possibility that a Collector crashing at an inopportune time might lead to a batch being lost permanently.\r\n\r\nIf batch IDs were predictable, this would be fixable in a fairly straightforward manner (from a [PR comment](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297#discussion_r948460390)):\r\n\r\n> Also, if it's acceptable to allow batch IDs to be enumerable (e.g. a counter, as suggested by others), I think a simpler idempotent design would be to have the Collector track which batch ID is next itself, and change next-batch to something like max-batch to allow Collectors to \"start up\" without knowing what the next batch is.",
           "createdAt": "2022-08-19T22:51:56Z",
           "updatedAt": "2022-08-19T22:51:56Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Here would be my suggested change for this: \r\n* Change type of `BatchID` from `uint8[32]` to `uint64`. Maybe call it `BatchNum`, since \"ID\" is always a 32-byte string elsewhere.\r\n* Have the Collector specify the `BatchID` in the collect request. Its choice of `BatchID` is arbitrary, except that the Aggregators are free to reject IDs that won't be ready for a while.\r\n* Allow the Leader to reject `BatchID`s that are too far into the future.\r\n\r\nAnything else to consider?\r\n\r\nI'll aim to have a PR up by end of week.",
+          "createdAt": "2022-08-23T15:31:46Z",
+          "updatedAt": "2022-08-23T15:34:09Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "You may wish to change `next-batch` to something like `current-batch` which causes the Leader to return the batch ID that is \"current.\" (Defined as something like \"the next batch that will be completed.\") This would allow a new Collector to start up with recent data, without needing out-of-band knowledge of the current batch ID.\r\n\r\nOTOH, I'm not sure if this `current-batch` functionality is necessary for any currently-planned deployment's needs; it's also possible to say that a Collector should simply start at the first Batch ID & iterate from there to find the latest Batch ID. In that case, the `next-batch` functionality could be dropped.",
+          "createdAt": "2022-08-23T22:46:55Z",
+          "updatedAt": "2022-08-23T22:46:55Z"
         }
       ]
     },
@@ -37042,6 +37098,481 @@
               "body": "(Just to check that I understand:) A batch `batch1` is \"valid\" if:\r\n1. (Total ordering) `batch1.start.time < batch1.end.time` or `batch1.start.time == batch1.end.time` and `batch1.start.nonce < batch1.end.nonce`\r\n2. (Non-overlapping) There is no prior batch `batch0` that intersects with `batch1`, i.e., there is at least one nonce contained in both batches\r\n3. (Boundary aligned) `batch1.start.time` and `batch1.start.end` are both equal to `0 (mod time_precision)`\r\n\r\nAnything I'm missing?",
               "createdAt": "2022-08-17T18:38:01Z",
               "updatedAt": "2022-08-17T18:38:35Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 303,
+      "id": "PR_kwDOFEJYQs49tC-w",
+      "title": "Make \"task_id\" optional in \"/hpke_config\" endpoint, and allow aggrega\u2026",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/303",
+      "state": "OPEN",
+      "author": "junyechen1996",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "\u2026tors to return a vector of \"HpkeConfig\".\r\n\r\n- Addresses issues #289 and #248",
+      "createdAt": "2022-08-24T09:34:13Z",
+      "updatedAt": "2022-08-24T23:56:28Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "headRepository": "junyechen1996/draft-ietf-ppm-dap",
+      "headRefName": "junyec/hpke_config_change",
+      "headRefOid": "159d4d2d5e76f446fe6ee7b78ec62524a91e6993",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "looks good, @chris-wood is the size of hpke_configs <1..2^16-1> needs expanding, given that it can contain more than one configs?",
+          "createdAt": "2022-08-24T12:42:03Z",
+          "updatedAt": "2022-08-24T12:42:03Z"
+        },
+        {
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "body": "> Looking good. One high level question I have: How does a client decide whether to add a query parameter or not? Perhaps we should try to spell out this discovery process:\r\n> \r\n> * The Client first sends GET /hpke_config.\r\n> * The Aggregator MAY abort with \"missingTaskID\", in which case the client retries with `task_id`.\r\n> * The Client is of course free to skip the first request if it knows it's going to need to provide a `task_id`.\r\n\r\nDo you mean I should have some texts specifying the behavior when a client doesn't know if a deployment enforces different HPKE configurations for different tasks? Some thoughts I have here:\r\n- As a first step, in the existing protocol text, after this sentence: \"then the aggregator responds with HTTP status code 400 Bad Request and an error of type `missingTaskID`\", I can add: \"The client can then retry the request by specifying a well-formed Task ID as the `task_id` parameter\".\r\n- With the above sentence, I think it's fairly clear that clients should retry the request with a task ID if the problem type is `missingTaskID`. I can try to spell out the discovery process as well, but I don't know if it makes the protocol text unnecessarily long.\r\n- If we need to spell this process out, regarding the \"MAY\" in your second bullet point, should I avoid using it, because I think it is a deployment-specific behavior? I think I can just say \"If the aggregator aborts with `missingTaskID`, client can retry the request by specifying `task_id`.",
+          "createdAt": "2022-08-24T23:51:00Z",
+          "updatedAt": "2022-08-24T23:52:10Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Do you mean I should have some texts specifying the behavior when a client doesn't know if a deployment enforces  different HPKE configurations for different tasks? Some thoughts I have here:\r\n\r\nYes :)\r\n\r\n> - As a first step, in the existing protocol text, after this sentence: \"then the aggregator responds with HTTP status code 400 Bad Request and an error of type `missingTaskID`\", I can add: \"The client can then retry the request by specifying a well-formed Task ID as the `task_id` parameter\".\r\n> - With the above sentence, I think it's fairly clear that clients should retry the request with a task ID if the problem type is `missingTaskID`. I can try to spell out the discovery process as well, but I don't know if it makes the protocol text unnecessarily long.\r\n> - If we need to spell this process out, regarding the \"MAY\" in your second bullet point, should I avoid using it, because I think it is a deployment-specific behavior? I think I can just say \"If the aggregator aborts with `missingTaskID`, client can retry the request by specifying `task_id`.\r\n\r\nI think spelling it out is a good idea. It shouldn't be too much text, but it may require a bit of refactoring. \"MAY\" is intended to capture deployment-specific behavior, so it's appropriate here.",
+          "createdAt": "2022-08-24T23:56:28Z",
+          "updatedAt": "2022-08-24T23:56:28Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5AoYxs",
+          "commit": {
+            "abbreviatedOid": "499d9d0"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2022-08-24T18:33:50Z",
+          "updatedAt": "2022-08-24T18:35:44Z",
+          "comments": [
+            {
+              "originalPosition": 20,
+              "body": "`unrecognizedMessage` and HTTP 400 seem inappropriate. The problem isn't an incorrectly encoded message, it's that this particular aggregator chooses not to implement this functionality. If a client does `GET /hpke_config` and the server doesn't support it, it should get some indication that it should now try `GET /hpke_config?task_id=[task_id]`.\r\n\r\n[HTTP 422](https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/422) seems pretty appropriate for this case (\"the server understands the content type of the request entity, and the syntax of the request entity is correct, but it was unable to process the contained instructions\"). I think we should use that status code and define a new problem document type (in section 3.1 errors) for this specific case.",
+              "createdAt": "2022-08-24T18:33:50Z",
+              "updatedAt": "2022-08-24T18:35:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AoaqF",
+          "commit": {
+            "abbreviatedOid": "499d9d0"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2022-08-24T18:38:23Z",
+          "updatedAt": "2022-08-24T18:49:11Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "```suggestion\r\nparameters. A deployment may choose to use different HPKE configurations\r\nfor different tasks, so clients MAY specify a query parameter `task_id`\r\n```",
+              "createdAt": "2022-08-24T18:38:23Z",
+              "updatedAt": "2022-08-24T18:49:11Z"
+            },
+            {
+              "originalPosition": 20,
+              "body": "+1 to new abort type (e.g., \"missingTaskId\"), but @tgeoghegan, we currently we return the same status code for all abort cases (400). It might be a good idea to let the status code differ for different abort types, but we should leave that out of this change I think.",
+              "createdAt": "2022-08-24T18:43:11Z",
+              "updatedAt": "2022-08-24T18:49:11Z"
+            },
+            {
+              "originalPosition": 29,
+              "body": "I don't think this adequately addresses #248:\r\n1. You have defined a new struct for a sequence of HPKE configs, but you have not changed the return type (see line 670 above).\r\n2. This hasn't been discussed in the issue yet, but merely allowing the server to return multiple HPKE configs doesn't totally solve the problem. What is needed, I think, is a mechanism for allowing the client to indicate which cipher suites its supports.\r\n\r\nIn any case, I think we should push this change to a future PR. Best practices for spec review (as well as code review!) is to keep changes minimal.",
+              "createdAt": "2022-08-24T18:49:06Z",
+              "updatedAt": "2022-08-24T18:49:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Aog8o",
+          "commit": {
+            "abbreviatedOid": "499d9d0"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T18:57:59Z",
+          "updatedAt": "2022-08-24T18:57:59Z",
+          "comments": [
+            {
+              "originalPosition": 20,
+              "body": "That's fair enough. The problem document type will make this explicit enough, and [RFC 9205](https://httpwg.org/specs/rfc9205.html#using-http-status-codes) recommends using the most general possible HTTP status anyway (in this case, 400).",
+              "createdAt": "2022-08-24T18:57:59Z",
+              "updatedAt": "2022-08-24T18:57:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ApcXM",
+          "commit": {
+            "abbreviatedOid": "499d9d0"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:12:00Z",
+          "updatedAt": "2022-08-24T23:12:01Z",
+          "comments": [
+            {
+              "originalPosition": 20,
+              "body": "Sounds good, I added a new `missingTaskId` problem type under {{Errors}}.",
+              "createdAt": "2022-08-24T23:12:00Z",
+              "updatedAt": "2022-08-24T23:12:01Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ApcbM",
+          "commit": {
+            "abbreviatedOid": "499d9d0"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:12:28Z",
+          "updatedAt": "2022-08-24T23:12:29Z",
+          "comments": [
+            {
+              "originalPosition": 9,
+              "body": "Fixed now.",
+              "createdAt": "2022-08-24T23:12:28Z",
+              "updatedAt": "2022-08-24T23:12:29Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Apc-Y",
+          "commit": {
+            "abbreviatedOid": "499d9d0"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:16:32Z",
+          "updatedAt": "2022-08-24T23:16:32Z",
+          "comments": [
+            {
+              "originalPosition": 29,
+              "body": "Sounds good, I reverted the changes on returning a vector of `HpkeConfig`. Previously I changed line 670 to indicate the endpoint would return a vector of `HpkeConfig` values, maybe I didn't explicitly say the return type would change to `HpkeConfigResp`.\r\n\r\nMy initial thinking was the endpoint would return all `HpkeConfig` that it supports, and clients can use any of them with a cipher suite that it recognizes. But I'm fine with addressing this in a separate PR if that's clearer. ",
+              "createdAt": "2022-08-24T23:16:32Z",
+              "updatedAt": "2022-08-24T23:16:32Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Apdus",
+          "commit": {
+            "abbreviatedOid": "499d9d0"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:22:14Z",
+          "updatedAt": "2022-08-24T23:22:14Z",
+          "comments": [
+            {
+              "originalPosition": 29,
+              "body": "In practice that might decrease the likelihood of failing to negotiate an HPKE suite, but I think we can do a bit better. In any case, this can/should be handled separately.",
+              "createdAt": "2022-08-24T23:22:14Z",
+              "updatedAt": "2022-08-24T23:22:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Apd9i",
+          "commit": {
+            "abbreviatedOid": "159d4d2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "Looking good. One high level question I have: How does a client decide whether to add a query parameter or not? Perhaps we should try to spell out this discovery process:\r\n* The Client first sends GET /hpke_config.\r\n* The Aggregator MAY abort with \"missingTaskID\", in which case the client retries with `task_id`.\r\n* The Client is of course free to skip the first request if it knows it's going to need to provide a `task_id`.",
+          "createdAt": "2022-08-24T23:23:52Z",
+          "updatedAt": "2022-08-24T23:30:05Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "While precise, this description of error is hard to parse without knowing the protocol context. What's going on here, intuitively?",
+              "createdAt": "2022-08-24T23:23:52Z",
+              "updatedAt": "2022-08-24T23:30:05Z"
+            },
+            {
+              "originalPosition": 4,
+              "body": "Also, @tgeoghegan: would you prefer `missingTaskId` or `missingTaskID`? I think the latter might be more consistent.",
+              "createdAt": "2022-08-24T23:24:31Z",
+              "updatedAt": "2022-08-24T23:30:05Z"
+            },
+            {
+              "originalPosition": 26,
+              "body": "```suggestion\r\nHTTP GET request, then the aggregator MUST respond with HTTP status code 400 Bad Request\r\n```",
+              "createdAt": "2022-08-24T23:25:17Z",
+              "updatedAt": "2022-08-24T23:30:05Z"
+            },
+            {
+              "originalPosition": 26,
+              "body": "This could be stated a bit simpler as:\r\n> then the Aggregator MUST abort with error `missingTaskId`.",
+              "createdAt": "2022-08-24T23:25:58Z",
+              "updatedAt": "2022-08-24T23:30:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ApgiL",
+          "commit": {
+            "abbreviatedOid": "159d4d2"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:41:12Z",
+          "updatedAt": "2022-08-24T23:41:12Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "> While precise, this description of error is hard to parse without knowing the protocol context. What's going on here, intuitively?\r\n\r\nShould I add on to the above text with \"if a deployment enforces different HPKE configurations for different tasks\"?\r\n\r\nRegarding TaskId vs TaskID, I think the type definition is `TaskId` at line 608, but there are struct fields where `TaskID` is used, so it seems like there is some inconsistency here. I was trying to follow the original type definition.",
+              "createdAt": "2022-08-24T23:41:12Z",
+              "updatedAt": "2022-08-24T23:41:12Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AphRb",
+          "commit": {
+            "abbreviatedOid": "159d4d2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:47:31Z",
+          "updatedAt": "2022-08-24T23:47:31Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "> Should I add on to the above text with \"if a deployment enforces different HPKE configurations for different tasks\"?\r\n\r\nI would simplify it. How about:\r\n```\r\nHPKE config requested without specifying the task ID\r\n```\r\n\r\n> Regarding TaskId vs TaskID, I think the type definition is `TaskId` at line 608, but there are struct fields where `TaskID` is used, so it seems like there is some inconsistency here. I was trying to follow the original type definition.\r\n\r\nAh OK, nice catch. Let's correct the inconsistency here. It seems like the preference is likely to be \"ID\".\r\n\r\n",
+              "createdAt": "2022-08-24T23:47:31Z",
+              "updatedAt": "2022-08-24T23:47:31Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 304,
+      "id": "PR_kwDOFEJYQs49t8Dp",
+      "title": "Adding max_task_lifetime to task parameters",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/304",
+      "state": "OPEN",
+      "author": "wangshan",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Addressing issue #291: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/291",
+      "createdAt": "2022-08-24T13:01:23Z",
+      "updatedAt": "2022-08-24T18:55:54Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "headRepository": "wangshan/draft-ietf-ppm-dap",
+      "headRefName": "max-task-lifetime",
+      "headRefOid": "11a2418aa6ac12ee0f8b31ac334e5dae2dc2af0f",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5Aof1b",
+          "commit": {
+            "abbreviatedOid": "11a2418"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "We will need to be more precise about client/aggregator/collector behavior. Specifically, the text needs to prescribe optional, or even mandatory behavior. For example:  \"Aggregators MAY (or MUST?) reject reports whose timestamps exceed `max_task_lifetime`.\"",
+          "createdAt": "2022-08-24T18:54:00Z",
+          "updatedAt": "2022-08-24T18:55:54Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "\"maximum timestamp of a task\" is a bit ill-defined. Can you be more precise about what this means? Is it that reports with timestamps exceeding the max_task_lifetime are rejected? Or is it that requests are aborted if they arrive after max_task_lifetime?",
+              "createdAt": "2022-08-24T18:54:00Z",
+              "updatedAt": "2022-08-24T18:55:54Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 305,
+      "id": "PR_kwDOFEJYQs49wL4e",
+      "title": "Revisit request authentication",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/305",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Remove the requirement that implementations use `DAP-Auth-Token` with a\r\nfixed, pre-negotiated secret and instead allow any client auth scheme\r\nthat is composable with HTTP (which includes `DAP-Auth-Token`).\r\n\r\nRelevant to #293",
+      "createdAt": "2022-08-24T22:18:59Z",
+      "updatedAt": "2022-08-25T00:30:05Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/request-auth",
+      "headRefOid": "1d5b2cd66929c30b2547aa0c9db24e93dd1deb1e",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5ApUlg",
+          "commit": {
+            "abbreviatedOid": "d975b33"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T22:20:32Z",
+          "updatedAt": "2022-08-24T22:22:28Z",
+          "comments": [
+            {
+              "originalPosition": 173,
+              "body": "I deleted this because it's implicit by virtue of using HTTPS: you won't even be able to establish a connection if you can't verify server identity, so we don't need more protocol/application layer language to repeat features offered by the transport.",
+              "createdAt": "2022-08-24T22:20:32Z",
+              "updatedAt": "2022-08-24T22:22:28Z"
+            },
+            {
+              "originalPosition": 10,
+              "body": "I think there's good arguments against relying on a transport-level concept of identity to authenticate protocol-level concepts, but [this is good enough for ACME](https://www.rfc-editor.org/rfc/rfc8555.html#section-6) so perhaps we can lean on that precedent.",
+              "createdAt": "2022-08-24T22:22:24Z",
+              "updatedAt": "2022-08-24T22:22:28Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ApbV1",
+          "commit": {
+            "abbreviatedOid": "1d5b2cd"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:04:31Z",
+          "updatedAt": "2022-08-24T23:20:13Z",
+          "comments": [
+            {
+              "originalPosition": 10,
+              "body": "Ultimately this question would be answered by a proof of (in)security in a formal model. I'm perfectly happy to make this a requirement for now.\r\n\r\nOne nit: Does RFC2818 cover HTTP/3? I'm wondering if @martinthomson can help us spell this requirement :)",
+              "createdAt": "2022-08-24T23:04:31Z",
+              "updatedAt": "2022-08-24T23:20:14Z"
+            },
+            {
+              "originalPosition": 12,
+              "body": "?\r\n\r\n```suggestion\r\n## HTTP Request Authentication {#request-authentication}\r\n```",
+              "createdAt": "2022-08-24T23:06:03Z",
+              "updatedAt": "2022-08-24T23:20:13Z"
+            },
+            {
+              "originalPosition": 22,
+              "body": "We should try to avoid overloading \"Client\" wherever possible.\r\n\r\n```suggestion\r\nIn other cases, DAP requires sender authentication. Any authentication scheme\r\n```",
+              "createdAt": "2022-08-24T23:10:10Z",
+              "updatedAt": "2022-08-24T23:20:13Z"
+            },
+            {
+              "originalPosition": 99,
+              "body": "```suggestion\r\nclient and the aggregator it is being sent to. In addition, clients must be able to\r\n```",
+              "createdAt": "2022-08-24T23:11:47Z",
+              "updatedAt": "2022-08-24T23:20:13Z"
+            },
+            {
+              "originalPosition": 119,
+              "body": "As it stands, this problem is unsolved. I don't think it's fair to nudge implementors until we have a better sense of what alternatives are possible. It might be worth pointing to an issue regarding Sybil attacks (we have at least one somewhere).\r\n\r\n```suggestion\r\nto any service), so client authentication is not mandatory in DAP.\r\n```",
+              "createdAt": "2022-08-24T23:15:47Z",
+              "updatedAt": "2022-08-24T23:20:14Z"
+            },
+            {
+              "originalPosition": 222,
+              "body": "Point to security considerations here.",
+              "createdAt": "2022-08-24T23:19:18Z",
+              "updatedAt": "2022-08-24T23:20:14Z"
+            },
+            {
+              "originalPosition": 227,
+              "body": "VDAF does already. Does DAP not as well?",
+              "createdAt": "2022-08-24T23:19:52Z",
+              "updatedAt": "2022-08-24T23:20:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Aphqm",
+          "commit": {
+            "abbreviatedOid": "1d5b2cd"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-24T23:50:55Z",
+          "updatedAt": "2022-08-24T23:55:16Z",
+          "comments": [
+            {
+              "originalPosition": 26,
+              "body": "```suggestion\r\nexisting well-known HTTP authentication mechanisms that they already support.\r\n```\r\n\r\n(typo)",
+              "createdAt": "2022-08-24T23:50:55Z",
+              "updatedAt": "2022-08-24T23:55:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5ApmIN",
+          "commit": {
+            "abbreviatedOid": "d975b33"
+          },
+          "author": "martinthomson",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T00:30:04Z",
+          "updatedAt": "2022-08-25T00:30:05Z",
+          "comments": [
+            {
+              "originalPosition": 10,
+              "body": "You can start to refer to RFC 9110 for that stuff now.  That definitely covers HTTP/3.\r\n\r\n(Technically, RFC2818 did cover HTTP/3, but only circuitously.  Also, RFC 2818 is a little old in a few important ways.)",
+              "createdAt": "2022-08-25T00:30:04Z",
+              "updatedAt": "2022-08-25T00:30:05Z"
             }
           ]
         }
