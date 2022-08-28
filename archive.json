@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-25T01:42:11.636456+00:00",
+  "timestamp": "2022-08-28T01:47:56.772824+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -67,6 +67,11 @@
       "name": "draft-02",
       "description": "",
       "color": "F5EF23"
+    },
+    {
+      "name": "draft-03",
+      "description": "",
+      "color": "24F4EB"
     }
   ],
   "issues": [
@@ -3256,7 +3261,7 @@
       "labels": [],
       "body": "During execution of the collect protocol, the leader is responsible for relaying some parameters of the collect request to the helper, represented by the opaque `output_param` in `CollectReq` and `OutputShareReq` messages introduced by #154. That parameter will always be null/empty/absent for Priov3, but in Hits, it would contain the string prefixes that the collector wants a count of in the result set (and who knows what else in yet-undefined VDAFs).\r\n\r\nIt's currently possible for the leader (or any actor that can tamper with messages on the network) to insert arbitrary `output_param` into `OutputShareReq` messages. @cjpatton reckons [this is a threat to soundness](https://github.com/abetterinternet/ppm-specification/pull/154#discussion_r718917818). We should think about whether this enables the leader to undermine soundness in any ways beyond the capabilities the threat model already grants it, and if so, introduce collector->helper authentication+integrity. ~Confidentiality~Privacy may not be needed on here because the `output_param` should be identical for helper and leader.",
       "createdAt": "2021-09-30T14:43:08Z",
-      "updatedAt": "2021-10-08T20:05:52Z",
+      "updatedAt": "2022-08-26T17:48:45Z",
       "closedAt": null,
       "comments": [
         {
@@ -3286,6 +3291,13 @@
           "body": "The text implies that we are doing mutual authentication, but it should be hoisted into the protocol definition\r\n```faithfully as specified. The system also assumes that servers communicate over\r\nsecure and mutually authenticated channels. In practice, this can be done by TLS\r\nor some other form of application-layer authentication.\r\n```",
           "createdAt": "2021-10-08T20:05:52Z",
           "updatedAt": "2021-10-08T20:05:52Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "What's discussed here is the risk of the leader presenting forged collect request/aggregate share request parameters to the leader. We have a similar problem in the other direction, which is that when satisfying a request to a collect job URI, a leader could throw away the aggregate share computed by the helper, fabricate two totally synthetic aggregate shares that combine into the leader's chosen aggregate result, and then present those to the collector, which has no way of verifying that either share came from the helper.\r\n\r\nWhile discussing this on the ppm@ietf.org mailing list, @cjpatton (citing ekr) observed that we can mitigate that risk by having collectors fetch each aggregate shares directly from each aggregator, enabling it to use TLS to verify each server's identity. This is a good way to solve this attack without adding new cryptography to DAP (e.g., an in-band signature over aggregate shares), though it might introduce new difficulties with ensuring the two aggregators produce aggregate shares over the same set of reports.",
+          "createdAt": "2022-08-26T17:48:45Z",
+          "updatedAt": "2022-08-26T17:48:45Z"
         }
       ]
     },
@@ -5203,11 +5215,11 @@
         "tgeoghegan"
       ],
       "labels": [
-        "draft-02"
+        "draft-03"
       ],
       "body": "Issue #261 touched on how task and job parameters are conveyed between aggregators across request and response messages. This issue tracks the more general question of how we convey these parameters. They could be conveyed in application messages as they are now, in URLs as query parameters, or even headers. \r\n\r\n@mnot, if you have cycles, I'd be very interested to hear what you think.\r\n\r\n_Originally posted by @BranLwyd in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/261#issuecomment-1132242994_",
       "createdAt": "2022-06-23T16:28:54Z",
-      "updatedAt": "2022-08-24T20:13:30Z",
+      "updatedAt": "2022-08-26T08:18:18Z",
       "closedAt": null,
       "comments": [
         {
@@ -5272,6 +5284,34 @@
           "body": "There are numerous places in DAP where we mandate specific HTTP status codes in responses, but [RFC 9205 recommends against this](https://httpwg.org/specs/rfc9205.html#using-http-status-codes). We should revisit prescriptions about responses and make sure that any protocol-critical error information is conveyed in a problem document type, and otherwise allow implementations to use whatever 4xx or 5xx HTTP status they want.\r\n\r\nRFC 9205 also suggests [a format for example HTTP messages](https://httpwg.org/specs/rfc9205.html#specifying-the-use-of-http), which we should use where possible.",
           "createdAt": "2022-08-24T20:13:30Z",
           "updatedAt": "2022-08-24T20:13:30Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think this is still doable for IETF 115, but it looks like we'll release draft-02 before this is ready, so punting to draft-03.",
+          "createdAt": "2022-08-25T21:09:05Z",
+          "updatedAt": "2022-08-25T21:09:05Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "[RFC 7807](https://www.rfc-editor.org/rfc/rfc7807.html) has specific suggestions on how to communicate error details which might be interesting.",
+          "createdAt": "2022-08-26T06:13:41Z",
+          "updatedAt": "2022-08-26T06:13:41Z"
+        },
+        {
+          "author": "mnot",
+          "authorAssociation": "NONE",
+          "body": "Note that it's currently being revised - see https://github.com/ietf-wg-httpapi/rfc7807bis",
+          "createdAt": "2022-08-26T06:18:50Z",
+          "updatedAt": "2022-08-26T06:18:50Z"
+        },
+        {
+          "author": "simon-friedberger",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Also related: We have \"outdatedConfig\" but we seem to be missing \"unrecognizedConfig\" like we do for task IDs. Might be worth adding when fixing this.",
+          "createdAt": "2022-08-26T08:18:18Z",
+          "updatedAt": "2022-08-26T08:18:18Z"
         }
       ]
     },
@@ -5562,13 +5602,15 @@
       "state": "OPEN",
       "author": "wangshan",
       "authorAssociation": "CONTRIBUTOR",
-      "assignees": [],
+      "assignees": [
+        "wangshan"
+      ],
       "labels": [
         "draft-02"
       ],
       "body": "The current spec doesn't explain how to retire or delete a task. For some use cases, it's useful to have a hard task deadline, when expired, the task and all its aggregations must be made inactive and eventually deleted. This can be a new Duration type task parameter called `max_task_lifetime`, or `max_task_duration` to avoid similar named but int typed `max_batch_lifetime`.\r\n\r\nOther than the practical benefit, for clients that uploads repeatedly and periodically, this can add privacy benefit to limit the number of uploads from the same client to the same task (related to https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/210).\r\n\r\nPS. I feel like \"lifetime\" is more appropriate for a deadline than a max allowed count.",
       "createdAt": "2022-07-21T22:49:10Z",
-      "updatedAt": "2022-08-23T14:58:01Z",
+      "updatedAt": "2022-08-25T21:02:23Z",
       "closedAt": null,
       "comments": [
         {
@@ -5630,13 +5672,15 @@
       "state": "OPEN",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
-      "assignees": [],
+      "assignees": [
+        "tgeoghegan"
+      ],
       "labels": [
         "draft-02"
       ],
       "body": "If clients upload reports directly to the leader, then the leader learns things like the client's IP among other identifying metadata. This can be mitigated with the use of some kind of anonymizing proxy, like an [OHAI](https://datatracker.ietf.org/wg/ohai/documents/) server, provided the proxy is not colluding with the aggregator(s).\r\n\r\nHowever, it's not clear that every deployment will be able to use such a proxy, because the aggregators can't run it as a service, and perhaps the cost of deploying this additional actor is prohibitive.\r\n\r\nNonetheless, the protocol should discuss the privacy leaks that result from direct uploads and discuss how deployments might use anonymizing proxies.",
       "createdAt": "2022-07-28T15:19:08Z",
-      "updatedAt": "2022-08-17T00:12:41Z",
+      "updatedAt": "2022-08-25T21:08:04Z",
       "closedAt": null,
       "comments": [
         {
@@ -5673,6 +5717,13 @@
           "body": "+1 to adding text about the benefits of anonymization, and adding explicit reference to OHTTP (and maybe MASQUE).",
           "createdAt": "2022-08-17T00:12:41Z",
           "updatedAt": "2022-08-17T00:12:41Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'm going to try to get this done for draft-02, hopefully early next week.",
+          "createdAt": "2022-08-25T21:08:04Z",
+          "updatedAt": "2022-08-25T21:08:04Z"
         }
       ]
     },
@@ -5777,14 +5828,14 @@
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
-        "cjpatton"
+        "branlwyd"
       ],
       "labels": [
         "draft-02"
       ],
       "body": "For fixed-size tasks, the Leader picks a batch ID and passes it to the Collector with the CollectResp. This is so that the batch can be queried later on with a different aggregation parameter (as required for Poplar1). Alternatively, we could arrange for batch IDs to be \"predictable\" so that the Collector doesn't have to store batch IDs.\r\n\r\n\r\n_Originally posted by @chris-wood in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/297#issuecomment-1219697601_",
       "createdAt": "2022-08-18T17:25:27Z",
-      "updatedAt": "2022-08-24T21:33:26Z",
+      "updatedAt": "2022-08-25T20:58:33Z",
       "closedAt": null,
       "comments": [
         {
@@ -5831,6 +5882,41 @@
           "body": "(closing as there is no content in this bug; @Qhassanx please feel free to add a description & reopen if desired)",
           "createdAt": "2022-08-22T16:20:40Z",
           "updatedAt": "2022-08-22T16:20:40Z"
+        }
+      ]
+    },
+    {
+      "number": 306,
+      "id": "I_kwDOFEJYQs5Qi6xx",
+      "title": "Align DAP discussion of soundness/correctness/robustness and privacy with VDAF",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/306",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [
+        "tgeoghegan"
+      ],
+      "labels": [
+        "draft-02"
+      ],
+      "body": "[VDAF's Security Considerations](https://github.com/cfrg/draft-irtf-cfrg-vdaf/blob/main/draft-irtf-cfrg-vdaf.md#security-considerations-security) contains a nice definition and discussion of the notions of privacy (meaning protecting any individual client's measurement from being seen) and robustness (meaning that the aggregates delivered to a collector are accurate aggregations over the inputs).\r\n\r\nDAP's security considerations has definitions of privacy and correctness, and we refer to robustness and soundness in a few places. We should align our definitions with VDAF (or just refer to VDAF's definitions) and consistently use the term \"robustness\" throughout DAP.",
+      "createdAt": "2022-08-25T19:01:48Z",
+      "updatedAt": "2022-08-25T21:07:47Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "PR, please!",
+          "createdAt": "2022-08-25T19:56:19Z",
+          "updatedAt": "2022-08-25T19:56:19Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'm going to get this done for draft-02, hopefully early next week.",
+          "createdAt": "2022-08-25T21:07:47Z",
+          "updatedAt": "2022-08-25T21:07:47Z"
         }
       ]
     }
@@ -37106,22 +37192,24 @@
     {
       "number": 303,
       "id": "PR_kwDOFEJYQs49tC-w",
-      "title": "Make \"task_id\" optional in \"/hpke_config\" endpoint, and allow aggrega\u2026",
+      "title": "Make \"task_id\" optional in \"/hpke_config\" endpoint",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/303",
       "state": "OPEN",
       "author": "junyechen1996",
       "authorAssociation": "NONE",
       "assignees": [],
-      "labels": [],
-      "body": "\u2026tors to return a vector of \"HpkeConfig\".\r\n\r\n- Addresses issues #289 and #248",
+      "labels": [
+        "draft-02"
+      ],
+      "body": "Closes #289.",
       "createdAt": "2022-08-24T09:34:13Z",
-      "updatedAt": "2022-08-24T23:56:28Z",
+      "updatedAt": "2022-08-26T17:24:59Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "junyechen1996/draft-ietf-ppm-dap",
       "headRefName": "junyec/hpke_config_change",
-      "headRefOid": "159d4d2d5e76f446fe6ee7b78ec62524a91e6993",
+      "headRefOid": "cb7aa6aeea5823909b8382fb6f80e75cb15035db",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -37147,6 +37235,20 @@
           "body": "> Do you mean I should have some texts specifying the behavior when a client doesn't know if a deployment enforces  different HPKE configurations for different tasks? Some thoughts I have here:\r\n\r\nYes :)\r\n\r\n> - As a first step, in the existing protocol text, after this sentence: \"then the aggregator responds with HTTP status code 400 Bad Request and an error of type `missingTaskID`\", I can add: \"The client can then retry the request by specifying a well-formed Task ID as the `task_id` parameter\".\r\n> - With the above sentence, I think it's fairly clear that clients should retry the request with a task ID if the problem type is `missingTaskID`. I can try to spell out the discovery process as well, but I don't know if it makes the protocol text unnecessarily long.\r\n> - If we need to spell this process out, regarding the \"MAY\" in your second bullet point, should I avoid using it, because I think it is a deployment-specific behavior? I think I can just say \"If the aggregator aborts with `missingTaskID`, client can retry the request by specifying `task_id`.\r\n\r\nI think spelling it out is a good idea. It shouldn't be too much text, but it may require a bit of refactoring. \"MAY\" is intended to capture deployment-specific behavior, so it's appropriate here.",
           "createdAt": "2022-08-24T23:56:28Z",
           "updatedAt": "2022-08-24T23:56:28Z"
+        },
+        {
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "body": "> I think spelling it out is a good idea. It shouldn't be too much text, but it may require a bit of refactoring. \"MAY\" is intended to capture deployment-specific behavior, so it's appropriate here.\r\n\r\nSounds good. I split the texts into three paragraphs: the first paragraph introduces the `/hpke_config` endpoint. The second paragraph talks about a deployment MAY enforce different HPKE configurations for different tasks, and different cases of aggregators' aborting. The third paragraph spells out client's discovery process of whether `task_id` is required. Let me know if it makes sense to you.",
+          "createdAt": "2022-08-25T04:44:36Z",
+          "updatedAt": "2022-08-25T04:44:36Z"
+        },
+        {
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "body": "> LGTM! One minor question for reviewers, which we can punt on.\r\n\r\nThanks! I just squashed commits into one.",
+          "createdAt": "2022-08-25T20:45:22Z",
+          "updatedAt": "2022-08-25T20:45:22Z"
         }
       ],
       "reviews": [
@@ -37379,6 +37481,271 @@
               "updatedAt": "2022-08-24T23:47:31Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AqFoO",
+          "commit": {
+            "abbreviatedOid": "159d4d2"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T04:42:16Z",
+          "updatedAt": "2022-08-25T04:42:16Z",
+          "comments": [
+            {
+              "originalPosition": 26,
+              "body": "I added the MUST keyword, but still kept the HTTP status code, to be more explicit.",
+              "createdAt": "2022-08-25T04:42:16Z",
+              "updatedAt": "2022-08-25T04:42:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Aua_m",
+          "commit": {
+            "abbreviatedOid": "159d4d2"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T18:23:43Z",
+          "updatedAt": "2022-08-25T18:23:43Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "[RFC 7807](https://www.rfc-editor.org/rfc/rfc7807.html#section-4) doesn't have any obvious guidance I can see, but if we look at [ACME aka RFC 8555](https://www.rfc-editor.org/rfc/rfc8555.html#section-6.7)'s errors, it has types like `badCSR`, `caa` and `dns`, which I think would lead us to using `missingTaskId`, and that would be consistent with the struct definitions elsewhere. But I'm happy with either; the ambiguous case problems weren't introduced by this change and can always be cleaned up later in the standardization process.",
+              "createdAt": "2022-08-25T18:23:43Z",
+              "updatedAt": "2022-08-25T18:23:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AufC6",
+          "commit": {
+            "abbreviatedOid": "d1a7ec2"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2022-08-25T18:38:00Z",
+          "updatedAt": "2022-08-25T18:44:59Z",
+          "comments": [
+            {
+              "originalPosition": 19,
+              "body": "I think MUST isn't right in this case, because it's not a violation of the protocol for the client to not send a `task_id` query parameter when the aggregator lacks a \"global\" HPKE config. Same goes for the one one line 669, because an aggregator is always free to respond to a request without the `task_id` query parameter.",
+              "createdAt": "2022-08-25T18:38:01Z",
+              "updatedAt": "2022-08-25T18:44:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AutT2",
+          "commit": {
+            "abbreviatedOid": "d1a7ec2"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T19:15:13Z",
+          "updatedAt": "2022-08-25T19:15:14Z",
+          "comments": [
+            {
+              "originalPosition": 19,
+              "body": "I think this paragraph tries to characterize the behaviors of an aggregator, when the deployment needs to enforce different HPKE configurations for different tasks. In this case, clients are required to send `task_id`, and aggregators are required to abort if no `task_id` is included in the request. Should I be clearer about the assumptions in this paragraph, or should I relax the \"MUST\" keyword, perhaps to \"SHOULD\"?",
+              "createdAt": "2022-08-25T19:15:13Z",
+              "updatedAt": "2022-08-25T19:15:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Auv5m",
+          "commit": {
+            "abbreviatedOid": "159d4d2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T19:23:10Z",
+          "updatedAt": "2022-08-25T19:23:11Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "Works for me",
+              "createdAt": "2022-08-25T19:23:10Z",
+              "updatedAt": "2022-08-25T19:23:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AuwKD",
+          "commit": {
+            "abbreviatedOid": "d1a7ec2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T19:24:08Z",
+          "updatedAt": "2022-08-25T19:25:37Z",
+          "comments": [
+            {
+              "originalPosition": 37,
+              "body": "nit: Wrap lines at 80 characters",
+              "createdAt": "2022-08-25T19:24:08Z",
+              "updatedAt": "2022-08-25T19:25:37Z"
+            },
+            {
+              "originalPosition": 26,
+              "body": "That's fine, but if later on we decide to change the status code, we'll have to update here as well. That's why it's better to specify something once.",
+              "createdAt": "2022-08-25T19:25:37Z",
+              "updatedAt": "2022-08-25T19:25:37Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AuztA",
+          "commit": {
+            "abbreviatedOid": "d1a7ec2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T19:37:55Z",
+          "updatedAt": "2022-08-25T19:38:35Z",
+          "comments": [
+            {
+              "originalPosition": 19,
+              "body": "I agree with Tim here. The problem is that the Client may not know a priori that the Aggregator enforces HPKE key separation per task. I think a different tack is needed.\r\n\r\nIn the paragraph above where you specify the GET request, you should also add: \"The Client MAY include the task ID with the query parameters. [Spell out what the path looks like.]\"\r\n\r\nIn this paragraph, you should start off with: \"The Aggregator is free to use different HPKE configurations for each task with which it's configured. If the task ID is missing from the Client's request, the Aggregator MAY abort with error \"missingTaskID\", in which case the Client SHOULD retry the request with the task ID included.\"\r\n\r\nThis accomplishes two things:\r\n* It provides a fail-safe way to obtain an HPKE config, regardless of how the Aggregator is configured.\r\n* It permits the optional, deployment-specific beahvior.",
+              "createdAt": "2022-08-25T19:37:55Z",
+              "updatedAt": "2022-08-25T19:39:29Z"
+            },
+            {
+              "originalPosition": 35,
+              "body": "I would fold this into the previous paragraph, as described above.",
+              "createdAt": "2022-08-25T19:38:26Z",
+              "updatedAt": "2022-08-25T19:38:35Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Au-3K",
+          "commit": {
+            "abbreviatedOid": "d1a7ec2"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T20:20:14Z",
+          "updatedAt": "2022-08-25T20:20:14Z",
+          "comments": [
+            {
+              "originalPosition": 37,
+              "body": "Fixed now.",
+              "createdAt": "2022-08-25T20:20:14Z",
+              "updatedAt": "2022-08-25T20:20:14Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Au_UD",
+          "commit": {
+            "abbreviatedOid": "d1a7ec2"
+          },
+          "author": "junyechen1996",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T20:22:05Z",
+          "updatedAt": "2022-08-25T20:22:05Z",
+          "comments": [
+            {
+              "originalPosition": 19,
+              "body": "@tgeoghegan @cjpatton Please take a look again at the revised wording based on Chris's suggestions.",
+              "createdAt": "2022-08-25T20:22:05Z",
+              "updatedAt": "2022-08-25T20:22:05Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AvE-I",
+          "commit": {
+            "abbreviatedOid": "40008b7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "LGTM! One minor question for reviewers, which we can punt on.",
+          "createdAt": "2022-08-25T20:37:55Z",
+          "updatedAt": "2022-08-25T20:38:43Z",
+          "comments": [
+            {
+              "originalPosition": 22,
+              "body": "(Orthogonal to this PR, so we can clean up later if needed.) @tgeoghegan is 404 correct here you think?",
+              "createdAt": "2022-08-25T20:37:55Z",
+              "updatedAt": "2022-08-25T20:38:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AvFlT",
+          "commit": {
+            "abbreviatedOid": "d1a7ec2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T20:40:17Z",
+          "updatedAt": "2022-08-25T20:40:18Z",
+          "comments": [
+            {
+              "originalPosition": 19,
+              "body": "Looks good to me.",
+              "createdAt": "2022-08-25T20:40:17Z",
+              "updatedAt": "2022-08-25T20:40:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AvMWK",
+          "commit": {
+            "abbreviatedOid": "40008b7"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T21:05:20Z",
+          "updatedAt": "2022-08-25T21:05:20Z",
+          "comments": [
+            {
+              "originalPosition": 22,
+              "body": "My reading of [RFC 9205's discussion of HTTP statuses](https://www.rfc-editor.org/rfc/rfc9205#name-using-http-status-codes) is that we should lean toward HTTP 400 and communicate more specific issues with the problem document, but [I made a note in #278](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/278#issuecomment-1226237695) that we should take a look at all this, so I don't think we need to iterate on that in this PR.",
+              "createdAt": "2022-08-25T21:05:20Z",
+              "updatedAt": "2022-08-25T21:05:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AvPmh",
+          "commit": {
+            "abbreviatedOid": "cb7aa6a"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "This works, thank you for iterating on it with us!",
+          "createdAt": "2022-08-25T21:20:16Z",
+          "updatedAt": "2022-08-25T21:20:16Z",
+          "comments": []
         }
       ]
     },
@@ -37391,21 +37758,31 @@
       "author": "wangshan",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
-      "body": "Addressing issue #291: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/291",
+      "labels": [
+        "draft-02"
+      ],
+      "body": "Closes #291.",
       "createdAt": "2022-08-24T13:01:23Z",
-      "updatedAt": "2022-08-24T18:55:54Z",
+      "updatedAt": "2022-08-26T21:51:30Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "wangshan/draft-ietf-ppm-dap",
       "headRefName": "max-task-lifetime",
-      "headRefOid": "11a2418aa6ac12ee0f8b31ac334e5dae2dc2af0f",
+      "headRefOid": "51f357cbb991aa94a4c011fe3f737318ef4a5b33",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@cjpatton I have made the definition more precise, in the process changing the meaning of this field a bit, please have another pass.",
+          "createdAt": "2022-08-26T09:15:22Z",
+          "updatedAt": "2022-08-26T09:15:22Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5Aof1b",
@@ -37426,6 +37803,94 @@
               "updatedAt": "2022-08-24T18:55:54Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AzKO-",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "This is looking pretty good to me. One thing we might be missing is report rejection during the aggregation flow. In particular, do we need to spell out how the Leader/Helper rejects reports with time stamps that exceed the max batch lifetime?",
+          "createdAt": "2022-08-26T15:40:57Z",
+          "updatedAt": "2022-08-26T16:06:04Z",
+          "comments": [
+            {
+              "originalPosition": 6,
+              "body": "```suggestion\r\n  to this task. The task is considered completed after this timestamp. Aggregators\r\n  MAY reject reports that have timestamps later than `max_task_lifetime`.\r\n```",
+              "createdAt": "2022-08-26T15:40:57Z",
+              "updatedAt": "2022-08-26T16:06:04Z"
+            },
+            {
+              "originalPosition": 27,
+              "body": "I think this can be merged with the paragraph on line 785 above. Basically there are now two reasons a report can be late:\r\n* its batch has been collected (time-series tasks)\r\n* the max task lifetime has elapsed.",
+              "createdAt": "2022-08-26T15:43:28Z",
+              "updatedAt": "2022-08-26T16:06:04Z"
+            },
+            {
+              "originalPosition": 37,
+              "body": "This paragraph isn't normative.\r\n```suggestion\r\nBefore an Aggregator responds to a CollectReq or AggregateShareReq, it must\r\n```",
+              "createdAt": "2022-08-26T15:48:18Z",
+              "updatedAt": "2022-08-26T16:06:04Z"
+            },
+            {
+              "originalPosition": 44,
+              "body": "I don't think this needs to be specified.\r\n1. The behavior is optional, so MUST is not appropriate.\r\n2. If an Aggregator has \"retired\" a task via max_task_lifetime, then it will do this anyway.\r\n\r\nI suggest reverting this change.",
+              "createdAt": "2022-08-26T15:54:19Z",
+              "updatedAt": "2022-08-26T16:06:04Z"
+            },
+            {
+              "originalPosition": 56,
+              "body": "nit: Wrap lines at 80 characters.",
+              "createdAt": "2022-08-26T16:03:02Z",
+              "updatedAt": "2022-08-26T16:06:04Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A0nHQ",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "There's an ambiguity here: is `task.max_batch_lifetime` an instant in time, or a timestamp (i.e., an encoding of an instant in time that might appear in a protocol message)?\r\n\r\n",
+          "createdAt": "2022-08-26T21:23:46Z",
+          "updatedAt": "2022-08-26T21:51:30Z",
+          "comments": [
+            {
+              "originalPosition": 68,
+              "body": "We already define type `Time` in terms of the Unix epoch, so no need to refer to that here.\r\n```suggestion\r\nFurthermore, the aggregators must store data related to a task as long as the current time\r\nhas not passed this task's `max_task_lifetime`. Aggregator MAY delete the task and all\r\ndata pertaining to this task after `max_task_lifetime`. Implementors SHOULD provide for some\r\nleeway so collector can collect the batch after some delay.\r\n```",
+              "createdAt": "2022-08-26T21:23:47Z",
+              "updatedAt": "2022-08-26T21:51:30Z"
+            },
+            {
+              "originalPosition": 15,
+              "body": "Let's not add new language referencing HTTP error codes more specific than 400 or 500 since [RFC 9205 cautions against that](https://www.rfc-editor.org/rfc/rfc9205#name-using-http-status-codes). In any case, I don't think we should require that aggregators stop advertising HPKE config for some task ID at any moment in time. The reason is that HPKE configs are likely to be cached for a long time (elsewhere the document explicitly suggests caching them for days), meaning it'd be difficult for implementations to meaningfully guarantee that they'll stop serving a task's HPKE config at the precise instant of task expiration. I don't see any harm in an aggregator continuing to serve expired HPKE configs because the subsequent upload requests to an expired task will reliably fail anyway.",
+              "createdAt": "2022-08-26T21:26:43Z",
+              "updatedAt": "2022-08-26T21:51:30Z"
+            },
+            {
+              "originalPosition": 27,
+              "body": "Should the leader make this determination based on the timestamp in the report, or based on the leader's perception of the current time when it receives the report?\r\n\r\nPut another way: suppose a task has `max_batch_lifetime` = `t_1`. The leader receives a report with timestamp `t_0 < t_1`. The leader checks its own clock and determines that the current time is `t_2 > t_1`. Should the report be rejected because it was too late by the time the leader saw it, or accepted because its timestamp indicates the measurement was taken before the end of the task?\r\n\r\nI think it's got to be the former (because otherwise clients could send back-dated reports long after a task has expired), in which case this should be rewritten to discuss time of report reception rather than the timestamp.",
+              "createdAt": "2022-08-26T21:33:59Z",
+              "updatedAt": "2022-08-26T21:51:30Z"
+            },
+            {
+              "originalPosition": 4,
+              "body": "I think defining this as a timestamp (i.e., the encoding of an instant in time that might appear in a message) is wrong. The `max_task_lifetime` is an instant in time.\r\n\r\n`lifetime` also seems like the wrong word. For one thing, it collides awkwardly with `max_batch_lifetime` (which refers to a totally different quantity). For another, \"lifetime\" implies to me a span of time, or a duration, but this is a single instant. Would `task_expiration` be better?",
+              "createdAt": "2022-08-26T21:41:50Z",
+              "updatedAt": "2022-08-26T21:51:30Z"
+            },
+            {
+              "originalPosition": 44,
+              "body": "I don't think we need this paragraph, but for a different reason: it should be OK to do aggregations on a task after the aggregators have stopped accepting client reports for it. Let's say a task has `max_task_lifetime` `t` and it takes `d` seconds to run the collect protocol. So far as clients know, it is OK for them to continue submitting reports right up until instant `t`. As written, the collector must initiate the collect protocol at time `t - d`. So that means any reports that arrive during the interval `(t - d, t)` won't be included in the aggregation.\r\n\r\nThe other problem is that there's no good way in the protocol for the collector to figure out what `d` is and thus figure out how late it can issue a collect request without risking losing an aggregation because the task expired.\r\n\r\nIn fact, that seems to be implied by the text added in \"Reducing storage requirements\".",
+              "createdAt": "2022-08-26T21:50:21Z",
+              "updatedAt": "2022-08-26T21:51:30Z"
+            }
+          ]
         }
       ]
     },
@@ -37438,16 +37903,18 @@
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "Remove the requirement that implementations use `DAP-Auth-Token` with a\r\nfixed, pre-negotiated secret and instead allow any client auth scheme\r\nthat is composable with HTTP (which includes `DAP-Auth-Token`).\r\n\r\nRelevant to #293",
       "createdAt": "2022-08-24T22:18:59Z",
-      "updatedAt": "2022-08-25T00:30:05Z",
+      "updatedAt": "2022-08-25T21:09:34Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/request-auth",
-      "headRefOid": "1d5b2cd66929c30b2547aa0c9db24e93dd1deb1e",
+      "headRefOid": "dcd1a3dfbe0408b8d95d2f4f90d0f0fde8be5ce6",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -37575,6 +38042,444 @@
               "updatedAt": "2022-08-25T00:30:05Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Auieu",
+          "commit": {
+            "abbreviatedOid": "1d5b2cd"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T18:48:38Z",
+          "updatedAt": "2022-08-25T19:10:49Z",
+          "comments": [
+            {
+              "originalPosition": 10,
+              "body": "Indeed, RFC2818 is explicitly marked as obsoleted by 9110. I've updated this reference.",
+              "createdAt": "2022-08-25T18:48:38Z",
+              "updatedAt": "2022-08-25T19:10:49Z"
+            },
+            {
+              "originalPosition": 12,
+              "body": "Sure, HTTP**S** even.",
+              "createdAt": "2022-08-25T18:49:04Z",
+              "updatedAt": "2022-08-25T19:10:49Z"
+            },
+            {
+              "originalPosition": 22,
+              "body": "Hmm, that's a good point, but then \"client\" also has a clear meaning in the context of HTTP(S) and TLS that I think we want to explicitly reference. I made this \"HTTPS client authentication\" in an effort to distinguish from a DAP client.",
+              "createdAt": "2022-08-25T18:53:46Z",
+              "updatedAt": "2022-08-25T19:10:49Z"
+            },
+            {
+              "originalPosition": 119,
+              "body": "#89 is what we point to elsewhere in the doc that touches on Sybil attacks, so I threw in an OPEN ISSUE and deleted the sentence as you suggest.",
+              "createdAt": "2022-08-25T18:56:30Z",
+              "updatedAt": "2022-08-25T19:10:49Z"
+            },
+            {
+              "originalPosition": 227,
+              "body": "Oh, whoops, I was searching for \"soundness\" in VDAF, but it discusses \"robustness\". And in security considerations we discuss \"privacy\" and \"correctness\", but the doc has references to \"soundness\" and \"robustness\", both in protocol text and the odd OPEN ISSUE block. I filed #306 to clean up this language in DAP and align it with VDAF.",
+              "createdAt": "2022-08-25T19:02:26Z",
+              "updatedAt": "2022-08-25T19:10:49Z"
+            },
+            {
+              "originalPosition": 222,
+              "body": "I put in a reference to {{sec-considerations}} and use the word \"correctness\", which is currently the term that Security Considerations uses. That's wrong, but it'll get cleaned up in #306.\r\n\r\nIt also occurs to me that maybe everything in these \"{Upload, Aggregate, Collect} Message Security\" sections that isn't a MUST or a MAY should be punted to security considerations, since it's discussion, context and justification rather than prescription.",
+              "createdAt": "2022-08-25T19:06:55Z",
+              "updatedAt": "2022-08-25T19:10:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Au1Ah",
+          "commit": {
+            "abbreviatedOid": "1d5b2cd"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T19:43:10Z",
+          "updatedAt": "2022-08-25T19:43:10Z",
+          "comments": [
+            {
+              "originalPosition": 222,
+              "body": "I think it's OK to point to security considerations as needed in the normative text, especially when it clarifies certain design choices to the reader. That said, mnimizing where possible is a good idea. In particular I'm not sure I would call these sections \".* Message Security\".",
+              "createdAt": "2022-08-25T19:43:10Z",
+              "updatedAt": "2022-08-25T19:43:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Au1_3",
+          "commit": {
+            "abbreviatedOid": "f9aad2f"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-25T19:47:06Z",
+          "updatedAt": "2022-08-25T19:55:32Z",
+          "comments": [
+            {
+              "originalPosition": 18,
+              "body": "Bump: We're not using HPKE for authenticated encryption here. The properties we need are confidentiality and non-malleability.\r\n```suggestion\r\nanother protocol participant, DAP mandates the use of public-key encryption\r\n```",
+              "createdAt": "2022-08-25T19:47:06Z",
+              "updatedAt": "2022-08-25T19:55:32Z"
+            },
+            {
+              "originalPosition": 28,
+              "body": "It's worth mentioning mutual TLS here as a viable option.",
+              "createdAt": "2022-08-25T19:47:59Z",
+              "updatedAt": "2022-08-25T19:55:32Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5AvGHY",
+          "commit": {
+            "abbreviatedOid": "dcd1a3d"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "I think it would be useful to minimizing security considerations language in the Message Security sections, but I don't have a clear idea how. I think this is good enough for now, hence the approval, but let's see if we can get more feedback before merging.",
+          "createdAt": "2022-08-25T20:42:27Z",
+          "updatedAt": "2022-08-25T20:42:27Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 307,
+      "id": "PR_kwDOFEJYQs490sXj",
+      "title": "Move draft-irtf-cfrg-vdaf-01 to 03",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/307",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-02"
+      ],
+      "body": "Closes #296.\r\n\r\nAlign with the latest VDAF draft. This requires two minor protocol\r\nchanges:\r\n\r\n* 02 added a value called the \"public_share\" to the VDAF syntax. This is\r\n  to support Poplar1 (and likely other schemes that need a similar\r\n  extractability property). To accommodate this, the public_share field\r\n  has been added to the Report and ReportShare structures and appended to\r\n  the AAD for input share encryption. (This may end up being useful for\r\n  privacy.)\r\n\r\n* 02 added the report count to the aggregate result computation. This is\r\n  already passed to the Collector in the CollectResp, so we just need to\r\n  update the aggregate result computation in the draft to match.",
+      "createdAt": "2022-08-25T20:33:24Z",
+      "updatedAt": "2022-08-26T20:02:36Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "cjpatton/296",
+      "headRefOid": "c3e039b2ec2174edf9cdcecf78631c99ea54c0fe",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5Avats",
+          "commit": {
+            "abbreviatedOid": "5b71fe7"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-25T22:20:03Z",
+          "updatedAt": "2022-08-26T17:20:56Z",
+          "comments": [
+            {
+              "originalPosition": 116,
+              "body": "nit: typo\r\n```suggestion\r\n`report_count` denote the report count sent by the Leader, and let `agg_param`\r\n```",
+              "createdAt": "2022-08-25T22:20:03Z",
+              "updatedAt": "2022-08-26T17:20:56Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A0X36",
+          "commit": {
+            "abbreviatedOid": "c3e039b"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-26T20:01:56Z",
+          "updatedAt": "2022-08-26T20:02:36Z",
+          "comments": [
+            {
+              "originalPosition": 40,
+              "body": "AFAICT, `public_share` always accompanies `ReportMetadata`, so it'd be nice to tuck the former into the latter, because then the public share would get included in message AAD and appear in all the places it needs to \"for free\". My only reservation is that calling the public share \"metadata\" feels like a misnomer. ",
+              "createdAt": "2022-08-26T20:01:56Z",
+              "updatedAt": "2022-08-26T20:02:36Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 308,
+      "id": "PR_kwDOFEJYQs495TvC",
+      "title": "Fixed-size tasks: use predictable batch IDs.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-02"
+      ],
+      "body": "This model expects the Collector to track the next batch ID of interest.\r\nA Collector that is starting up or otherwise does not know the next\r\nbatch ID can use the `current-batch` functionality to collect a recent\r\nbatch, which also determines the current batch ID as this information is\r\ntransmitted in the eventual CollectResp.\r\n\r\nCloses #301.",
+      "createdAt": "2022-08-26T23:03:13Z",
+      "updatedAt": "2022-08-27T00:33:48Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "headRepository": "branlwyd/draft-ietf-ppm-dap",
+      "headRefName": "bran/predictable-batch-ids",
+      "headRefOid": "f97e991389228e119e95bff15083006380afc8b9",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5A0yyD",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-26T23:07:10Z",
+          "updatedAt": "2022-08-26T23:07:54Z",
+          "comments": [
+            {
+              "originalPosition": 59,
+              "body": "The `current-batch` functionality may not be ideal:\r\n\r\n* It assumes that a Collector might want to start up against a task that has already collected some batches, and will want to start from \"recent\" data. If this is not the case (for example, if we assume that a Collector can always safely start from batch ID 0, or are OK saying that communicating a \"recent\" batch ID can be done out-of-band), we could drop this functionality entirely.\r\n* Even if we keep this functionality, it would be nicer to separate \"give me a recent batch ID\" from \"start collecting a batch ID\". One way to do this would be to expose an endpoint that forwards to a recent batch ID; this would be easier to specify with #278, at which point the batch ID might be specified as part of the URL.",
+              "createdAt": "2022-08-26T23:07:11Z",
+              "updatedAt": "2022-08-26T23:07:54Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A0zov",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-26T23:18:29Z",
+          "updatedAt": "2022-08-26T23:25:20Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "Since other \"IDs\" have type `opaque [32]`, I wonder if it makes sense to give this a different name. What about `BatchNum`?",
+              "createdAt": "2022-08-26T23:18:30Z",
+              "updatedAt": "2022-08-26T23:25:20Z"
+            },
+            {
+              "originalPosition": 96,
+              "body": "```suggestion\r\n  MAY abort with error \"XXX\" if the batch ID is considered out of range (too small or too large).\r\n```",
+              "createdAt": "2022-08-26T23:21:04Z",
+              "updatedAt": "2022-08-26T23:25:20Z"
+            },
+            {
+              "originalPosition": 102,
+              "body": "```suggestion\r\n  AggregateInitializeReq for the task. The Helper MAY abort with error \"XXX\" if the batch ID is\r\n```",
+              "createdAt": "2022-08-26T23:21:43Z",
+              "updatedAt": "2022-08-26T23:25:20Z"
+            },
+            {
+              "originalPosition": 59,
+              "body": "Yeah, this is a bit hairy. The protocol seems like it would be a lot simpler if all the Collector could do is specify which batch ID it wants.\r\n\r\nDo you thin this functionality is needed right now? If not, maybe better to punt on and keep DAP-02 simple.",
+              "createdAt": "2022-08-26T23:25:11Z",
+              "updatedAt": "2022-08-26T23:25:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A038g",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:02:25Z",
+          "updatedAt": "2022-08-27T00:02:25Z",
+          "comments": [
+            {
+              "originalPosition": 59,
+              "body": "I think an eventual \"final\"/\"production-quality\" design would definitely want some provision to allow Collectors to discover a recent batch ID from the Aggregators.\r\n\r\nHowever, you're probably right that this isn't needed for initial testing: I suspect interop-test-level deployments can get away with the Collector always starting at batch ID 0, and if that doesn't work out, out-of-band communications would allow configuration of the Collector to start from the correct batch ID.\r\n\r\nI went ahead and tore out the `current-batch` functionality for now.",
+              "createdAt": "2022-08-27T00:02:25Z",
+              "updatedAt": "2022-08-27T00:02:25Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A040R",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:19:47Z",
+          "updatedAt": "2022-08-27T00:19:48Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "I like calling it an \"ID\" because that is an accurate description of this type's semantics -- it's a primary identifier for a batch. The difference in types doesn't bother me so much; IMO, it's fairly natural for IDs for different kinds of entities to have different types, depending on the needs for the ID.\r\n\r\nOTOH, we might rename some messages such that a \"batch ID\" is either an interval (for `time-interval` tasks) or an opaque numeric value (for `fixed-size` tasks), i.e.:\r\n\r\n```\r\nstruct BatchID {\r\n  select (query_type) {\r\n    case time-interval: Interval batch_interval;\r\n    case fixed-size: BatchID batch_id;\r\n  }\r\n}\r\n```\r\n\r\nThis would be \"cleaner\" (IMO) -- this new BatchID struct would effectively replace the Query -- but I'm not sure it's worth taking the time to do right now.",
+              "createdAt": "2022-08-27T00:19:48Z",
+              "updatedAt": "2022-08-27T00:19:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A045b",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:21:41Z",
+          "updatedAt": "2022-08-27T00:21:42Z",
+          "comments": [
+            {
+              "originalPosition": 96,
+              "body": "In the Batch Validation section, these boundary conditions are specified as causing a failure of type \"batchInvalid\". I reworded this from \"failing\" to \"checking\", since this section should be describing a set of checks.",
+              "createdAt": "2022-08-27T00:21:42Z",
+              "updatedAt": "2022-08-27T00:21:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A0452",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:21:51Z",
+          "updatedAt": "2022-08-27T00:21:51Z",
+          "comments": [
+            {
+              "originalPosition": 102,
+              "body": "Same as above: in the Batch Validation section, these boundary conditions are specified as causing a failure of type \"batchInvalid\". I reworded this from \"failing\" to \"checking\", since this section should be describing a set of checks.",
+              "createdAt": "2022-08-27T00:21:51Z",
+              "updatedAt": "2022-08-27T00:21:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A05HW",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:26:38Z",
+          "updatedAt": "2022-08-27T00:26:38Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "Good point about my suggestion. The second idea I like quite a lot as well, though I think we'd have to rename the inner \"batch_id\" :) If the change is not overly invasive, I say go for it and let's see what it looks like! Just be ready to revert if needed.",
+              "createdAt": "2022-08-27T00:26:38Z",
+              "updatedAt": "2022-08-27T00:26:38Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A05Mx",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:28:19Z",
+          "updatedAt": "2022-08-27T00:28:20Z",
+          "comments": [
+            {
+              "originalPosition": 96,
+              "body": "Yup, you're right. I was a bit careless there. Text looks good after revision.",
+              "createdAt": "2022-08-27T00:28:19Z",
+              "updatedAt": "2022-08-27T00:28:20Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A05PB",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:29:16Z",
+          "updatedAt": "2022-08-27T00:29:17Z",
+          "comments": [
+            {
+              "originalPosition": 59,
+              "body": "Sounds good. Most likely we'll be able to spell this feature when we actually need it.",
+              "createdAt": "2022-08-27T00:29:16Z",
+              "updatedAt": "2022-08-27T00:29:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A05S8",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-27T00:30:43Z",
+          "updatedAt": "2022-08-27T00:30:44Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "Actually, thinking about it more, it sounds like what you want is to rename \"Query\" to \"BatchID\"? ",
+              "createdAt": "2022-08-27T00:30:44Z",
+              "updatedAt": "2022-08-27T00:30:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A05Zb",
+          "commit": {
+            "abbreviatedOid": "f97e991"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "LGTM. One potential downside is that the Leader can no longer choose batch IDs at random, since it needs to fill batch IDs consecutively. I wonder if this could potentially create a processing bottleneck for the Leader. (I don't know the answer so I'm hoping other reviewers will take the time to think this through!)",
+          "createdAt": "2022-08-27T00:33:20Z",
+          "updatedAt": "2022-08-27T00:33:48Z",
+          "comments": []
         }
       ]
     }
