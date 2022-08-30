@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-28T01:47:56.772824+00:00",
+  "timestamp": "2022-08-30T01:52:38.925995+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -33884,10 +33884,12 @@
       "author": "chris-wood",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "Issue #195 discusses a problem with the current collect request validation requirements. We don't yet have a solution that permits safe query flexibility. This change fixes the privacy problem at the cost of flexibility, leaving an OPEN ISSUE for us to address this regression in a followup change. It does _not_ close the corresponding issue.",
       "createdAt": "2022-06-23T14:08:30Z",
-      "updatedAt": "2022-07-11T20:11:29Z",
+      "updatedAt": "2022-08-29T17:54:49Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "1225fa8f19288f4de093f341397d7c8028203b20",
@@ -33939,10 +33941,12 @@
       "author": "wangshan",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "See discussion here: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/272",
       "createdAt": "2022-06-24T14:49:36Z",
-      "updatedAt": "2022-08-02T12:42:03Z",
+      "updatedAt": "2022-08-29T17:54:54Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "5c789f1b62ad8f8c1e0d766f9e71390f479405d9",
@@ -34154,7 +34158,7 @@
       "labels": [],
       "body": "Closes #216.\r\n\r\nGitHub seems to think there's a conflict on the other PR, but I don't see it on the branch, so this just cherry-picks all changes from that PR.",
       "createdAt": "2022-06-27T17:14:54Z",
-      "updatedAt": "2022-06-27T18:14:58Z",
+      "updatedAt": "2022-08-29T17:55:22Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2cf835cef0e7ecad0080f17ccc7cfa5262be0327",
@@ -35015,10 +35019,12 @@
       "author": "divergentdave",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "This adds a field to collect responses with the number of reports that contributed to the aggregation. Collectors will likely want this count to aid in the interpretation of aggregate results. (see #163) There is also a change in draft-irtf-cfrg-vdaf-02 that opens the door for VDAFs that would require the report count during unsharding. (see cfrg/draft-irtf-cfrg-vdaf#95)\r\n\r\nNote that while this field is not part of the adjacent `HpkeCiphertext`s, it will be protected by to the confidentiality of HTTPS and the leader-collector bearer token authentication.",
       "createdAt": "2022-07-19T18:42:30Z",
-      "updatedAt": "2022-08-10T19:23:11Z",
+      "updatedAt": "2022-08-29T17:56:30Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "9639d4f7c6baa9efc9712d326b2a635edecadd4d",
@@ -35121,17 +35127,19 @@
       "title": "Allow leader to remove collect results without an explicit DELETE.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/292",
       "state": "MERGED",
-      "author": "BranLwyd",
+      "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "The previous wording required the leader to store collect results until\r\nthe collector sent an explicit DELETE request to the collect job's URI.\r\nNow, the relevant text is reworded to allow the leader to remove collect\r\nresults for other reasons (for example, a leader can now garbage-collect\r\nold results after a suitable period of time).\r\n\r\nThis fell out of discussion on #288.",
       "createdAt": "2022-07-26T20:23:50Z",
-      "updatedAt": "2022-08-02T17:15:03Z",
+      "updatedAt": "2022-08-29T17:56:39Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "22364f6d76421f6f4edcbe81c03cdce3682aad0a",
-      "headRepository": "BranLwyd/draft-ietf-ppm-dap",
+      "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/allow-deletion-of-collect-results",
       "headRefOid": "86ebbbdff01eb6c27010f708a3eaee3534c5ac69",
       "closedAt": "2022-08-02T12:38:03Z",
@@ -35142,7 +35150,7 @@
       },
       "comments": [
         {
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "body": "OK -- I left the motivating example out as I didn't want to be too prescriptive to implementations. I would also be interested in comments from folks more experienced with RFC writing; I've added the motivating example for now.",
           "createdAt": "2022-07-27T16:58:30Z",
@@ -35175,7 +35183,7 @@
           "commit": {
             "abbreviatedOid": "3c34b7a"
           },
-          "author": "BranLwyd",
+          "author": "branlwyd",
           "authorAssociation": "COLLABORATOR",
           "state": "COMMENTED",
           "body": "",
@@ -35267,10 +35275,12 @@
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "Closes #273.\r\n\r\nGeneralizes \"batch_interval\" to \"query\" and enumerate the different query\r\ntypes and constraints that apply to each. The existing collect request\r\nsemantics is subsumed by the `time-interval` query type.\r\n\r\nAdds a query type, `fixed-size`, that is designed to support use cases\r\nin which the sample size needs to be tightly controlled. The main\r\nfeature of this query type is that the Aggregators enforce limits on the\r\nsize of each batch. We given them a little wiggle room in order to make\r\ncoordination of aggregation jobs a bit easier.\r\n\r\nOne notable feature of this change is that each tasks supports exactly\r\none query type. This allows us to punt on the coomplexity of having to\r\ncomposing different query types per task. For example: If a report can\r\nbe batched into a chunk or a batch interval, then it's not clear that\r\nit's possible for Aggregators to aggregate reports ahead of a collect\r\nrequest.",
       "createdAt": "2022-07-30T02:28:18Z",
-      "updatedAt": "2022-08-19T22:53:36Z",
+      "updatedAt": "2022-08-29T17:56:47Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "2a7b8b5e5ab90d5641da8be0d0919df24b52023f",
@@ -37070,10 +37080,12 @@
       "author": "MichaelScaria",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "",
       "createdAt": "2022-08-02T16:50:54Z",
-      "updatedAt": "2022-08-02T17:25:55Z",
+      "updatedAt": "2022-08-29T17:56:52Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "9639d4f7c6baa9efc9712d326b2a635edecadd4d",
@@ -37908,13 +37920,13 @@
       ],
       "body": "Remove the requirement that implementations use `DAP-Auth-Token` with a\r\nfixed, pre-negotiated secret and instead allow any client auth scheme\r\nthat is composable with HTTP (which includes `DAP-Auth-Token`).\r\n\r\nRelevant to #293",
       "createdAt": "2022-08-24T22:18:59Z",
-      "updatedAt": "2022-08-25T21:09:34Z",
+      "updatedAt": "2022-08-29T22:12:45Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/request-auth",
-      "headRefOid": "dcd1a3dfbe0408b8d95d2f4f90d0f0fde8be5ce6",
+      "headRefOid": "445c526d2b1d19c09b90b459fbe4c885dc9087dc",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -38151,6 +38163,19 @@
           "createdAt": "2022-08-25T20:42:27Z",
           "updatedAt": "2022-08-25T20:42:27Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7xtU",
+          "commit": {
+            "abbreviatedOid": "445c526"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-29T22:12:45Z",
+          "updatedAt": "2022-08-29T22:12:45Z",
+          "comments": []
         }
       ]
     },
@@ -38168,13 +38193,13 @@
       ],
       "body": "Closes #296.\r\n\r\nAlign with the latest VDAF draft. This requires two minor protocol\r\nchanges:\r\n\r\n* 02 added a value called the \"public_share\" to the VDAF syntax. This is\r\n  to support Poplar1 (and likely other schemes that need a similar\r\n  extractability property). To accommodate this, the public_share field\r\n  has been added to the Report and ReportShare structures and appended to\r\n  the AAD for input share encryption. (This may end up being useful for\r\n  privacy.)\r\n\r\n* 02 added the report count to the aggregate result computation. This is\r\n  already passed to the Collector in the CollectResp, so we just need to\r\n  update the aggregate result computation in the draft to match.",
       "createdAt": "2022-08-25T20:33:24Z",
-      "updatedAt": "2022-08-26T20:02:36Z",
+      "updatedAt": "2022-08-29T22:20:43Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/296",
-      "headRefOid": "c3e039b2ec2174edf9cdcecf78631c99ea54c0fe",
+      "headRefOid": "ddc2a3c3604071a9c61c3999ff69d71971fa1b4a",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -38220,6 +38245,66 @@
               "updatedAt": "2022-08-26T20:02:36Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7OMd",
+          "commit": {
+            "abbreviatedOid": "c3e039b"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2022-08-29T19:44:53Z",
+          "updatedAt": "2022-08-29T19:45:16Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "While we're in here touching these lines: I think VDAF qualifies as a normative reference rather than an informative one based on [the IETF's criteria](https://www.ietf.org/about/groups/iesg/statements/normative-informative-references/). This and all the other VDAF references should be updated to use `!`.\r\n```suggestion\r\n   {{!VDAF=I-D.draft-irtf-cfrg-vdaf-03}} sharding algorithm. This algorithm is run by\r\n```",
+              "createdAt": "2022-08-29T19:44:53Z",
+              "updatedAt": "2022-08-29T19:45:16Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7y1h",
+          "commit": {
+            "abbreviatedOid": "c3e039b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T22:19:17Z",
+          "updatedAt": "2022-08-29T22:19:17Z",
+          "comments": [
+            {
+              "originalPosition": 40,
+              "body": "Yes, you're right. We could rename to \"header\" maybe, but @chris-wood rejected this name in an earlier PR. Maybe it makes sense to rename if we include public share?",
+              "createdAt": "2022-08-29T22:19:17Z",
+              "updatedAt": "2022-08-29T22:19:17Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7zCS",
+          "commit": {
+            "abbreviatedOid": "c3e039b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T22:20:33Z",
+          "updatedAt": "2022-08-29T22:20:34Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Done!",
+              "createdAt": "2022-08-29T22:20:34Z",
+              "updatedAt": "2022-08-29T22:20:34Z"
+            }
+          ]
         }
       ]
     },
@@ -38237,18 +38322,33 @@
       ],
       "body": "This model expects the Collector to track the next batch ID of interest.\r\nA Collector that is starting up or otherwise does not know the next\r\nbatch ID can use the `current-batch` functionality to collect a recent\r\nbatch, which also determines the current batch ID as this information is\r\ntransmitted in the eventual CollectResp.\r\n\r\nCloses #301.",
       "createdAt": "2022-08-26T23:03:13Z",
-      "updatedAt": "2022-08-27T00:33:48Z",
+      "updatedAt": "2022-08-29T22:23:47Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/predictable-batch-ids",
-      "headRefOid": "f97e991389228e119e95bff15083006380afc8b9",
+      "headRefOid": "ceff8f301ad7b5657a60289112495635abdb5375",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> LGTM. One potential downside is that the Leader can no longer choose batch IDs at random, since it needs to fill batch IDs consecutively. I wonder if this could potentially create a processing bottleneck for the Leader. (I don't know the answer so I'm hoping other reviewers will take the time to think this through!)\r\n\r\nI'm not _too_ worried about this over-and-above the current design: I think there is already effectively a \"serialization point\" required when the Leader assigns the next aggregation job to a batch -- at that point, it needs to know the assignment of existing aggregation jobs to batches, and how many reports are in those aggregation jobs, in order to decide the batch ID to use for its next aggregation job. I think it needs to know this since, if this knowledge is unavailable or imprecise, it might assign too many reports to a single batch, leading to those reports being uncollectable.\r\n\r\nOnce you have a serialization point at point-of-generation-of-aggregation-job, choosing a new batch ID would be something like the pseudo-SQL `SELECT MAX(batch_id) + 1 FROM batches WHERE batch_full = true`.\r\n\r\nThat said -- maybe the existing serialization point will be too much of a performance hit, with or without generating a consecutive batch ID? I guess implementation experience will tell. I'm not too worried since this serialization point wouldn't affect the aggregation protocol, which is likely to be the costliest part of the overall protocol, but it's hard to be certain without actually implementing.\r\n\r\n(also, did I miss something with the above? maybe there's some kinds of imprecision in knowledge of assignment of client reports/aggregation jobs to batches that would allow a serialization point to be safely skipped?)",
+          "createdAt": "2022-08-29T18:34:53Z",
+          "updatedAt": "2022-08-29T18:40:58Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> (also, did I miss something with the above? maybe there's some kinds of imprecision in knowledge of assignment of client reports/aggregation jobs to batches that would allow a serialization point to be safely skipped?)\r\n\r\nI'm not sure myself, I haven't fully thought this through. I'm also happy to wait for implementation experience to tell us if we need to change course here.",
+          "createdAt": "2022-08-29T22:23:47Z",
+          "updatedAt": "2022-08-29T22:23:47Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5A0yyD",
@@ -38480,6 +38580,207 @@
           "createdAt": "2022-08-27T00:33:20Z",
           "updatedAt": "2022-08-27T00:33:48Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A6f8N",
+          "commit": {
+            "abbreviatedOid": "f97e991"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-29T17:17:22Z",
+          "updatedAt": "2022-08-29T17:21:41Z",
+          "comments": [
+            {
+              "originalPosition": 67,
+              "body": "```suggestion\r\nIn addition to the minimum batch size common to all query types, the\r\n```",
+              "createdAt": "2022-08-29T17:17:22Z",
+              "updatedAt": "2022-08-29T17:21:42Z"
+            },
+            {
+              "originalPosition": 60,
+              "body": "Should we say \"monotonic\" to allow discontinuities in batch IDs? Does anything bad happen if there are discontinuities in batch IDs? I assume we already have text instructing aggregators what to do if they don't recognize a batch ID.",
+              "createdAt": "2022-08-29T17:19:31Z",
+              "updatedAt": "2022-08-29T17:21:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A61qR",
+          "commit": {
+            "abbreviatedOid": "f97e991"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T18:18:30Z",
+          "updatedAt": "2022-08-29T18:18:31Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "I think we don't want discontinuities: the idea of this approach is that the Collector can send requests for batch 0, followed by batch 1, followed by batch 2, and so on -- i.e. that the Collector can predict the sequence of batch identifiers. While a failed aggregation or technical issues might lead to an uncollectable batch, which (hopefully) is communicated well enough for the Collector to realize it won't be able to collect that batch, allowing the Leader to skip arbitrary batch IDs would currently be painful[1]. For example, if the Leader decided to skip `10^6` batch IDs, I suppose the Collector would have to walk through `10^6` collect requests getting an \"unknown batch\" before finding the next \"good\" batch.\r\n\r\n\r\n[1] I think the best way to reduce this pain, if we decide we need to, would be to have some way for the Collector to ask the Leader which batch IDs are usable/acceptable. That's what I was trying to get at with the now-removed `current-batch` functionality, to allow Collectors to startup against Aggregators that have been running for awhile without the need for out-of-band communication. Like with that functionality, IMO we should see whether we need to implement something more complicated before we specify it.",
+              "createdAt": "2022-08-29T18:18:30Z",
+              "updatedAt": "2022-08-29T18:18:31Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7Cb7",
+          "commit": {
+            "abbreviatedOid": "f97e991"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T19:02:59Z",
+          "updatedAt": "2022-08-29T19:02:59Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "OK, then do we need a MUST describing how the leader should assign batch IDs?",
+              "createdAt": "2022-08-29T19:02:59Z",
+              "updatedAt": "2022-08-29T19:02:59Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7XEB",
+          "commit": {
+            "abbreviatedOid": "f97e991"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T20:16:10Z",
+          "updatedAt": "2022-08-29T20:16:10Z",
+          "comments": [
+            {
+              "originalPosition": 60,
+              "body": "Sure -- the existing text in the \"Fixed-size Queries\" section defined them this way, but it's probably valuable to reiterate this point in the \"Leader Initialization\" section since that section defines the specific protocol steps. I did so in terms of a `MUST`.",
+              "createdAt": "2022-08-29T20:16:10Z",
+              "updatedAt": "2022-08-29T20:16:10Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7axi",
+          "commit": {
+            "abbreviatedOid": "de354d7"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-29T20:30:32Z",
+          "updatedAt": "2022-08-29T20:30:33Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "Thinking about this some more, I think I don't want to rename Query to BatchID: while this would work well for `fixed-size`, I think the interval included in `time-interval` isn't quite an ID: specifically, `time-interval` tasks allow queries that span multiple `min_batch_duration` intervals, so for `time-interval` the query is actually describing a range of batches rather than a single batch. IMO, a batch ID would identify a single `min_batch_duration` interval for `time-interval`.\r\n\r\n(of course, I could keep Query and separately define BatchID, but at that point the suggested change is no longer a simplification...)",
+              "createdAt": "2022-08-29T20:30:32Z",
+              "updatedAt": "2022-08-29T20:30:33Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 309,
+      "id": "PR_kwDOFEJYQs49_19A",
+      "title": "Rely on VDAF's definitions of privacy, robustness",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/309",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-02"
+      ],
+      "body": "Resolves #306",
+      "createdAt": "2022-08-29T20:05:00Z",
+      "updatedAt": "2022-08-30T00:08:33Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/robust-private-vdaf-defs",
+      "headRefOid": "a053edb8e907c5cc882e02a397a6c7974db75ac5",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5A7g00",
+          "commit": {
+            "abbreviatedOid": "89dacb9"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-29T20:53:33Z",
+          "updatedAt": "2022-08-29T20:53:33Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7hel",
+          "commit": {
+            "abbreviatedOid": "89dacb9"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-29T20:56:04Z",
+          "updatedAt": "2022-08-29T20:56:04Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A7yjf",
+          "commit": {
+            "abbreviatedOid": "89dacb9"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "",
+          "createdAt": "2022-08-29T22:17:44Z",
+          "updatedAt": "2022-08-29T22:17:52Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "Sadly I don't think italics get rendered in txt the way you want https://datatracker.ietf.org/doc/html/draft-ietf-ppm-dap\r\n```suggestion\r\nIn the presence of this adversary, DAP aims to achieve the \"privacy\" and\r\n\"robustness\" security goals described in {{!VDAF, Section 9}}.\r\n```",
+              "createdAt": "2022-08-29T22:17:44Z",
+              "updatedAt": "2022-08-29T22:17:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5A8DL9",
+          "commit": {
+            "abbreviatedOid": "a053edb"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-30T00:08:28Z",
+          "updatedAt": "2022-08-30T00:08:33Z",
+          "comments": [
+            {
+              "originalPosition": 17,
+              "body": "The section number is subject to change (if, for example, we add a new VDAF). Maybe refer to security considerations, just to make our lives later in the future.",
+              "createdAt": "2022-08-30T00:08:28Z",
+              "updatedAt": "2022-08-30T00:08:33Z"
+            }
+          ]
         }
       ]
     }
