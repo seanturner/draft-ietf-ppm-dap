@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 March 2023                                         Cloudflare
+Expires: 3 March 2023                                         Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                          29 August 2022
+                                                          30 August 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 March 2023.
+   This Internet-Draft will expire on 3 March 2023.
 
 Copyright Notice
 
@@ -1940,8 +1940,8 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    coerce an aggregator into diverting from the protocol specified
    (e.g., by divulging its input shares to the attacker).
 
-   In the presence of this adversary, DAP aims to achieve the _privacy_
-   and _robustness_ security goals described in [VDAF], Section 9.
+   In the presence of this adversary, DAP aims to achieve the privacy
+   and robustness security goals described in [VDAF], Section 9.
 
    Currently, the specification does not achieve these goals.  In
    particular, there are several open issues that need to be addressed
