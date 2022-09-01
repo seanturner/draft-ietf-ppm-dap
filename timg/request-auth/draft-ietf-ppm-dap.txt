@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 2 March 2023                                         Cloudflare
+Expires: 5 March 2023                                         Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                          29 August 2022
+                                                        1 September 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 2 March 2023.
+   This Internet-Draft will expire on 5 March 2023.
 
 Copyright Notice
 
@@ -497,6 +497,10 @@ Table of Contents
       |                            | request failed (see            |
       |                            | Section 3.1).                  |
       +----------------------------+--------------------------------+
+      | missingTaskID              | HPKE configuration was         |
+      |                            | requested without specifying a |
+      |                            | task ID.                       |
+      +----------------------------+--------------------------------+
 
                                   Table 1
 
@@ -751,16 +755,25 @@ struct {
    information on HPKE algorithm choices.
 
    Clients retrieve the HPKE configuration from each aggregator by
+   sending an HTTP GET request to [aggregator]/hpke_config, where
+   [aggregator] is the aggregator's endpoint URL, obtained from the task
+   parameters.  Clients MAY specify a query parameter task_id when
    sending an HTTP GET request to
-   [aggregator]/hpke_config?task_id=[task-id], where [aggregator] is the
-   aggregator's endpoint URL, obtained from the task parameters, and
-   [task-id] is the task ID obtained from the task parameters, encoded
-   in Base 64 with URL and filename safe alphabet with no padding, as
-   specified in sections 5 and 3.2 of [RFC4648].  If the aggregator does
-   not recognize the task ID, then it responds with HTTP status code 404
-   Not Found and an error of type unrecognizedTask.  The aggregator
-   responds to well-formed requests with HTTP status code 200 OK and an
-   HpkeConfig value:
+   [aggregator]/hpke_config?task_id=[task-id], where [task-id] is the
+   task ID obtained from the task parameters, encoded in Base 64 with
+   URL and filename safe alphabet with no padding, as specified in
+   sections 5 and 3.2 of [RFC4648].  If the aggregator does not
+   recognize the task ID, then it responds with HTTP status code 404 Not
+   Found and an error of type unrecognizedTask.
+
+   An aggregator is free to use different HPKE configurations for each
+   task with which it's configured.  If the task ID is missing from a
+   client's request, the aggregator MAY abort with an error of type
+   missingTaskID, in which case the client SHOULD retry the request with
+   a well-formed task ID included.
+
+   An aggregator responds to well-formed requests with HTTP status code
+   200 OK and an HpkeConfig value:
 
    [TODO: Allow aggregators to return HTTP status code 403 Forbidden in
    deployments that use authentication to avoid leaking information
