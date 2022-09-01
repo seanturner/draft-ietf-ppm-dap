@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-08-30T01:52:38.925995+00:00",
+  "timestamp": "2022-09-01T01:23:16.726522+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -5676,11 +5676,11 @@
         "tgeoghegan"
       ],
       "labels": [
-        "draft-02"
+        "draft-03"
       ],
       "body": "If clients upload reports directly to the leader, then the leader learns things like the client's IP among other identifying metadata. This can be mitigated with the use of some kind of anonymizing proxy, like an [OHAI](https://datatracker.ietf.org/wg/ohai/documents/) server, provided the proxy is not colluding with the aggregator(s).\r\n\r\nHowever, it's not clear that every deployment will be able to use such a proxy, because the aggregators can't run it as a service, and perhaps the cost of deploying this additional actor is prohibitive.\r\n\r\nNonetheless, the protocol should discuss the privacy leaks that result from direct uploads and discuss how deployments might use anonymizing proxies.",
       "createdAt": "2022-07-28T15:19:08Z",
-      "updatedAt": "2022-08-25T21:08:04Z",
+      "updatedAt": "2022-08-31T20:16:58Z",
       "closedAt": null,
       "comments": [
         {
@@ -5721,9 +5721,9 @@
         {
           "author": "tgeoghegan",
           "authorAssociation": "COLLABORATOR",
-          "body": "I'm going to try to get this done for draft-02, hopefully early next week.",
+          "body": "I'm going to try to get this done for draft-02, hopefully early next week.\r\n\r\nEdit: I did not get to this in time, and am still unsure what I want to do about it (crucially, I'm not sure if we need a `ReportList` or not), so punting to draft-03.",
           "createdAt": "2022-08-25T21:08:04Z",
-          "updatedAt": "2022-08-25T21:08:04Z"
+          "updatedAt": "2022-08-31T20:16:52Z"
         }
       ]
     },
@@ -37775,13 +37775,13 @@
       ],
       "body": "Closes #291.",
       "createdAt": "2022-08-24T13:01:23Z",
-      "updatedAt": "2022-08-26T21:51:30Z",
+      "updatedAt": "2022-08-31T23:39:26Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "wangshan/draft-ietf-ppm-dap",
       "headRefName": "max-task-lifetime",
-      "headRefOid": "51f357cbb991aa94a4c011fe3f737318ef4a5b33",
+      "headRefOid": "35663d312bb14cd2e12883bcfb90c33164eee9a7",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -37793,6 +37793,13 @@
           "body": "@cjpatton I have made the definition more precise, in the process changing the meaning of this field a bit, please have another pass.",
           "createdAt": "2022-08-26T09:15:22Z",
           "updatedAt": "2022-08-26T09:15:22Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> In particular, do we need to spell out how the Leader/Helper rejects reports with time stamps that exceed the max batch lifetime?\r\n\r\ndo you mean we should specify whether expired reports should be result in upload error or be dropped silently?",
+          "createdAt": "2022-08-31T23:33:42Z",
+          "updatedAt": "2022-08-31T23:33:42Z"
         }
       ],
       "reviews": [
@@ -37901,6 +37908,106 @@
               "body": "I don't think we need this paragraph, but for a different reason: it should be OK to do aggregations on a task after the aggregators have stopped accepting client reports for it. Let's say a task has `max_task_lifetime` `t` and it takes `d` seconds to run the collect protocol. So far as clients know, it is OK for them to continue submitting reports right up until instant `t`. As written, the collector must initiate the collect protocol at time `t - d`. So that means any reports that arrive during the interval `(t - d, t)` won't be included in the aggregation.\r\n\r\nThe other problem is that there's no good way in the protocol for the collector to figure out what `d` is and thus figure out how late it can issue a collect request without risking losing an aggregation because the task expired.\r\n\r\nIn fact, that seems to be implied by the text added in \"Reducing storage requirements\".",
               "createdAt": "2022-08-26T21:50:21Z",
               "updatedAt": "2022-08-26T21:51:30Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BH4nK",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-31T22:39:23Z",
+          "updatedAt": "2022-08-31T22:39:23Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "I agree `task_expiration` is a better name if it's defined as a timestamp.\r\n\r\nWhat's the main concern of encoding an instant in time in the protocol message (sorry if this is  obvious). Defining it as a duration will make it very hard for client to check this, since a client doesn't know the starting time of a task. ",
+              "createdAt": "2022-08-31T22:39:23Z",
+              "updatedAt": "2022-08-31T22:39:23Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BH4_k",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-31T22:41:57Z",
+          "updatedAt": "2022-08-31T22:41:58Z",
+          "comments": [
+            {
+              "originalPosition": 56,
+              "body": "will do but the current doc doesn't seem to follow that strictly :)",
+              "createdAt": "2022-08-31T22:41:57Z",
+              "updatedAt": "2022-08-31T22:41:58Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BH8Rh",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-31T23:05:06Z",
+          "updatedAt": "2022-08-31T23:05:06Z",
+          "comments": [
+            {
+              "originalPosition": 44,
+              "body": "I'll revert the change.\r\n\r\n@tgeoghegan The current description indeed doesn't say explicitly how soon a task should be retired after expiry, IMO it should be left to the deployment. Collector should know `t` and try to collect before `t` expires.",
+              "createdAt": "2022-08-31T23:05:06Z",
+              "updatedAt": "2022-08-31T23:05:06Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BH92r",
+          "commit": {
+            "abbreviatedOid": "cbb9bbf"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-31T23:16:53Z",
+          "updatedAt": "2022-08-31T23:16:53Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "@tgeoghegan I think it should be based on a timestamp in the report. Assuming we want to give client a chance to check this, it can't be a duration since client may \"wake up\" at very different times.\r\nEven for aggregators, if we determine by arrival time, then we could lose reports due to any latency caused on route to leader. The threat you mentioned is real, but attacker would have to hijack a large number of clients to make this attack effective.",
+              "createdAt": "2022-08-31T23:16:53Z",
+              "updatedAt": "2022-08-31T23:16:53Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BIAqc",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-31T23:39:26Z",
+          "updatedAt": "2022-08-31T23:39:26Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "having said that, I realised that given the `time_precision` is used to blur client timestamp, if we really want client to check this expiry time, then we should round (up?) `task_expiry` with `time_precision` too, otherwise if time_expiry is close to the rounded timestamp, people could figure out a more accurate timestamp of client.",
+              "createdAt": "2022-08-31T23:39:26Z",
+              "updatedAt": "2022-08-31T23:39:26Z"
             }
           ]
         }
@@ -38193,7 +38300,7 @@
       ],
       "body": "Closes #296.\r\n\r\nAlign with the latest VDAF draft. This requires two minor protocol\r\nchanges:\r\n\r\n* 02 added a value called the \"public_share\" to the VDAF syntax. This is\r\n  to support Poplar1 (and likely other schemes that need a similar\r\n  extractability property). To accommodate this, the public_share field\r\n  has been added to the Report and ReportShare structures and appended to\r\n  the AAD for input share encryption. (This may end up being useful for\r\n  privacy.)\r\n\r\n* 02 added the report count to the aggregate result computation. This is\r\n  already passed to the Collector in the CollectResp, so we just need to\r\n  update the aggregate result computation in the draft to match.",
       "createdAt": "2022-08-25T20:33:24Z",
-      "updatedAt": "2022-08-29T22:20:43Z",
+      "updatedAt": "2022-08-31T19:58:09Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
@@ -38305,6 +38412,19 @@
               "updatedAt": "2022-08-29T22:20:34Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BHUkq",
+          "commit": {
+            "abbreviatedOid": "ddc2a3c"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-08-31T19:58:08Z",
+          "updatedAt": "2022-08-31T19:58:08Z",
+          "comments": []
         }
       ]
     },
@@ -38322,13 +38442,13 @@
       ],
       "body": "This model expects the Collector to track the next batch ID of interest.\r\nA Collector that is starting up or otherwise does not know the next\r\nbatch ID can use the `current-batch` functionality to collect a recent\r\nbatch, which also determines the current batch ID as this information is\r\ntransmitted in the eventual CollectResp.\r\n\r\nCloses #301.",
       "createdAt": "2022-08-26T23:03:13Z",
-      "updatedAt": "2022-08-29T22:23:47Z",
+      "updatedAt": "2022-08-31T23:55:53Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/predictable-batch-ids",
-      "headRefOid": "ceff8f301ad7b5657a60289112495635abdb5375",
+      "headRefOid": "f856e42116e84783f572ce10b1e85d6053687e76",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -38347,6 +38467,104 @@
           "body": "> (also, did I miss something with the above? maybe there's some kinds of imprecision in knowledge of assignment of client reports/aggregation jobs to batches that would allow a serialization point to be safely skipped?)\r\n\r\nI'm not sure myself, I haven't fully thought this through. I'm also happy to wait for implementation experience to tell us if we need to change course here.",
           "createdAt": "2022-08-29T22:23:47Z",
           "updatedAt": "2022-08-29T22:23:47Z"
+        },
+        {
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "In #301:\r\n\r\n> With the current next-batch semantics, there is the possibility that a Collector crashing at an inopportune time might lead to a batch being lost permanently.\r\n\r\n\r\nWould this happen when the Leader commits that it sent the Collector the next batch and the Collector crashes before it commits that it received the batch?\r\n\r\n",
+          "createdAt": "2022-08-31T16:59:18Z",
+          "updatedAt": "2022-08-31T16:59:18Z"
+        },
+        {
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I'm a little concerned with requiring that the Leader assigns batch ids consecutively. If there are multiple Leaders instances running (for scale purposes), it would require that we share some type of counter across the instances. Additionally, it's not clear to me what happens if we lose this state.\r\n\r\nI'm also just catching up on this thread, so apologies in advance if I'm missing any details. Looking forward to hearing back!",
+          "createdAt": "2022-08-31T17:01:29Z",
+          "updatedAt": "2022-08-31T17:01:29Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "Today we already require collector to store some states, for e.g. the task ID, and the \"collect job URI\" returned by leader, the (random) batchID is just an addition to that.\r\nI guess I don't see the added value of having consecutive numbers. ",
+          "createdAt": "2022-08-31T18:03:58Z",
+          "updatedAt": "2022-08-31T18:03:58Z"
+        },
+        {
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "For this PR, having the Collector to indicate the desired batch ID (as proposed), but not requiring the Leader to consecutively order the batches? That allows implementations to have the flexibility to:\r\n\r\n\u2028\u2028a) Make the Leader generate random batch ids and explicitly hand it off to the collector.\r\n\u2028\u2028\r\n\u2028\u2028or\r\n\u2028\u2028\r\n\u2028\u2028\u2028b) Make the Leader consecutively generate batch ids and allow the collector to predict the batch id.\r\n\u2028\u2028\u2028\r\n\u2028\u2028\u2028\u2028\u2028In a separate issue/PR we can discuss how a Leader could implement the \u201cnext batch\u201d functionality. Currently, it isn\u2019t clear how the Leader and Collector reconcile the batch id if state is lost for whatever reason. An analogy I have in my mind would be how Kafka maintains offsets for consumer groups. Similarly, the Leader could maintain the \u201cbatch offset\u201d the collector last committed receiving.",
+          "createdAt": "2022-08-31T19:44:41Z",
+          "updatedAt": "2022-08-31T19:44:41Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> In #301:\r\n> \r\n> > With the current next-batch semantics, there is the possibility that a Collector crashing at an inopportune time might lead to a batch being lost permanently.\r\n> \r\n> Would this happen when the Leader commits that it sent the Collector the next batch and the Collector crashes before it commits that it received the batch?\r\n\r\nCorrect, that is the situation I was concerned with. To be fully explicit, the problematic scenario with the old `next-batch` semantics was:\r\n\r\n1. The Collector issues a `next-batch` request to the Leader. The Leader returns the next batch ID and updates its durable storage to note that this batch has been returned to the Collector.\r\n2. Before the Collector stores the batch ID back to its own durable storage, it crashes.\r\n\r\nAt this point, there would be no way for the Collector to interact with the Leader to retrieve this batch ID again, so the batch would effectively be lost.\r\n\r\nPutting it another way, I think the core of this problem is that the old `next-batch` semantics required an (inherently-fallible) durable state update from both the Leader & the Collector; these updates were not transactional, so the Leader's update could succeed while the Collector's update could fail; and if this did occur, there was no way for the Collector to interact with the Leader to retrieve the same batch ID again.",
+          "createdAt": "2022-08-31T19:46:37Z",
+          "updatedAt": "2022-08-31T19:46:37Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Thanks @MichaelScaria, I'm with you on the requirements. However I just noticed a potential problem here: If the Leader doesn't get to choose the batch ID, then it doesn't get to proactively aggregate reports as they come in: It has to wait until the batch ID is assigned by the Collector.",
+          "createdAt": "2022-08-31T19:47:43Z",
+          "updatedAt": "2022-08-31T19:47:43Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I'm a little concerned with requiring that the Leader assigns batch ids consecutively. If there are multiple Leaders instances running (for scale purposes), it would require that we share some type of counter across the instances.\r\n\r\nIn this scenario, do the multiple Leader instances share state or not? (\"state\" in this case being received client reports, aggregation jobs, etc)\r\n\r\nIf the Leader instances do share state, I think the argument in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308#issuecomment-1230705299 applies: assigning batch IDs without risking adding too many client reports to a given batch already implies serialization of creation of aggregation jobs. Once that serialization is accepted, the counter will not significantly affect performance over-and-above the existing performance cost of serializing the rest of the aggregation-job-creation operation. (That said, I'd be interested in review of the linked argument; I may well be missing some clever implementation strategy.)\r\n\r\nIf the Leader instances don't share state, I think the two Leaders are effectively separate DAP deployments and are free to use a per-Leader counter.\r\n\r\n\r\n> Additionally, it's not clear to me what happens if we lose this state.\r\n\r\nThis is a good point -- I don't think the DAP specification covers data-loss-recovery scenarios currently. For this case in particular, if only the counter is lost, out-of-band communication would allow recovery. I think that is probably acceptable for an initial pass. (If more data is lost, e.g. client reports/aggregation jobs, recovery may be much more difficult--but that's not new with this PR & IMO would best be covered in separate work.)",
+          "createdAt": "2022-08-31T20:02:44Z",
+          "updatedAt": "2022-08-31T20:52:10Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> 1. The Collector issues a next-batch request to the Leader. The Leader returns the next batch ID and updates its durable storage to note that this batch has been returned to the Collector.\r\n> 2. Before the Collector stores the batch ID back to its own durable storage, it crashes.\r\n\r\nCan we not ask the collector to re-send `next-batch` request in this case?  \r\n\r\n> Upon receipt of a CollectReq, the leader begins by checking that the request meets the requirements of the batch parameters using the procedure in {{batch-validation}}. If so, it immediately sends the collector a response with HTTP status 303 See Other and a Location header containing a URI identifying the collect job that can be polled by the collector, called the \"collect job URI\". \r\n\r\nShould we include the batchID in the \"collect job URI\", so if the collector crashes before saving the batchID, it will have to re-send CollectReq with `next-batch` since the collect job URI will be lost too? @branlwyd @cjpatton @MichaelScaria \r\n",
+          "createdAt": "2022-08-31T20:35:44Z",
+          "updatedAt": "2022-08-31T20:36:20Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> Today we already require collector to store some states, for e.g. the task ID, and the \"collect job URI\" returned by leader, the (random) batchID is just an addition to that. I guess I don't see the added value of having consecutive numbers.\r\n\r\nThe reason for this change are:\r\n* This allows the Collector to opportunistically query for batches. (the discussion around this point starts at https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297#discussion_r949117056)\r\n* The semantics of `next-batch` could lead to data loss by design (see https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308#issuecomment-1233352095 for a full explanation). Allowing the Collector to predict batch IDs avoids this problem. (but it is not the only possible solution to this problem)",
+          "createdAt": "2022-08-31T20:51:17Z",
+          "updatedAt": "2022-08-31T20:51:17Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > 1. The Collector issues a next-batch request to the Leader. The Leader returns the next batch ID and updates its durable storage to note that this batch has been returned to the Collector.\r\n> > 2. Before the Collector stores the batch ID back to its own durable storage, it crashes.\r\n> \r\n> Can we not ask the collector to re-send `next-batch` request in this case?\r\n\r\nThe semantics of `next-batch` were defined such that sending another `next-batch` request would receive a different batch. There was no way for the Leader to know that it should return the same batch twice for two different `next-batch` requests. See https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/297#discussion_r948460390 for original discussion around these semantics.\r\n\r\n\r\n> > Upon receipt of a CollectReq, the leader begins by checking that the request meets the requirements of the batch parameters using the procedure in {{batch-validation}}. If so, it immediately sends the collector a response with HTTP status 303 See Other and a Location header containing a URI identifying the collect job that can be polled by the collector, called the \"collect job URI\".\r\n> \r\n> Should we include the batchID in the \"collect job URI\", so if the collector crashes before saving the batchID, it will have to re-send CollectReq with `next-batch` since the collect job URI will be lost too? @branlwyd @cjpatton @MichaelScaria\r\n\r\nI think in the medium-term, including batch ID in the collect job URI is likely a good idea. I think this work would be part of (or perhaps an eventual extension of) https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/278.\r\n\r\nYou're correct that the data-loss scenario under discussion would lose the collect job URI, as well as the batch ID. However, I'm not certain how including the batch ID in the collect job URI helps:\r\n\r\n* When using `next-batch` (i.e. the approach before this PR), a second `next-batch` request will receive a different batch, so including the batch ID in the collect job URI does not help to avoid data loss.\r\n* When using the approach in this PR, if the Collector loses the collect job URI, it can issue a second collect request with the same batch ID to receive it again.",
+          "createdAt": "2022-08-31T21:44:05Z",
+          "updatedAt": "2022-08-31T21:44:05Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> For this PR, having the Collector to indicate the desired batch ID (as proposed), but not requiring the Leader to consecutively order the batches?\r\n\r\nThat would work, but we'd need to specify how the Collector \"discovers\" batches. That is, I think we'd need to specify the equivalent of \"next-batch\" functionality in this PR or at least before DAP-02 is published.\r\n\r\n\r\n> Similarly, the Leader could maintain the \u201cbatch offset\u201d the collector last committed receiving.\r\n\r\nA commit-based approach would definitely work; my only complaint is that it may be more complex than is needed.",
+          "createdAt": "2022-08-31T21:51:58Z",
+          "updatedAt": "2022-08-31T21:51:58Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@branlwyd thank you for pointing out previous comments, definitely helped explaining the ideas. But I'm curious why the \"current-batch\" solution was removed, it feels like the right solution to this problem: the \"current\" batch is maintained by leader, if collector restarts without the batchID, it can ask leader with a \"current-batch\" CollectReq. \r\n\r\nAlternatively, we can let collector specify a randomised batchID (what @MichaelScaria said), in this case the \"current\" batch is maintained by collector, there's no need for batchID discovery, collector could persist the batchID before sending CollectReq. But as @cjpatton pointed out, since the batchID is used in AggregateInitializeReq, the aggregators will have to wait for a CollectReq before aggregating. Unless we change AggregateInitializeReq to use a list of agg job IDs instead of a batchID and associate the list with batchID when CollectReq is received.\r\n",
+          "createdAt": "2022-08-31T22:08:51Z",
+          "updatedAt": "2022-08-31T22:08:51Z"
+        },
+        {
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> That is, I think we'd need to specify the equivalent of \"next-batch\" functionality in this PR or at least before DAP-02 is published.\r\n\r\nAny reason we need \"next-batch\" functionality before draft 02? If we remove that feature and assume that the Leader and Collector have a way to share the batchID (for example, encoding it in the collect URI), then fixed size query isn't regressing from a data loss perspective.\r\n\r\nJust to clear up any confusion, I wrote earlier: \r\n\r\n> For this PR, having the Collector to indicate the desired batch ID (as proposed), but not requiring the Leader to consecutively order the batches? \r\n\r\nTo clarify, Collector would set the batchID on CollectReq that the Leader had previously generated.",
+          "createdAt": "2022-08-31T23:54:54Z",
+          "updatedAt": "2022-08-31T23:54:54Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> I'm curious why the \"current-batch\" solution was removed, it feels like the right solution to this problem: the \"current\" batch is maintained by leader, if collector restarts without the batchID, it can ask leader with a \"current-batch\" CollectReq.\r\n\r\nThe only reason it was removed was we believed we didn't need it in an initial implementation (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308#discussion_r956491618).\r\n\r\nI'd be OK restoring it if desirable -- @cjpatton any thoughts?",
+          "createdAt": "2022-08-31T23:55:52Z",
+          "updatedAt": "2022-08-31T23:55:52Z"
         }
       ],
       "reviews": [
@@ -38686,6 +38904,46 @@
               "updatedAt": "2022-08-29T20:30:33Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BGuOi",
+          "commit": {
+            "abbreviatedOid": "ceff8f3"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-31T17:49:40Z",
+          "updatedAt": "2022-08-31T17:49:40Z",
+          "comments": [
+            {
+              "originalPosition": 108,
+              "body": "this contradicts with previous text: \"it is expected that the batch ID to start\r\n from will be configured out-of-band from the DAP protocol.\" at line #571",
+              "createdAt": "2022-08-31T17:49:40Z",
+              "updatedAt": "2022-08-31T17:49:40Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BHZsB",
+          "commit": {
+            "abbreviatedOid": "ceff8f3"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-08-31T20:15:50Z",
+          "updatedAt": "2022-08-31T20:15:50Z",
+          "comments": [
+            {
+              "originalPosition": 108,
+              "body": "Ah, good point. The intent of the text you reference on line 571 is that a Collector that starts after the Aggregators have been running may not be able to start from 0 -- while the Aggregators generated batch IDs starting from 0, by the time the Collector starts, batch ID 0 will have already been garbage collected & no longer be available for collection. Given that, the Collector needs some way to know where to start from.\r\n\r\nThat said, this text is confusing & likely unnecessary at this point. I deleted the relevant text around line 571.",
+              "createdAt": "2022-08-31T20:15:50Z",
+              "updatedAt": "2022-08-31T20:26:05Z"
+            }
+          ]
         }
       ]
     },
@@ -38703,13 +38961,13 @@
       ],
       "body": "Resolves #306",
       "createdAt": "2022-08-29T20:05:00Z",
-      "updatedAt": "2022-08-30T00:08:33Z",
+      "updatedAt": "2022-08-30T16:39:03Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/robust-private-vdaf-defs",
-      "headRefOid": "a053edb8e907c5cc882e02a397a6c7974db75ac5",
+      "headRefOid": "d997a1b01523a5b2d73a3307c6471217fb3156af",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
