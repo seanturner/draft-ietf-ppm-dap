@@ -85,8 +85,8 @@ Table of Contents
      2.1.  System Architecture
      2.2.  Validating Inputs
    3.  Message Transport
-     3.1.  Errors
-     3.2.  HTTPS Sender Authentication
+     3.1.  HTTPS Request Authentication
+     3.2.  Errors
    4.  Protocol Definition
      4.1.  Queries
        4.1.1.  Time-interval Queries
@@ -96,16 +96,19 @@ Table of Contents
        4.3.1.  HPKE Configuration Request
        4.3.2.  Upload Request
        4.3.3.  Upload Extensions
+       4.3.4.  Upload Message Security
      4.4.  Verifying and Aggregating Reports
        4.4.1.  Aggregate Initialization
        4.4.2.  Aggregate Continuation
+       4.4.3.  Aggregate Message Security
      4.5.  Collecting Results
        4.5.1.  Collection Initialization
        4.5.2.  Collection Aggregation
        4.5.3.  Collection Finalization
        4.5.4.  Aggregate Share Encryption
-       4.5.5.  Batch Validation
-       4.5.6.  Anti-replay
+       4.5.5.  Collect Message Security
+       4.5.6.  Batch Validation
+       4.5.7.  Anti-replay
    5.  Operational Considerations
      5.1.  Protocol participant capabilities
        5.1.1.  Client capabilities
@@ -411,12 +414,31 @@ Table of Contents
 
 3.  Message Transport
 
-   Communications between DAP entities are carried over HTTPS [RFC2818].
-   HTTPS provides server authentication and confidentiality.  When
-   client authenticaiton is also required, the client uses the mechanism
-   described in Section 3.2.
+   Communications between DAP participants are carried over HTTPS
+   [RFC9110].  HTTPS provides server authentication and confidentiality.
+   Use of HTTPS is REQUIRED.
 
-3.1.  Errors
+3.1.  HTTPS Request Authentication
+
+   DAP is made up of several sub-protocols in which different subsets of
+   the protocol's participants interact with each other.
+
+   In those cases where a channel between two participants is tunneled
+   through another protocol participant, DAP mandates the use of public-
+   key encryption using [HPKE] to ensure that only the intended
+   recipient can see a message in the clear.
+
+   In other cases, DAP requires HTTPS client authentication.  Any
+   authentication scheme that is composable with HTTP is allowed.  For
+   example, [OAuth2] credentials are presented in an Authorization HTTP
+   header, which can be added to any DAP protocol message, or TLS client
+   certificates are another viable solution.  This allows organizations
+   deploying DAP to use existing well-known HTTP authentication
+   mechanisms that they already support.  Discovering what
+   authentication mechanisms are supported by a DAP participant is
+   outside of this document's scope.
+
+3.2.  Errors
 
    Errors can be reported in DAP both at the HTTP layer and within
    challenge objects as defined in Section 8.  DAP servers can return
@@ -473,7 +495,7 @@ Table of Contents
       +----------------------------+--------------------------------+
       | unauthorizedRequest        | Authentication of an HTTP      |
       |                            | request failed (see            |
-      |                            | Section 3.2).                  |
+      |                            | Section 3.1).                  |
       +----------------------------+--------------------------------+
       | missingTaskID              | HPKE configuration was         |
       |                            | requested without specifying a |
@@ -502,30 +524,6 @@ Table of Contents
    This document uses the verbs "abort" and "alert with [some error
    message]" to describe how protocol participants react to various
    error conditions.
-
-3.2.  HTTPS Sender Authentication
-
-   Some HTTP requests in the DAP protocol require the sender to
-   authenticate its request.  It does so as described here.
-
-   Prior to the start of the protocol, the sender and receiver arrange
-   to share a secret sender-specific API token, which MUST be suitable
-   for representation in an HTTP header.
-
-   For requests requiring authentication, the sender includes a "DAP-
-   Auth-Token" header in its HTTP request containing the API token.
-
-   To authenticate the request, the receiver looks up the token for the
-   sender as determined by the task configuration.  (See Section 4.2.)
-   If the value of the "DAP-Auth-Token" header does not match the token,
-   then the receiver MUST abort with error "unauthorizedRequest" and
-   HTTP status code 403 Forbidden.
-
-   [OPEN ISSUE: This simple bearer-token scheme is meant to unblock
-   interop testing.  Eventually it should be replaced with a more secure
-   authentication mechanism, e.g., TLS client certificates.  See
-   https://mailarchive.ietf.org/arch/msg/ppm/
-   z65FK8kOU27Dt38WNhpI6apc2so/ for details.]
 
 4.  Protocol Definition
 
@@ -638,7 +636,7 @@ struct {
 
    *  time_precision - Clients use this value to truncate their report
       timestamps; see Section 4.3.  Additional semantics may apply,
-      depending on the query type.  (See Section 4.5.5 for details.)
+      depending on the query type.  (See Section 4.5.6 for details.)
 
    The parameters pertaining to specific query types are described in
    the relevant subsection below.
@@ -742,11 +740,6 @@ struct {
       distributed may be relevant to the VDAF's security.  See
       issue#161.]
 
-   The helper stores a bearer token used to authenticate HTTP requests
-   from the leader.  Likewise, the leader stores a bearer token to
-   authenticate HTTP request from the collector.  The authentication
-   mechanism is described in Section 3.2.
-
    Finally, the collector is configured with the HPKE secret key
    corresponding to collector_hpke_config.
 
@@ -805,9 +798,6 @@ struct {
    The client MUST abort if any of the following happen for any HPKE
    config request:
 
-   *  the client and aggregator failed to establish a secure,
-      aggregator-authenticated channel;
-
    *  the GET request failed or didn't return a valid HPKE
       configuration; or
 
@@ -861,7 +851,7 @@ struct {
       be used to link a report back to the Client that generated it.
 
    *  A nonce used by the Aggregators to ensure the report appears in at
-      most one batch.  (See Section 4.5.6.)  The Client MUST generate
+      most one batch.  (See Section 4.5.7.)  The Client MUST generate
       this by generating 16 random bytes using a cryptographically
       secure random number gnerator.
 
@@ -888,7 +878,7 @@ struct {
 
    The leader responds to well-formed requests to [leader]/upload with
    HTTP status code 200 OK and an empty body.  Malformed requests are
-   handled as described in Section 3.1.  Clients SHOULD NOT upload the
+   handled as described in Section 3.2.  Clients SHOULD NOT upload the
    same measurement value in more than one report if the leader responds
    with HTTP status code 200 OK and an empty body.
 
@@ -936,6 +926,37 @@ struct {
 
    "extension_type" indicates the type of extension, and
    "extension_data" contains information specific to the extension.
+
+4.3.4.  Upload Message Security
+
+   The contents of each input share must be kept confidential from
+   everyone but the client and the aggregator it is being sent to.  In
+   addition, clients must be able to authenticate the aggregator they
+   upload to.
+
+   HTTPS provides confidentiality between the DAP client and the leader,
+   but this is not sufficient since the helper's report shares are
+   relayed through the leader.  Confidentiality of report shares is
+   achieved by encrypting each report share to a public key held by the
+   respective aggregator.  Clients fetch the public keys from each
+   aggregator over HTTPS, allowing them to authenticate the server.
+
+   Aggregators MAY require clients to authenticate when uploading
+   reports.  This is an effective mitigation against Sybil attacks in
+   deployments where it is practical for each client to have an identity
+   provisioned (e.g., a user logged into an online service or a hardware
+   device programmed with an identity).  If it is used, client
+   authentication MUST use a scheme that meets the requirements in
+   Section 3.1.
+
+   In some deployments, it will not be practical to require clients to
+   authenticate (e.g., a widely distributed application that does not
+   require its users to login to any service), so client authentication
+   is not mandatory in DAP.
+
+   [[OPEN ISSUE: deployments that don't have client auth will need to do
+   something about Sybil attacks.  Is there any useful guidance or
+   SHOULDs we can provide?  Sorta relevant: issue #89]]
 
 4.4.  Verifying and Aggregating Reports
 
@@ -1127,8 +1148,7 @@ struct {
    Let [aggregator] denote the helper's API endpoint.  The leader sends
    a POST request to [aggregator]/aggregate with its
    AggregateInitializeReq message as the payload.  The media type is
-   "message/dap-aggregate-initialize-req".  In addition, this request
-   MUST be authenticated as described in Section 3.2.
+   "message/dap-aggregate-initialize-req".
 
 4.4.1.2.  Helper Initialization
 
@@ -1247,7 +1267,7 @@ struct {
        case if the report was used in a previous aggregate request and
        is therefore a replay.  An aggregator may also choose to mark an
        input share as invalid with the error report-dropped under the
-       conditions prescribed in Section 4.5.6.
+       conditions prescribed in Section 4.5.7.
 
    3.  Depending on the query type for the task, additional checks may
        be applicable:
@@ -1258,7 +1278,7 @@ struct {
           size (per the task configuration), the Aggregator MAY mark the
           input share as invalid with the error "batch-saturated".  Note
           that this behavior is not strictly enforced here but during
-          the collect sub-protocol.  (See Section 4.5.5.)  If both
+          the collect sub-protocol.  (See Section 4.5.6.)  If both
           checks succeed, the input share is not marked as invalid.
 
 4.4.1.5.  Input Share Preparation
@@ -1349,8 +1369,7 @@ out = VDAF.prep_next(prep_state, inbound)
    AggregateContinueReq.task_id's parameters except its own, the leader
    sends a POST request to [aggregator]/aggregate with
    AggregateContinueReq as the payload and the media type set to
-   "message/dap-aggregate-continue-req".  In addition, this request MUST
-   be authenticated as described in Section 3.2.
+   "message/dap-aggregate-continue-req".
 
 4.4.2.2.  Helper Continuation
 
@@ -1413,6 +1432,18 @@ out = VDAF.prep_next(prep_state, inbound)
    [[OPEN ISSUE: consider relaxing this ordering constraint.  See
    issue#217.]]
 
+4.4.3.  Aggregate Message Security
+
+   Aggregate sub-protocol messages must be confidential and mutually
+   authenticated.
+
+   The aggregate sub-protocol is driven by the leader acting as an HTTPS
+   client, making requests to the helper's HTTPS server.  HTTPS provides
+   confidentiality and authenticates the helper to the leader.
+
+   Leaders MUST authenticate their requests to helpers using a scheme
+   that meets the requirements in Section 3.1.
+
 4.5.  Collecting Results
 
    In this phase, the Collector requests aggregate shares from each
@@ -1437,8 +1468,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    To initiate collection, the collector issues a POST request to
    [leader]/collect, where [leader] is the leader's endpoint URL.  The
-   request MUST be authenticated as described in Section 3.2.  The body
-   of the request is structured as follows:
+   body of the request is structured as follows:
 
    [OPEN ISSUE: Decide if and how the collector's request is
    authenticated.  If not, then we need to ensure that collect job URIs
@@ -1470,7 +1500,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    Upon receipt of a CollectReq, the leader begins by checking that the
    request meets the requirements of the batch parameters using the
-   procedure in Section 4.5.5.  If so, it immediately sends the
+   procedure in Section 4.5.6.  If so, it immediately sends the
    collector a response with HTTP status 303 See Other and a Location
    header containing a URI identifying the collect job that can be
    polled by the collector, called the "collect job URI".
@@ -1516,7 +1546,7 @@ out = VDAF.prep_next(prep_state, inbound)
 
    If obtaining aggregate shares fails, then the leader responds to
    subsequent HTTP GET requests to the collect job URI with an HTTP
-   error status and a problem document as described in Section 3.1.
+   error status and a problem document as described in Section 3.2.
 
    The collector can send an HTTP DELETE request to the collect job URI,
    to which the leader MUST respond with HTTP status 204 No Content.
@@ -1583,10 +1613,9 @@ out = VDAF.prep_next(prep_state, inbound)
 
    *  The batch checksum.
 
-   This request MUST be authenticated as described in Section 3.2.  To
-   handle the leader's request, the helper first ensures that the
+   To handle the leader's request, the helper first ensures that the
    request meets the requirements for batch parameters following the
-   procedure in Section 4.5.5.
+   procedure in Section 4.5.6.
 
    Next, it computes a checksum based on the reports that satisfy the
    query, and checks that the report_count and checksum included in the
@@ -1602,7 +1631,7 @@ out = VDAF.prep_next(prep_state, inbound)
    Note that for most VDAFs, it is possible to aggregate output shares
    as they arrive rather than wait until the batch is collected.  To do
    so however, it is necessary to enforce the batch parameters as
-   described in Section 4.5.5 so that the aggregator knows which
+   described in Section 4.5.6 so that the aggregator knows which
    aggregate share to update.
 
    The helper then encrypts agg_share under the collector's HPKE public
@@ -1683,7 +1712,48 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    *  For fixed-size tasks, the batch selector is the batch ID assigned
       sent in the response.
 
-4.5.5.  Batch Validation
+4.5.5.  Collect Message Security
+
+   Collect sub-protocol messages must be confidential and mutually
+   authenticated.
+
+   HTTPS provides confidentiality and authenticates the leader to the
+   collector.  Additionally, the leader encrypts its aggregate share to
+   a public key held by the collector.
+
+   Collectors MUST authenticate their requests to leaders using a scheme
+   that meets the requirements in Section 3.1.
+
+   [[OPEN ISSUE: collector public key is currently in the task
+   parameters, but this will have to change #102]]
+
+   The collector and helper never directly communicate with each other,
+   but the helper does transmit an aggregate share to the collector
+   through the leader, as detailed in Section 4.5.2.  The aggregate
+   share must be confidential from everyone but the helper and the
+   collector.
+
+   Confidentiality is achieved by having the helper encrypt its
+   aggregate share to a public key held by the collector.
+
+   There is no authentication between the collector and the helper.
+   This allows the leader to:
+
+   *  Send collect parameters to the helper that do not reflect the
+      parameters chosen by the collector
+
+   *  Discard the aggregate share computed by the helper and then
+      fabricate aggregate shares that combine into an arbitrary
+      aggregate result
+
+   These are both attacks on robustness, which we already assume to hold
+   only if both aggregators are honest, which puts these malicious-
+   leader attacks out of scope (see Section 7.
+
+   [[OPEN ISSUE: Should we have authentication in either direction
+   between the helper and the collector? #155]]
+
+4.5.6.  Batch Validation
 
    Before an Aggregator responds to a CollectReq or AggregateShareReq,
    it must first check that the request does not violate the parameters
@@ -1716,9 +1786,9 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    for more collect query flexibility.  As of now, this is quite rigid
    and doesn't give the collector much room for mistakes.]]
 
-4.5.5.1.  Time-interval Queries
+4.5.6.1.  Time-interval Queries
 
-4.5.5.1.1.  Boundary Check
+4.5.6.1.1.  Boundary Check
 
    The batch boundaries are determined by the time_precision field of
    the query configuration.  For the batch_interval included with the
@@ -1734,15 +1804,15 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    aggregate" output shares recovered during the aggregation sub-
    protocol.
 
-4.5.5.1.2.  Size Check
+4.5.6.1.2.  Size Check
 
    The query configuration specifies the minimum batch size,
    min_batch_size.  The Aggregator checks that len(X) >= min_batch_size,
    where X is the set of reports in the batch.
 
-4.5.5.2.  Fixed-size Queries
+4.5.6.2.  Fixed-size Queries
 
-4.5.5.2.1.  Boundary Check
+4.5.6.2.1.  Boundary Check
 
    For fixed-size tasks, the batch boundaries are defined by "batch IDs"
    selected by the Leader.  Thus the Aggregator needs to check that the
@@ -1759,14 +1829,14 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
       AggregateShareReq corresponds to a batch ID used in a previous
       AggregateInitializeReq for the task.
 
-4.5.5.2.2.  Size Check
+4.5.6.2.2.  Size Check
 
    The query configuration specifies the minimum batch size,
    min_batch_size, and maximum batch size, max_batch_size.  The
    Aggregator checks that len(X) >= min_batch_size and len(X) <=
    max_batch_size, where X is the set of reports in the batch.
 
-4.5.6.  Anti-replay
+4.5.7.  Anti-replay
 
    Using a client-provided report multiple times within a single batch,
    or using the same report in multiple batches, may allow a server to
@@ -1794,7 +1864,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
 
    Aggregators prevent the same report from being used in multiple
    batches (except as required by the protocol) by only responding to
-   valid collect requests, as described in Section 4.5.5.
+   valid collect requests, as described in Section 4.5.6.
 
 5.  Operational Considerations
 
@@ -1842,7 +1912,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
       and intra-batch replay mitigation storage, which includes some way
       of tracking batch report size.  Some of this state may be used for
       replay attack mitigation.  The replay mitigation strategy is
-      described in Section 4.5.6.
+      described in Section 4.5.7.
 
    Beyond the minimal capabilities required of helpers, leaders are
    generally required to:
@@ -1855,7 +1925,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    In addition, for each DAP task, leaders are required to:
 
    *  Implement and store state for the form of inter- and intra-batch
-      replay mitigation in Section 4.5.6; and
+      replay mitigation in Section 4.5.7; and
 
 5.1.3.  Collector capabilities
 
@@ -1929,7 +1999,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    each possible batch interval, along with the number of times the
    aggregate share was used in a batch.  This is due to the requirement
    that the batch interval respect the boundaries defined by the DAP
-   parameters.  (See Section 4.5.5.)
+   parameters.  (See Section 4.5.6.)
 
 6.  Compliance Requirements
 
@@ -2000,10 +2070,6 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
        --- these types of attacks.  See Section 4.3.3.  [OPEN ISSUE: No
        such extension has been implemented, so we're not yet sure if the
        current mechanism is sufficient.]
-
-   4.  Attacks may also come from the network.  Thus, it is required
-       that the aggregators and collector communicate with one another
-       over mutually authenticated and confidential channels.
 
 7.1.  Threat model
 
@@ -2815,7 +2881,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    Index value:  No transformation needed.
 
    Initial contents: The types and descriptions in the table in
-   Section 3.1 above, with the Reference field set to point to this
+   Section 3.2 above, with the Reference field set to point to this
    specification.
 
 9.  Acknowledgements
@@ -2836,14 +2902,14 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
               24 August 2021, <https://datatracker.ietf.org/doc/html/
               draft-thomson-http-oblivious-02>.
 
+   [OAuth2]   Hardt, D., Ed., "The OAuth 2.0 Authorization Framework",
+              RFC 6749, DOI 10.17487/RFC6749, October 2012,
+              <https://www.rfc-editor.org/rfc/rfc6749>.
+
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
               DOI 10.17487/RFC2119, March 1997,
               <https://www.rfc-editor.org/rfc/rfc2119>.
-
-   [RFC2818]  Rescorla, E., "HTTP Over TLS", RFC 2818,
-              DOI 10.17487/RFC2818, May 2000,
-              <https://www.rfc-editor.org/rfc/rfc2818>.
 
    [RFC3553]  Mealling, M., Masinter, L., Hardie, T., and G. Klyne, "An
               IETF URN Sub-namespace for Registered Protocol
@@ -2874,6 +2940,11 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    [RFC8446]  Rescorla, E., "The Transport Layer Security (TLS) Protocol
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/rfc/rfc8446>.
+
+   [RFC9110]  Fielding, R., Ed., Nottingham, M., Ed., and J. Reschke,
+              Ed., "HTTP Semantics", STD 97, RFC 9110,
+              DOI 10.17487/RFC9110, June 2022,
+              <https://www.rfc-editor.org/rfc/rfc9110>.
 
 10.2.  Informative References
 
