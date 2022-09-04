@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-09-01T01:23:16.726522+00:00",
+  "timestamp": "2022-09-04T01:28:09.902342+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -5388,7 +5388,7 @@
       "id": "I_kwDOFEJYQs5OTrmJ",
       "title": "Allow hpke_config to be queried without task_id",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/289",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "wangshan",
       "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
@@ -5397,8 +5397,8 @@
       ],
       "body": "In [HPKE Configuration Request](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/blob/main/draft-ietf-ppm-dap.md#hpke-configuration-request-hpke-config), the `[aggregator]/hpke_config` endpoint will be called with a `task_id`, unrecognised `task_id` will result in a 404. \r\nThis requires clients (or any entity wishes to call `[aggregator]/hpke_config`) to know a task id in advance. This is unnecessary for deployments that want to share HPKE config across multiple tasks. Can we consider make `task_id` optional in this endpoint, when queried without `task_id`, aggregator returns either one or a list of `hpke_config`.",
       "createdAt": "2022-07-21T20:45:47Z",
-      "updatedAt": "2022-08-15T22:16:30Z",
-      "closedAt": null,
+      "updatedAt": "2022-09-01T19:54:39Z",
+      "closedAt": "2022-09-01T19:54:39Z",
       "comments": [
         {
           "author": "wangshan",
@@ -5641,7 +5641,7 @@
       "id": "I_kwDOFEJYQs5Ovh_G",
       "title": "Revisit requirements and recommendations for request and response authentication",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/293",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -5652,8 +5652,8 @@
       ],
       "body": "At IETF 114, we discussed how [draft-01](https://datatracker.ietf.org/doc/draft-ietf-ppm-dap/01/) contains inconsistent guidance and/or requirements on authentication. Some details can be found in [this slide deck](https://datatracker.ietf.org/meeting/114/materials/slides-114-ppm-whats-new-for-dap/), especially slide 7.\r\n\r\nDAP should figure out what the security requirements are for each of the channels between the protocol participants, and then decide what if any prescriptions to make.",
       "createdAt": "2022-07-28T15:03:45Z",
-      "updatedAt": "2022-08-03T18:23:19Z",
-      "closedAt": null,
+      "updatedAt": "2022-09-01T20:07:15Z",
+      "closedAt": "2022-09-01T20:07:15Z",
       "comments": [
         {
           "author": "tgeoghegan",
@@ -5917,6 +5917,55 @@
           "body": "I'm going to get this done for draft-02, hopefully early next week.",
           "createdAt": "2022-08-25T21:07:47Z",
           "updatedAt": "2022-08-25T21:07:47Z"
+        }
+      ]
+    },
+    {
+      "number": 310,
+      "id": "I_kwDOFEJYQs5Q804k",
+      "title": "Update info string prefixes for HPKE",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/310",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-02"
+      ],
+      "body": "",
+      "createdAt": "2022-09-01T01:30:13Z",
+      "updatedAt": "2022-09-01T01:30:18Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 311,
+      "id": "I_kwDOFEJYQs5Q_1Zv",
+      "title": "Consider adding max_report_size to task parameters",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/311",
+      "state": "OPEN",
+      "author": "wangshan",
+      "authorAssociation": "CONTRIBUTOR",
+      "assignees": [],
+      "labels": [],
+      "body": "Today the report payload size is limited to <1..2^32-1>\r\n\r\n```\r\nstruct {\r\n  TaskID task_id;\r\n  ReportMetadata metadata;\r\n  HpkeCiphertext encrypted_input_shares<1..2^32-1>;\r\n} Report;\r\n```\r\n\r\nIn practise, it's very unlikely for client to send report of GB size, large payload also increase performance burden of aggregators. It's likely that the aggregator that need to handle GB or x100MB size of payload to be designed very differently than aggregators only need to handle xMB size payload. We can add a field in task configuration to limit the size that aggregators can accept.\r\n\r\nAlternatively we can specify this limit on the aggregators or the whole DAP deployment, but I don't know if there is a way to communicate this capability.",
+      "createdAt": "2022-09-01T14:07:46Z",
+      "updatedAt": "2022-09-01T20:05:30Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I think the maximum input size of a report will be a function of the VDAF in use. e.g., a report for `Prio3Aes128Sum` with `bits = 16` will always have the same size. I think the same is true for Poplar1, where you have to choose a bit length for the strings being aggregated.\r\n\r\nAny report that has a different size will be rejected during decoding (as @simon-friedberger and I learned during a test this week). If we introduce a size constraint at the DAP level, then I worry that we are introducing an opportunity for error by having a DAP-level `max_report_size` that disagrees with the report size dictated by the VDAF.\r\n\r\n",
+          "createdAt": "2022-09-01T16:53:24Z",
+          "updatedAt": "2022-09-01T16:53:24Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I agree with @tgeoghegan, the expected size of the input shares is determined entirely by the VDAF and its parameters. This in turn is determined by the task config, so it should be sufficient to \"opt in\" to that task.\r\n\r\nThe same is true for Poplar1. In particular, each measurement is a bit string of some fixed length. For what it's worth, the public share + input shares is about 16.3 KB for 256-bit inputs.",
+          "createdAt": "2022-09-01T20:05:30Z",
+          "updatedAt": "2022-09-01T20:05:30Z"
         }
       ]
     }
@@ -37206,26 +37255,28 @@
       "id": "PR_kwDOFEJYQs49tC-w",
       "title": "Make \"task_id\" optional in \"/hpke_config\" endpoint",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/303",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "junyechen1996",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [
         "draft-02"
       ],
       "body": "Closes #289.",
       "createdAt": "2022-08-24T09:34:13Z",
-      "updatedAt": "2022-08-26T17:24:59Z",
+      "updatedAt": "2022-09-01T19:54:38Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "junyechen1996/draft-ietf-ppm-dap",
       "headRefName": "junyec/hpke_config_change",
       "headRefOid": "cb7aa6aeea5823909b8382fb6f80e75cb15035db",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2022-09-01T19:54:38Z",
+      "mergedAt": "2022-09-01T19:54:38Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "1ee91724360fc7bf7b2477c23e4657f15f0a0f2c"
+      },
       "comments": [
         {
           "author": "wangshan",
@@ -37236,7 +37287,7 @@
         },
         {
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> Looking good. One high level question I have: How does a client decide whether to add a query parameter or not? Perhaps we should try to spell out this discovery process:\r\n> \r\n> * The Client first sends GET /hpke_config.\r\n> * The Aggregator MAY abort with \"missingTaskID\", in which case the client retries with `task_id`.\r\n> * The Client is of course free to skip the first request if it knows it's going to need to provide a `task_id`.\r\n\r\nDo you mean I should have some texts specifying the behavior when a client doesn't know if a deployment enforces different HPKE configurations for different tasks? Some thoughts I have here:\r\n- As a first step, in the existing protocol text, after this sentence: \"then the aggregator responds with HTTP status code 400 Bad Request and an error of type `missingTaskID`\", I can add: \"The client can then retry the request by specifying a well-formed Task ID as the `task_id` parameter\".\r\n- With the above sentence, I think it's fairly clear that clients should retry the request with a task ID if the problem type is `missingTaskID`. I can try to spell out the discovery process as well, but I don't know if it makes the protocol text unnecessarily long.\r\n- If we need to spell this process out, regarding the \"MAY\" in your second bullet point, should I avoid using it, because I think it is a deployment-specific behavior? I think I can just say \"If the aggregator aborts with `missingTaskID`, client can retry the request by specifying `task_id`.",
           "createdAt": "2022-08-24T23:51:00Z",
           "updatedAt": "2022-08-24T23:52:10Z"
@@ -37250,17 +37301,24 @@
         },
         {
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> I think spelling it out is a good idea. It shouldn't be too much text, but it may require a bit of refactoring. \"MAY\" is intended to capture deployment-specific behavior, so it's appropriate here.\r\n\r\nSounds good. I split the texts into three paragraphs: the first paragraph introduces the `/hpke_config` endpoint. The second paragraph talks about a deployment MAY enforce different HPKE configurations for different tasks, and different cases of aggregators' aborting. The third paragraph spells out client's discovery process of whether `task_id` is required. Let me know if it makes sense to you.",
           "createdAt": "2022-08-25T04:44:36Z",
           "updatedAt": "2022-08-25T04:44:36Z"
         },
         {
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "body": "> LGTM! One minor question for reviewers, which we can punt on.\r\n\r\nThanks! I just squashed commits into one.",
           "createdAt": "2022-08-25T20:45:22Z",
           "updatedAt": "2022-08-25T20:45:22Z"
+        },
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "These changes were approved about a week ago and there have been no comments since, so I am merging.",
+          "createdAt": "2022-09-01T19:54:31Z",
+          "updatedAt": "2022-09-01T19:54:31Z"
         }
       ],
       "reviews": [
@@ -37342,7 +37400,7 @@
             "abbreviatedOid": "499d9d0"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-24T23:12:00Z",
@@ -37362,7 +37420,7 @@
             "abbreviatedOid": "499d9d0"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-24T23:12:28Z",
@@ -37382,7 +37440,7 @@
             "abbreviatedOid": "499d9d0"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-24T23:16:32Z",
@@ -37460,7 +37518,7 @@
             "abbreviatedOid": "159d4d2"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-24T23:41:12Z",
@@ -37500,7 +37558,7 @@
             "abbreviatedOid": "159d4d2"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-25T04:42:16Z",
@@ -37560,7 +37618,7 @@
             "abbreviatedOid": "d1a7ec2"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-25T19:15:13Z",
@@ -37652,7 +37710,7 @@
             "abbreviatedOid": "d1a7ec2"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-25T20:20:14Z",
@@ -37672,7 +37730,7 @@
             "abbreviatedOid": "d1a7ec2"
           },
           "author": "junyechen1996",
-          "authorAssociation": "NONE",
+          "authorAssociation": "CONTRIBUTOR",
           "state": "COMMENTED",
           "body": "",
           "createdAt": "2022-08-25T20:22:05Z",
@@ -37775,7 +37833,7 @@
       ],
       "body": "Closes #291.",
       "createdAt": "2022-08-24T13:01:23Z",
-      "updatedAt": "2022-08-31T23:39:26Z",
+      "updatedAt": "2022-09-01T19:11:55Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
@@ -38010,6 +38068,77 @@
               "updatedAt": "2022-08-31T23:39:26Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BMvPA",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-01T18:12:35Z",
+          "updatedAt": "2022-09-01T18:12:36Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "I think the distinction is that `task_expiration` should be defined as an abstract instant in time, not a timestamp representing that instant. Since the expiration is going to be shared out of bounds, and won't appear in encoded form anywhere in the protocol, it would be cleanest to define it as a point in time, and not define a timestamp encoding for it that the protocol doesn't use.",
+              "createdAt": "2022-09-01T18:12:36Z",
+              "updatedAt": "2022-09-01T18:12:36Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BM7G2",
+          "commit": {
+            "abbreviatedOid": "35663d3"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-01T18:55:17Z",
+          "updatedAt": "2022-09-01T19:09:48Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "I'm being fussy about the distinction between an instant in time and a timestamp which is a representation of an instant in time. I'm not suggesting that the type of this value be a duration.\r\n```suggestion\r\n* `task_expiration`: The time up to which clients are allowed to upload\r\n  to this task. The task is considered completed after this time. Aggregators\r\n```",
+              "createdAt": "2022-09-01T18:55:17Z",
+              "updatedAt": "2022-09-01T19:09:48Z"
+            },
+            {
+              "originalPosition": 21,
+              "body": "```suggestion\r\nprivacy violation. (Note that the Helpers enforce this as well.) The Leader MAY\r\nignore any reports whose timestamp is past the task's `task_expiration`.\r\nIn addition, the leader SHOULD abort the upload protocol\r\nand alert the client with error \"reportTooLate\". Client MAY choose to opt out\r\nof the task if its own clock has passed `task_expiration`.\r\n```",
+              "createdAt": "2022-09-01T18:56:09Z",
+              "updatedAt": "2022-09-01T19:09:48Z"
+            },
+            {
+              "originalPosition": 30,
+              "body": "Looks like a copy-paste error. Should these lines be deleted?",
+              "createdAt": "2022-09-01T18:56:45Z",
+              "updatedAt": "2022-09-01T19:09:48Z"
+            },
+            {
+              "originalPosition": 27,
+              "body": "I think you're right that it makes sense to trust the timestamp in the report.\r\n\r\nCan you expand on why evaluating `task_expiration` could leak information about the report? Which actor (the client, the aggregator, a network observer) could learn something about the true time a measurement was taken based on what observable behavior of which actor?",
+              "createdAt": "2022-09-01T19:09:48Z",
+              "updatedAt": "2022-09-01T19:09:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BM_6R",
+          "commit": {
+            "abbreviatedOid": "35663d3"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "I think the text in its current iteration accomplishes what it should, which is that clients may upload reports right up until `task_expiration`, and collectors can initiate the collect flow _after_ `task_expiration`. I left a few more comments about word choices and some typos but I think this is OK to go forward.",
+          "createdAt": "2022-09-01T19:11:55Z",
+          "updatedAt": "2022-09-01T19:11:55Z",
+          "comments": []
         }
       ]
     },
@@ -38018,7 +38147,7 @@
       "id": "PR_kwDOFEJYQs49wL4e",
       "title": "Revisit request authentication",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/305",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -38027,18 +38156,28 @@
       ],
       "body": "Remove the requirement that implementations use `DAP-Auth-Token` with a\r\nfixed, pre-negotiated secret and instead allow any client auth scheme\r\nthat is composable with HTTP (which includes `DAP-Auth-Token`).\r\n\r\nRelevant to #293",
       "createdAt": "2022-08-24T22:18:59Z",
-      "updatedAt": "2022-08-29T22:12:45Z",
+      "updatedAt": "2022-09-01T20:07:14Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "baseRefOid": "1ee91724360fc7bf7b2477c23e4657f15f0a0f2c",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/request-auth",
-      "headRefOid": "445c526d2b1d19c09b90b459fbe4c885dc9087dc",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "headRefOid": "3a2e91463acde28b81563749b52ad2071f7366e8",
+      "closedAt": "2022-09-01T20:07:14Z",
+      "mergedAt": "2022-09-01T20:07:14Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "60178323ac998e89ccd85235f9c9f7fd08a15613"
+      },
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I had to do a rebase to fix a trivial conflict with #303. These changes were approved about a week ago and there's been no further comment, so I am merging.",
+          "createdAt": "2022-09-01T20:07:10Z",
+          "updatedAt": "2022-09-01T20:07:10Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5ApUlg",
@@ -38300,18 +38439,26 @@
       ],
       "body": "Closes #296.\r\n\r\nAlign with the latest VDAF draft. This requires two minor protocol\r\nchanges:\r\n\r\n* 02 added a value called the \"public_share\" to the VDAF syntax. This is\r\n  to support Poplar1 (and likely other schemes that need a similar\r\n  extractability property). To accommodate this, the public_share field\r\n  has been added to the Report and ReportShare structures and appended to\r\n  the AAD for input share encryption. (This may end up being useful for\r\n  privacy.)\r\n\r\n* 02 added the report count to the aggregate result computation. This is\r\n  already passed to the Collector in the CollectResp, so we just need to\r\n  update the aggregate result computation in the draft to match.",
       "createdAt": "2022-08-25T20:33:24Z",
-      "updatedAt": "2022-08-31T19:58:09Z",
+      "updatedAt": "2022-09-02T00:22:22Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "baseRefOid": "60178323ac998e89ccd85235f9c9f7fd08a15613",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/296",
-      "headRefOid": "ddc2a3c3604071a9c61c3999ff69d71971fa1b4a",
+      "headRefOid": "8fdbe58d4f179edc85e9c3434358cb06596a450a",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
-      "comments": [],
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Rebased and pushed a minor update: The public share in Report and ReportStore now both have the same length prefix.",
+          "createdAt": "2022-09-02T00:22:22Z",
+          "updatedAt": "2022-09-02T00:22:22Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5Avats",
@@ -38431,7 +38578,7 @@
     {
       "number": 308,
       "id": "PR_kwDOFEJYQs495TvC",
-      "title": "Fixed-size tasks: use predictable batch IDs.",
+      "title": "Fixed-size tasks: remove `next-batch` functionality.",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308",
       "state": "OPEN",
       "author": "branlwyd",
@@ -38440,15 +38587,15 @@
       "labels": [
         "draft-02"
       ],
-      "body": "This model expects the Collector to track the next batch ID of interest.\r\nA Collector that is starting up or otherwise does not know the next\r\nbatch ID can use the `current-batch` functionality to collect a recent\r\nbatch, which also determines the current batch ID as this information is\r\ntransmitted in the eventual CollectResp.\r\n\r\nCloses #301.",
+      "body": "This PR does not specify how the Collector knows what batch IDs to query for.\r\nThis will be addressed in a follow-on PR.",
       "createdAt": "2022-08-26T23:03:13Z",
-      "updatedAt": "2022-08-31T23:55:53Z",
+      "updatedAt": "2022-09-02T21:29:27Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/predictable-batch-ids",
-      "headRefOid": "f856e42116e84783f572ce10b1e85d6053687e76",
+      "headRefOid": "4acb70f2334cc01f5d55075c1f2a7fe7660c65fa",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -38565,6 +38712,55 @@
           "body": "> I'm curious why the \"current-batch\" solution was removed, it feels like the right solution to this problem: the \"current\" batch is maintained by leader, if collector restarts without the batchID, it can ask leader with a \"current-batch\" CollectReq.\r\n\r\nThe only reason it was removed was we believed we didn't need it in an initial implementation (https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308#discussion_r956491618).\r\n\r\nI'd be OK restoring it if desirable -- @cjpatton any thoughts?",
           "createdAt": "2022-08-31T23:55:52Z",
           "updatedAt": "2022-08-31T23:55:52Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "> > I'm curious why the \"current-batch\" solution was removed, it feels like the right solution to this problem: the \"current\" batch is maintained by leader, if collector restarts without the batchID, it can ask leader with a \"current-batch\" CollectReq.\r\n> \r\n> The only reason it was removed was we believed we didn't need it in an initial implementation ([#308 (comment)](https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308#discussion_r956491618)).\r\n> \r\n> I'd be OK restoring it if desirable -- @cjpatton any thoughts?\r\n\r\nI'm not sure restoring solves the problem at hand. It might be helpful to take a step back and organize our requirements for this change. I believe these are as follows (let me know if I'm missing anything):\r\n1. Our main goal is to prevent data loss in case the Collector forgets the batch ID (due to @branlwyd).\r\n2. Restrictions on ordering of batch IDs is untenable (due to @MichaelScaria). In particular, it would be useful if the Leader could choose batch IDs at random.\r\n\r\nThe decision tree is as follows:\r\n* If folks generally agree on these requirements, then our goal is to extend this PR so that it solves for (2.), without regressing on (1.).\r\n   * Someone observed previously that forgetting the collect URI also results in data loss. Thus one way we can solve for these requirements without *increasing* the risk of data loss is to require the collect URI to encode the batch ID. This appears to be the best suggestion right now.\r\n   * Perhaps we can de-couple the batch ID used by the Aggregators for aggregation from the collect flow. In other words, the Leader maintains in its head a map from batch IDs use during aggregation and \"batch indices\" queried by the collector. For example, when the Collector queries \"batch index == 0\", the Leader looks for the batch that's closest to being finished and associated the corresponding batch ID with that index. This would allow the Collector to \"predict\" batches without storing them (thereby solving (1.)) without constraining the Leader.\r\n   * Any other ideas I've missed?\r\n* If folks don't agree on these requirements, then we should move the discussion back to the issue and figure out what we need.",
+          "createdAt": "2022-09-01T01:25:57Z",
+          "updatedAt": "2022-09-01T01:29:15Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I think 1. is the main requirement, 2. is only an issue if we choose to go the predictable ID route. @cjpatton \r\n\r\nI think the decision tree should be following:\r\n\r\nIf we want to maintain the \"current batch id\" in leader, then a clean solution could be using an idempotent `current-batch` query, and add batch ID to collect job URI. Collector only sends CollectReq with `current-batch`\r\n* if it saves the returned collect job URI successfully, then it also knows the batchID, and from that moment on it can pull from collect job URI. \r\n* If it failed to save the returned collect job URI, it can send the same `current-batch` again.\r\n\r\nHaving a predicable ID is another solution but I would imagine the complexity of maintaining such count in leader is no less than maintaining the current batch ID.\r\n\r\nIf we want to maintain the \"current batch id\" in collector, then we just need the collector to come up with an(random) ID and always use that in CollectReq, we can still add batchID to collect job URI so collector only need to maintain one state. \r\n* If we want to go this route, we must resolve what batchID to send in `AggregateInitailiseReq`, we could, for e.g. not send any batchID in `AggregateInitailiseReq`, but send the list of agg job IDs in `AggregateShareReq`, but that has the problem of how long the list of agg job ID can become, pointed out by someone from the mailing list when the issue was open.\r\n",
+          "createdAt": "2022-09-01T14:53:36Z",
+          "updatedAt": "2022-09-01T14:53:36Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Ok, it sounds like we might be converging on the following changes to this PR:\r\n1. Let the Leader pick the batch ID\r\n2. (Re-)introduce `current-batch` query, in response to which the Leader returns the batch ID for the latest batch being processed.\r\n3. Require the collect URI to encode the batch ID. (Probably we would just spell out the structure of the URI explicitly.)\r\n\r\nPlease \ud83d\udc4d this comment if you're happy with this :)",
+          "createdAt": "2022-09-01T16:11:48Z",
+          "updatedAt": "2022-09-01T17:29:14Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "I'll just note that, for the third point, we might be able to remove the batch ID from the CollectResp.",
+          "createdAt": "2022-09-01T16:13:53Z",
+          "updatedAt": "2022-09-01T16:13:53Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Let's please keep the semantics of how batch IDs are chosen outside of this PR, and instead do the simple thing ((3) in @cjpatton's last comment) here. There are lots of ways in which implementations might choose to pick the batch IDs. I don't think we need to be prescriptive here.",
+          "createdAt": "2022-09-01T16:17:10Z",
+          "updatedAt": "2022-09-01T16:17:10Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "@chris-wood (3) is desirable, I think we should do it regardless of how batchID is chosen, but as @branlwyd has pointed out above: https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308#issuecomment-1233450503, it won't solve the requirement 1, if we keep current `next-batch` query.\r\n\r\n",
+          "createdAt": "2022-09-01T16:33:53Z",
+          "updatedAt": "2022-09-01T16:33:53Z"
+        },
+        {
+          "author": "chris-wood",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@wangshan that's fine, but this is a _separable change_. I am suggesting we make this change separately. This PR is doing too much.",
+          "createdAt": "2022-09-01T16:35:07Z",
+          "updatedAt": "2022-09-01T16:35:07Z"
         }
       ],
       "reviews": [
@@ -38944,6 +39140,170 @@
               "updatedAt": "2022-08-31T20:26:05Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BNQzN",
+          "commit": {
+            "abbreviatedOid": "f856e42"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "CHANGES_REQUESTED",
+          "body": "Unapproving, pending changes discussed in slack.",
+          "createdAt": "2022-09-01T20:09:26Z",
+          "updatedAt": "2022-09-01T20:09:26Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BNrqo",
+          "commit": {
+            "abbreviatedOid": "483c8af"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "OK, this is ready for review w/ the changes suggested from Slack discussion.",
+          "createdAt": "2022-09-01T21:53:02Z",
+          "updatedAt": "2022-09-01T21:53:55Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "I'm not totally sure \"The Leader MAY allocate batch IDs in any order.\" is necessary -- we could remove this sentence and leave this implicit. Thoughts?",
+              "createdAt": "2022-09-01T21:53:02Z",
+              "updatedAt": "2022-09-01T21:53:55Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BOEtt",
+          "commit": {
+            "abbreviatedOid": "483c8af"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T01:14:44Z",
+          "updatedAt": "2022-09-02T01:17:34Z",
+          "comments": [
+            {
+              "originalPosition": 34,
+              "body": "Consider making the BatchID at least 16 bytes in order to allow implementations to choose this at random.",
+              "createdAt": "2022-09-02T01:14:44Z",
+              "updatedAt": "2022-09-02T01:17:34Z"
+            },
+            {
+              "originalPosition": 84,
+              "body": "Let's make sure the follow-on PR actually resolves this!",
+              "createdAt": "2022-09-02T01:15:39Z",
+              "updatedAt": "2022-09-02T01:17:34Z"
+            },
+            {
+              "originalPosition": 103,
+              "body": "I agree it's unnecessary.",
+              "createdAt": "2022-09-02T01:16:06Z",
+              "updatedAt": "2022-09-02T01:17:34Z"
+            },
+            {
+              "originalPosition": 143,
+              "body": "Is this required? For this PR we're assuming the mechanism by which batch IDs are assigned is implementation-specific. (This will be addressed in the follow-up PR.)",
+              "createdAt": "2022-09-02T01:17:29Z",
+              "updatedAt": "2022-09-02T01:17:34Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSBdb",
+          "commit": {
+            "abbreviatedOid": "483c8af"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T18:58:52Z",
+          "updatedAt": "2022-09-02T18:58:53Z",
+          "comments": [
+            {
+              "originalPosition": 34,
+              "body": "\ud83d\udc4d\ud83c\udffb I restored it to 32 bytes as originally written; I suppose this matches the size of other \"opaque identifiers for which we want to enable random generation with negligible collision chance\". (I'd advocate for changing all of these identifiers to 16 bytes rather than 32, but I also think that's a separable change, and so for now I think maintaining consistency is more valuable.)",
+              "createdAt": "2022-09-02T18:58:53Z",
+              "updatedAt": "2022-09-02T18:58:53Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSCK0",
+          "commit": {
+            "abbreviatedOid": "483c8af"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T19:02:25Z",
+          "updatedAt": "2022-09-02T19:02:26Z",
+          "comments": [
+            {
+              "originalPosition": 34,
+              "body": "I'd be all for 16 bytes, but yes this change is separable :) One thing we need to keep in mind is whether we need IDs to be the hash of things, in which case 32 bytes might be better.",
+              "createdAt": "2022-09-02T19:02:26Z",
+              "updatedAt": "2022-09-02T19:02:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSDX_",
+          "commit": {
+            "abbreviatedOid": "483c8af"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T19:08:35Z",
+          "updatedAt": "2022-09-02T19:08:35Z",
+          "comments": [
+            {
+              "originalPosition": 103,
+              "body": "Removed.",
+              "createdAt": "2022-09-02T19:08:35Z",
+              "updatedAt": "2022-09-02T19:08:35Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSDxx",
+          "commit": {
+            "abbreviatedOid": "483c8af"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T19:10:43Z",
+          "updatedAt": "2022-09-02T19:10:43Z",
+          "comments": [
+            {
+              "originalPosition": 143,
+              "body": "Good point, I think it's not required in this PR. Removed.",
+              "createdAt": "2022-09-02T19:10:43Z",
+              "updatedAt": "2022-09-02T19:10:43Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSf2K",
+          "commit": {
+            "abbreviatedOid": "4acb70f"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-09-02T21:29:27Z",
+          "updatedAt": "2022-09-02T21:29:27Z",
+          "comments": []
         }
       ]
     },
@@ -39037,6 +39397,243 @@
               "body": "The section number is subject to change (if, for example, we add a new VDAF). Maybe refer to security considerations, just to make our lives later in the future.",
               "createdAt": "2022-08-30T00:08:28Z",
               "updatedAt": "2022-08-30T00:08:33Z"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "number": 312,
+      "id": "PR_kwDOFEJYQs4-Ok5G",
+      "title": "Update HPKE info strings for dap-02",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/312",
+      "state": "OPEN",
+      "author": "tgeoghegan",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-02"
+      ],
+      "body": "Fixes #310",
+      "createdAt": "2022-09-01T17:09:06Z",
+      "updatedAt": "2022-09-01T19:55:14Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "headRefName": "timg/hpke-info-dap-02",
+      "headRefOid": "c60e8a21d47b72ad557e5a04fe4f867645bc8a28",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5BMdmG",
+          "commit": {
+            "abbreviatedOid": "c60e8a2"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-09-01T17:19:37Z",
+          "updatedAt": "2022-09-01T17:19:37Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BNMHw",
+          "commit": {
+            "abbreviatedOid": "c60e8a2"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-09-01T19:54:58Z",
+          "updatedAt": "2022-09-01T19:54:58Z",
+          "comments": []
+        }
+      ]
+    },
+    {
+      "number": 313,
+      "id": "PR_kwDOFEJYQs4-P8m8",
+      "title": "Fixed-size tasks: specify `current-batch` to allow Collector to discover batch IDs.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/313",
+      "state": "OPEN",
+      "author": "branlwyd",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "This is implemented via a new `current-batch` query type for fixed-size\r\ntasks, which allows the Leader to select a batch to return to the\r\nCollector.\r\n\r\nThis is stacked on https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308. (Unfortunately, I don't know how to use that PR as a base without merging into\r\na branch on my personal fork of the DAP specification repository, which is\r\nprobably not desirable.)",
+      "createdAt": "2022-09-02T00:03:57Z",
+      "updatedAt": "2022-09-03T00:07:21Z",
+      "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
+      "baseRefName": "main",
+      "baseRefOid": "60178323ac998e89ccd85235f9c9f7fd08a15613",
+      "headRepository": "branlwyd/draft-ietf-ppm-dap",
+      "headRefName": "bran/current-batch",
+      "headRefOid": "9b7dcef4ca2b726d1c30234d6d151524b5eec9f5",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@MichaelScaria & @wangshan: GitHub's UI will not allow me to add you as reviewers, but I would appreciate your review.",
+          "createdAt": "2022-09-02T00:07:02Z",
+          "updatedAt": "2022-09-02T00:07:02Z"
+        },
+        {
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "body": "(I also picked up changes based on review comments for #308)",
+          "createdAt": "2022-09-02T20:00:04Z",
+          "updatedAt": "2022-09-02T20:00:04Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOFEJYQs5BRfrY",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T16:23:48Z",
+          "updatedAt": "2022-09-02T16:23:49Z",
+          "comments": [
+            {
+              "originalPosition": 38,
+              "body": "Won't the line above this need to be `BatchID`?",
+              "createdAt": "2022-09-02T16:23:49Z",
+              "updatedAt": "2022-09-02T16:23:49Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BRf_e",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T16:25:03Z",
+          "updatedAt": "2022-09-02T16:25:03Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "Do we need to also make an update to `AggregateContinueReq`?",
+              "createdAt": "2022-09-02T16:25:03Z",
+              "updatedAt": "2022-09-02T16:25:03Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSKW9",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T19:46:17Z",
+          "updatedAt": "2022-09-02T19:46:18Z",
+          "comments": [
+            {
+              "originalPosition": 38,
+              "body": "Indeed -- updated.",
+              "createdAt": "2022-09-02T19:46:17Z",
+              "updatedAt": "2022-09-02T19:46:18Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSLW4",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T19:51:57Z",
+          "updatedAt": "2022-09-02T19:51:57Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "What update are you thinking of?\r\n\r\nOn the assumption it is something along the lines of \"include the batch ID in the `AggregateContinueReq` as well\", I think we don't need an update to `AggregateContinueReq`: once the mapping of aggregation job to batch ID is determined by the `AggregateInitializeReq`, it is sufficient to specify only the aggregation job ID in further communications.\r\n\r\n(apologies if I'm misinterpreting your comment!)",
+              "createdAt": "2022-09-02T19:51:57Z",
+              "updatedAt": "2022-09-02T19:51:57Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BShJc",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T21:37:42Z",
+          "updatedAt": "2022-09-02T21:37:42Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "Nope, you assumed right! Would the Helper need to have some sort of reverse map to recover the batch ID from the job ID?",
+              "createdAt": "2022-09-02T21:37:42Z",
+              "updatedAt": "2022-09-02T21:37:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BShRP",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-02T21:38:38Z",
+          "updatedAt": "2022-09-02T21:38:39Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "Thinking aloud here - \r\n\r\nOn init, Helper gets batch and job IDs. \r\nOn cont, Helper gets job ID.\r\nOn collect, Helper gets batchID.\r\n\r\nSo we would need jobID -> batchID (for cont) and batchID -> jobID (for collect) right?",
+              "createdAt": "2022-09-02T21:38:39Z",
+              "updatedAt": "2022-09-02T21:39:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BSusx",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-03T00:05:55Z",
+          "updatedAt": "2022-09-03T00:05:55Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "> Nope, you assumed right! Would the Helper need to have some sort of reverse map to recover the batch ID from the job ID?\r\n\r\nIndeed: the Helper will need to track this as an additional piece of state. Presumably this reverse map would be an index (or equivalent) in a Helper implementation.\r\n\r\nThinking about whether this state is needed, I think it is: even if we decided that `AggregateContinueReq` should include a `BatchID` as well, I think we would want to enforce that the `BatchID` matches for all `Aggregate{Initialize,Continue}Req` messages for the same aggregation job ID, which would imply the helper storing the state there as well. (maybe there is a larger change possible?)\r\n\r\n\r\n>Thinking aloud here -\r\n>\r\n>On init, Helper gets batch and job IDs.\r\n>On cont, Helper gets job ID.\r\n>On collect, Helper gets batchID.\r\n>\r\n>So we would need jobID -> batchID (for cont) and batchID -> jobID (for collect) right?\r\n\r\nThat's correct. Effectively, a batch is made up of one or more aggregation jobs. Informally, aggregation jobs are the unit of batching between the Aggregators for the majority of the aggregation process (i.e. the Aggregators evaluating the VDAF up to the point of recovering their respective output shares). Batches are the unit of collection by the Collector.\r\n\r\nOne reason that the concept of \"batch\" is separate from \"aggregation job\" is that it may be practically infeasible to group together enough reports at a time to meet the batch requirements (e.g. `min_batch_size`). Also, in many scenarios Aggregators can begin the aggregation process before the collection process can start; this is aided by allowing aggregation jobs to be created even before e.g. enough reports have arrived to fill a batch. That is, the concept of aggregation jobs allows aggregating already-received reports for a batch concurrently with additional reports arriving.",
+              "createdAt": "2022-09-03T00:05:55Z",
+              "updatedAt": "2022-09-03T00:07:21Z"
             }
           ]
         }
