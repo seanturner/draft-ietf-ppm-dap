@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-09-04T01:28:09.902342+00:00",
+  "timestamp": "2022-09-06T01:51:37.804328+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -5873,7 +5873,7 @@
       "labels": [],
       "body": "",
       "createdAt": "2022-08-22T10:54:02Z",
-      "updatedAt": "2022-08-22T16:20:40Z",
+      "updatedAt": "2022-09-05T02:36:38Z",
       "closedAt": "2022-08-22T16:20:40Z",
       "comments": [
         {
@@ -5882,6 +5882,13 @@
           "body": "(closing as there is no content in this bug; @Qhassanx please feel free to add a description & reopen if desired)",
           "createdAt": "2022-08-22T16:20:40Z",
           "updatedAt": "2022-08-22T16:20:40Z"
+        },
+        {
+          "author": "Qhassanx",
+          "authorAssociation": "NONE",
+          "body": "Thanks!\nThis was a mistake.\nI am very unfamiliar with GitHub.  If there are any tutorials that I can access to become more familiar with basic functionality, please let me know.\n\n-qaid\n\n\nThis message was sent from an enhanced modular device with limited telephonic/satellitic capabilities.\n\n> On Aug 22, 2022, at 12:20 PM, Brandon Pitman ***@***.***> wrote:\n> \n> \ufeff\n> (closing as there is no content in this bug; @Qhassanx please feel free to add a description & reopen if desired)\n> \n> \u2014\n> Reply to this email directly, view it on GitHub, or unsubscribe.\n> You are receiving this because you were mentioned.\n",
+          "createdAt": "2022-09-05T02:36:37Z",
+          "updatedAt": "2022-09-05T02:36:37Z"
         }
       ]
     },
@@ -37833,13 +37840,13 @@
       ],
       "body": "Closes #291.",
       "createdAt": "2022-08-24T13:01:23Z",
-      "updatedAt": "2022-09-01T19:11:55Z",
+      "updatedAt": "2022-09-05T11:19:12Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "wangshan/draft-ietf-ppm-dap",
       "headRefName": "max-task-lifetime",
-      "headRefOid": "35663d312bb14cd2e12883bcfb90c33164eee9a7",
+      "headRefOid": "cc9defd79d6565c6bc6d2bb0fead5a09c5d881e1",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -38139,6 +38146,26 @@
           "createdAt": "2022-09-01T19:11:55Z",
           "updatedAt": "2022-09-01T19:11:55Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BV_Ux",
+          "commit": {
+            "abbreviatedOid": "51f357c"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-05T11:11:46Z",
+          "updatedAt": "2022-09-05T11:11:47Z",
+          "comments": [
+            {
+              "originalPosition": 27,
+              "body": "@tgeoghegan for e.g. if the precision is in 1hr, and \r\n1. one client has rounded it's true timestamp to 14:00:00\r\n2. the aggregators know the `task_expiration` is effectively 14:00:01 UTC\r\n3. the aggregators know clients will check their timestamp < `task_expiration` before sending.\r\n\r\nThen the aggregator could know that the client has a true timestamp between 14:00:00 and 14:00:01. ",
+              "createdAt": "2022-09-05T11:11:47Z",
+              "updatedAt": "2022-09-05T11:11:47Z"
+            }
+          ]
         }
       ]
     },
@@ -38589,7 +38616,7 @@
       ],
       "body": "This PR does not specify how the Collector knows what batch IDs to query for.\r\nThis will be addressed in a follow-on PR.",
       "createdAt": "2022-08-26T23:03:13Z",
-      "updatedAt": "2022-09-02T21:29:27Z",
+      "updatedAt": "2022-09-05T15:13:41Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
@@ -39304,6 +39331,19 @@
           "createdAt": "2022-09-02T21:29:27Z",
           "updatedAt": "2022-09-02T21:29:27Z",
           "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BXKsC",
+          "commit": {
+            "abbreviatedOid": "4acb70f"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-09-05T15:13:41Z",
+          "updatedAt": "2022-09-05T15:13:41Z",
+          "comments": []
         }
       ]
     },
@@ -39469,7 +39509,7 @@
       "labels": [],
       "body": "This is implemented via a new `current-batch` query type for fixed-size\r\ntasks, which allows the Leader to select a batch to return to the\r\nCollector.\r\n\r\nThis is stacked on https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308. (Unfortunately, I don't know how to use that PR as a base without merging into\r\na branch on my personal fork of the DAP specification repository, which is\r\nprobably not desirable.)",
       "createdAt": "2022-09-02T00:03:57Z",
-      "updatedAt": "2022-09-03T00:07:21Z",
+      "updatedAt": "2022-09-05T15:34:15Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "60178323ac998e89ccd85235f9c9f7fd08a15613",
@@ -39634,6 +39674,66 @@
               "body": "> Nope, you assumed right! Would the Helper need to have some sort of reverse map to recover the batch ID from the job ID?\r\n\r\nIndeed: the Helper will need to track this as an additional piece of state. Presumably this reverse map would be an index (or equivalent) in a Helper implementation.\r\n\r\nThinking about whether this state is needed, I think it is: even if we decided that `AggregateContinueReq` should include a `BatchID` as well, I think we would want to enforce that the `BatchID` matches for all `Aggregate{Initialize,Continue}Req` messages for the same aggregation job ID, which would imply the helper storing the state there as well. (maybe there is a larger change possible?)\r\n\r\n\r\n>Thinking aloud here -\r\n>\r\n>On init, Helper gets batch and job IDs.\r\n>On cont, Helper gets job ID.\r\n>On collect, Helper gets batchID.\r\n>\r\n>So we would need jobID -> batchID (for cont) and batchID -> jobID (for collect) right?\r\n\r\nThat's correct. Effectively, a batch is made up of one or more aggregation jobs. Informally, aggregation jobs are the unit of batching between the Aggregators for the majority of the aggregation process (i.e. the Aggregators evaluating the VDAF up to the point of recovering their respective output shares). Batches are the unit of collection by the Collector.\r\n\r\nOne reason that the concept of \"batch\" is separate from \"aggregation job\" is that it may be practically infeasible to group together enough reports at a time to meet the batch requirements (e.g. `min_batch_size`). Also, in many scenarios Aggregators can begin the aggregation process before the collection process can start; this is aided by allowing aggregation jobs to be created even before e.g. enough reports have arrived to fill a batch. That is, the concept of aggregation jobs allows aggregating already-received reports for a batch concurrently with additional reports arriving.",
               "createdAt": "2022-09-03T00:05:55Z",
               "updatedAt": "2022-09-03T00:07:21Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BXODn",
+          "commit": {
+            "abbreviatedOid": "9b7dcef"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-05T15:27:52Z",
+          "updatedAt": "2022-09-05T15:27:52Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "why do we need a reverse map of jobID-> batchID?",
+              "createdAt": "2022-09-05T15:27:52Z",
+              "updatedAt": "2022-09-05T15:27:52Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BXPYX",
+          "commit": {
+            "abbreviatedOid": "9b7dcef"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-05T15:33:42Z",
+          "updatedAt": "2022-09-05T15:33:42Z",
+          "comments": [
+            {
+              "originalPosition": 63,
+              "body": "If the batchID is allocated by Leader in an arbitrary fashion, then wouldn't the collect HAVE TO issue a current-batch query first? Or are we deliberately not being specific about the way current-batch is used, so some OOB agreement can be used to \"predict\" the batchID?",
+              "createdAt": "2022-09-05T15:33:42Z",
+              "updatedAt": "2022-09-05T15:33:42Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BXPfy",
+          "commit": {
+            "abbreviatedOid": "9b7dcef"
+          },
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-05T15:34:15Z",
+          "updatedAt": "2022-09-05T15:34:15Z",
+          "comments": [
+            {
+              "originalPosition": 134,
+              "body": "nit: \"in its\" is redundant",
+              "createdAt": "2022-09-05T15:34:15Z",
+              "updatedAt": "2022-09-05T15:34:15Z"
             }
           ]
         }
