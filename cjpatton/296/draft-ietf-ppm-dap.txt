@@ -5,12 +5,12 @@
 Network Working Group                                       T. Geoghegan
 Internet-Draft                                                      ISRG
 Intended status: Standards Track                               C. Patton
-Expires: 6 March 2023                                         Cloudflare
+Expires: 10 March 2023                                        Cloudflare
                                                              E. Rescorla
                                                                  Mozilla
                                                               C. A. Wood
                                                               Cloudflare
-                                                        2 September 2022
+                                                        6 September 2022
 
 
   Distributed Aggregation Protocol for Privacy Preserving Measurement
@@ -61,7 +61,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 6 March 2023.
+   This Internet-Draft will expire on 10 March 2023.
 
 Copyright Notice
 
@@ -839,11 +839,11 @@ struct {
      HpkeCiphertext encrypted_input_shares<1..2^32-1>;
    } Report;
 
-   This message is called the Client's report.  It consists of a
-   "header", the "public share" output by the VDAF's input-distribution
-   algorithm, and the encrypted input share of each of the Aggregators.
-   The header consists of the task ID and report "metadata".  The
-   metadata consists of the following fields:
+   This message is called the Client's report.  It consists of the
+   report metaata, the "public share" output by the VDAF's input-
+   distribution algorithm, and the encrypted input share of each of the
+   Aggregators.  The header consists of the task ID and report
+   "metadata".  The metadata consists of the following fields:
 
    *  A timestamp representing the time at which the report was
       generated.  Specifically, the time field is set to the number of
@@ -865,7 +865,7 @@ struct {
    share as follows:
 
    enc, payload = SealBase(pk,
-       "dap-01 input share" || 0x01 || server_role,
+       "dap-02 input share" || 0x01 || server_role,
        task_id || metadata || public_share, input_share)
 
    where pk is the aggregator's public key; server_role is the Role of
@@ -1242,7 +1242,7 @@ struct {
    Otherwise, it decrypts the payload with the following procedure:
 
    input_share = OpenBase(encrypted_input_share.enc, sk,
-       "dap-01 input share" || 0x01 || server_role,
+       "dap-02 input share" || 0x01 || server_role,
        task_id || metadata || public_share,
        encrypted_input_share.payload)
 
@@ -1697,7 +1697,7 @@ out = VDAF.prep_next(prep_state, inbound)
    Encrypting an aggregate share agg_share for a given AggregateShareReq
    is done as follows:
 
-enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
+enc, payload = SealBase(pk, "dap-02 aggregate share" || server_role || 0x00,
   AggregateShareReq.task_id || AggregateShareReq.batch_selector, agg_share)
 
    where pk is the HPKE public key encoded by the collector's HPKE key,
@@ -1708,7 +1708,7 @@ enc, payload = SealBase(pk, "dap-01 aggregate share" || server_role || 0x00,
    enc_share, for a given batch interval, denoted batch_interval,
    decryption works as follows:
 
-  agg_share = OpenBase(enc_share.enc, sk, "dap-01 aggregate share" ||
+  agg_share = OpenBase(enc_share.enc, sk, "dap-02 aggregate share" ||
       server_role || 0x00, task_id || batch_selector, enc_share.payload)
 
    where sk is the HPKE secret key, task_id is the task ID for the
