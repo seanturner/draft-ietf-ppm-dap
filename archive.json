@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2022-09-06T01:51:37.804328+00:00",
+  "timestamp": "2022-09-08T01:45:27.961330+00:00",
   "repo": "ietf-wg-ppm/draft-ietf-ppm-dap",
   "labels": [
     {
@@ -5770,7 +5770,7 @@
       "id": "I_kwDOFEJYQs5O2MeX",
       "title": "Align with latest VDAF draft",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/296",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -5781,8 +5781,8 @@
       ],
       "body": "This will be VDAF-02 or 03, depending on when we need to cut DAP-02.",
       "createdAt": "2022-07-30T01:26:45Z",
-      "updatedAt": "2022-08-24T22:46:21Z",
-      "closedAt": null,
+      "updatedAt": "2022-09-06T16:28:12Z",
+      "closedAt": "2022-09-06T16:28:12Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -5897,7 +5897,7 @@
       "id": "I_kwDOFEJYQs5Qi6xx",
       "title": "Align DAP discussion of soundness/correctness/robustness and privacy with VDAF",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/306",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [
@@ -5908,8 +5908,8 @@
       ],
       "body": "[VDAF's Security Considerations](https://github.com/cfrg/draft-irtf-cfrg-vdaf/blob/main/draft-irtf-cfrg-vdaf.md#security-considerations-security) contains a nice definition and discussion of the notions of privacy (meaning protecting any individual client's measurement from being seen) and robustness (meaning that the aggregates delivered to a collector are accurate aggregations over the inputs).\r\n\r\nDAP's security considerations has definitions of privacy and correctness, and we refer to robustness and soundness in a few places. We should align our definitions with VDAF (or just refer to VDAF's definitions) and consistently use the term \"robustness\" throughout DAP.",
       "createdAt": "2022-08-25T19:01:48Z",
-      "updatedAt": "2022-08-25T21:07:47Z",
-      "closedAt": null,
+      "updatedAt": "2022-09-06T16:51:59Z",
+      "closedAt": "2022-09-06T16:51:59Z",
       "comments": [
         {
           "author": "cjpatton",
@@ -5932,7 +5932,7 @@
       "id": "I_kwDOFEJYQs5Q804k",
       "title": "Update info string prefixes for HPKE",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/310",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -5941,8 +5941,8 @@
       ],
       "body": "",
       "createdAt": "2022-09-01T01:30:13Z",
-      "updatedAt": "2022-09-01T01:30:18Z",
-      "closedAt": null,
+      "updatedAt": "2022-09-06T16:23:29Z",
+      "closedAt": "2022-09-06T16:23:29Z",
       "comments": []
     },
     {
@@ -5973,6 +5973,79 @@
           "body": "I agree with @tgeoghegan, the expected size of the input shares is determined entirely by the VDAF and its parameters. This in turn is determined by the task config, so it should be sufficient to \"opt in\" to that task.\r\n\r\nThe same is true for Poplar1. In particular, each measurement is a bit string of some fixed length. For what it's worth, the public share + input shares is about 16.3 KB for 256-bit inputs.",
           "createdAt": "2022-09-01T20:05:30Z",
           "updatedAt": "2022-09-01T20:05:30Z"
+        }
+      ]
+    },
+    {
+      "number": 314,
+      "id": "I_kwDOFEJYQs5RRMCI",
+      "title": "Editoral: Use underscores in enum variants instead of dashes",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/314",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [],
+      "body": "We use dashes in enums:\r\n\r\n```\r\n  enum {\r\n    batch-collected(0),                                                             \r\n    report-replayed(1),\r\n    report-dropped(2),                                                              \r\n    hpke-unknown-config-id(3),\r\n    hpke-decrypt-error(4),\r\n    vdaf-prep-error(5),\r\n    batch-saturated(6),\r\n  } ReportShareError;\r\n```\r\n\r\nI'm not sure how got on this kick (might be my fault!), but I would prefer underscores, mainly for consistency with RFC 8446:\r\n\r\n```\r\n  enum {\r\n    batch_collected(0),                                                             \r\n    report_replayed(1),\r\n    report_dropped(2),                                                              \r\n    hpke_unknown_config_id(3),\r\n    hpke_decrypt_error(4),\r\n    vdaf_prep_error(5),\r\n    batch_saturated(6),\r\n  } ReportShareError;\r\n```\r\n\r\n1. Does anyone have a strong preference for dashes? \r\n2. Does anyone object to landing this in DAP-02?",
+      "createdAt": "2022-09-06T15:25:32Z",
+      "updatedAt": "2022-09-06T16:49:11Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "1. No. The argument for consistency with RFC 8446 is good enough for me.\r\n2. I think we could take this in draft-02 if we really wanted to, but since this change has no actual impact on implementations (the enum variant names never appear in encoded messages), I think we could err on the side of allowing a reasonable span of time for discussion in the WG and do this in draft-03.",
+          "createdAt": "2022-09-06T16:49:11Z",
+          "updatedAt": "2022-09-06T16:49:11Z"
+        }
+      ]
+    },
+    {
+      "number": 315,
+      "id": "I_kwDOFEJYQs5RRMo-",
+      "title": "Update CL for DAP-01 -> DAP-03",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/315",
+      "state": "OPEN",
+      "author": "cjpatton",
+      "authorAssociation": "COLLABORATOR",
+      "assignees": [],
+      "labels": [
+        "draft-02"
+      ],
+      "body": "",
+      "createdAt": "2022-09-06T15:27:13Z",
+      "updatedAt": "2022-09-06T15:27:13Z",
+      "closedAt": null,
+      "comments": []
+    },
+    {
+      "number": 316,
+      "id": "I_kwDOFEJYQs5RSy9A",
+      "title": "Consider tying nonces to shares within a batch.",
+      "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/316",
+      "state": "OPEN",
+      "author": "hannahdaviscrypto",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "DAP uses a checksum over the report nonces to make sure that the same set of reports are included in repeated batches, but it does not verify the consistency of the ciphertexts  and input shares themselves between collect requests. In situations where max_batch_lifetime >=2, it may be possible for a a malicious leader to change the input share for a given nonce between two collect requests over the same batch interval. Replays are currently prevented by putting the nonce in the AAD of HPKE for client reports; however this does not protect against nonce replays with changed input shares by malicious clients. This could be of particular concern for Poplar, where multiple collect requests are used to explore a binary tree that is expected not to change between aggregations. \r\n\r\nCould we consider additional verification strategies for honest aggregators/helpers to ensure that every repeated batch interval contains the same input shares as well as the same nonces?",
+      "createdAt": "2022-09-06T22:31:29Z",
+      "updatedAt": "2022-09-07T22:59:06Z",
+      "closedAt": null,
+      "comments": [
+        {
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "body": "This is a really neat attack. I think this would be mitigated if we wind up doing direct uploads from client to helper (tracked in https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/issues/130). But unless there's some kind of authentication scheme in play, a leader can still race with the clients to submit reports with the same nonces but different contents, so I wonder whether this falls into the general category of Sybil attacks?",
+          "createdAt": "2022-09-06T23:08:51Z",
+          "updatedAt": "2022-09-06T23:08:51Z"
+        },
+        {
+          "author": "hannahdaviscrypto",
+          "authorAssociation": "NONE",
+          "body": "Yes, I think direct uploads would absolutely solve the problem. \r\n\r\nI think this is definitely related to Sybil attacks but goes slightly further because the leader can replace honest reports or change malicious reports after they have already been collected one or more times in addition to its expected ability to impersonate arbitrary clients at the start of the protocol.",
+          "createdAt": "2022-09-07T22:59:06Z",
+          "updatedAt": "2022-09-07T22:59:06Z"
         }
       ]
     }
@@ -37840,13 +37913,13 @@
       ],
       "body": "Closes #291.",
       "createdAt": "2022-08-24T13:01:23Z",
-      "updatedAt": "2022-09-05T11:19:12Z",
+      "updatedAt": "2022-09-08T01:06:39Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "wangshan/draft-ietf-ppm-dap",
       "headRefName": "max-task-lifetime",
-      "headRefOid": "cc9defd79d6565c6bc6d2bb0fead5a09c5d881e1",
+      "headRefOid": "9dda90363c63b604c5dc9610cfe8cb2e306db7c6",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -37865,6 +37938,13 @@
           "body": "> In particular, do we need to spell out how the Leader/Helper rejects reports with time stamps that exceed the max batch lifetime?\r\n\r\ndo you mean we should specify whether expired reports should be result in upload error or be dropped silently?",
           "createdAt": "2022-08-31T23:33:42Z",
           "updatedAt": "2022-08-31T23:33:42Z"
+        },
+        {
+          "author": "wangshan",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "> Suppose the Helper receives an aggregation job for a task that has not yet \"expired\" but contains at least one report whose timestamp is passed the expiration date. What should it do?\r\n> \r\n> I think it would be appropriate to add a `ReportShareError` variant for this case.\r\n\r\ngood point, let me add that",
+          "createdAt": "2022-09-07T11:36:45Z",
+          "updatedAt": "2022-09-07T11:36:45Z"
         }
       ],
       "reviews": [
@@ -38166,6 +38246,71 @@
               "updatedAt": "2022-09-05T11:11:47Z"
             }
           ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Bbo3U",
+          "commit": {
+            "abbreviatedOid": "cc9defd"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "Suppose the Helper receives an aggregation job for a task that has not yet \"expired\" but contains at least one report whose timestamp is passed the expiration date. What should it do?\r\n\r\nI think it would be appropriate to add a `ReportShareError` variant for this case.",
+          "createdAt": "2022-09-06T15:04:06Z",
+          "updatedAt": "2022-09-06T15:09:26Z",
+          "comments": [
+            {
+              "originalPosition": 39,
+              "body": "```suggestion\r\nthe reports themselves. For schemes like Prio3 {{!VDAF}} in which the input-validation\r\n```",
+              "createdAt": "2022-09-06T15:04:06Z",
+              "updatedAt": "2022-09-06T15:09:26Z"
+            },
+            {
+              "originalPosition": 49,
+              "body": "```suggestion\r\nImplementors SHOULD provide for some leeway so the collector can collect the batch\r\n```",
+              "createdAt": "2022-09-06T15:05:50Z",
+              "updatedAt": "2022-09-06T15:09:26Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BiWDU",
+          "commit": {
+            "abbreviatedOid": "700e72b"
+          },
+          "author": "tgeoghegan",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2022-09-07T16:55:21Z",
+          "updatedAt": "2022-09-07T16:55:21Z",
+          "comments": []
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Bjxvi",
+          "commit": {
+            "abbreviatedOid": "700e72b"
+          },
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "state": "APPROVED",
+          "body": "A couple editorial nits, otherwise I'm good landing this.",
+          "createdAt": "2022-09-07T22:40:38Z",
+          "updatedAt": "2022-09-07T22:42:32Z",
+          "comments": [
+            {
+              "originalPosition": 4,
+              "body": "```suggestion\r\n* `task_expiration`: The time up to which clients are expected to upload to this\r\n```",
+              "createdAt": "2022-09-07T22:40:38Z",
+              "updatedAt": "2022-09-07T22:42:32Z"
+            },
+            {
+              "originalPosition": 19,
+              "body": "```suggestion\r\nignore any reports whose timestamp is past the task's `task_expiration`. When it does so, \r\nthe leader SHOULD abort the upload protocol and alert the client with\r\n```",
+              "createdAt": "2022-09-07T22:41:30Z",
+              "updatedAt": "2022-09-07T22:42:32Z"
+            }
+          ]
         }
       ]
     },
@@ -38457,7 +38602,7 @@
       "id": "PR_kwDOFEJYQs490sXj",
       "title": "Move draft-irtf-cfrg-vdaf-01 to 03",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/307",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "cjpatton",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -38466,17 +38611,19 @@
       ],
       "body": "Closes #296.\r\n\r\nAlign with the latest VDAF draft. This requires two minor protocol\r\nchanges:\r\n\r\n* 02 added a value called the \"public_share\" to the VDAF syntax. This is\r\n  to support Poplar1 (and likely other schemes that need a similar\r\n  extractability property). To accommodate this, the public_share field\r\n  has been added to the Report and ReportShare structures and appended to\r\n  the AAD for input share encryption. (This may end up being useful for\r\n  privacy.)\r\n\r\n* 02 added the report count to the aggregate result computation. This is\r\n  already passed to the Collector in the CollectResp, so we just need to\r\n  update the aggregate result computation in the draft to match.",
       "createdAt": "2022-08-25T20:33:24Z",
-      "updatedAt": "2022-09-02T00:22:22Z",
+      "updatedAt": "2022-09-06T16:28:12Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "60178323ac998e89ccd85235f9c9f7fd08a15613",
+      "baseRefOid": "0ea091f3e7d36528c79fe2e7a8b795e08b7bc69d",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "cjpatton/296",
-      "headRefOid": "8fdbe58d4f179edc85e9c3434358cb06596a450a",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "416f052e8d63614074336a2318cdc9c1ca85ac3c",
+      "closedAt": "2022-09-06T16:28:11Z",
+      "mergedAt": "2022-09-06T16:28:11Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "50053bc92912cc937b599b47028efbe403584a9e"
+      },
       "comments": [
         {
           "author": "cjpatton",
@@ -38484,6 +38631,13 @@
           "body": "Rebased and pushed a minor update: The public share in Report and ReportStore now both have the same length prefix.",
           "createdAt": "2022-09-02T00:22:22Z",
           "updatedAt": "2022-09-02T00:22:22Z"
+        },
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "Rebased.",
+          "createdAt": "2022-09-06T16:27:25Z",
+          "updatedAt": "2022-09-06T16:27:25Z"
         }
       ],
       "reviews": [
@@ -39352,7 +39506,7 @@
       "id": "PR_kwDOFEJYQs49_19A",
       "title": "Rely on VDAF's definitions of privacy, robustness",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/309",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -39361,18 +39515,28 @@
       ],
       "body": "Resolves #306",
       "createdAt": "2022-08-29T20:05:00Z",
-      "updatedAt": "2022-08-30T16:39:03Z",
+      "updatedAt": "2022-09-06T16:51:58Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
-      "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
+      "baseRefOid": "50053bc92912cc937b599b47028efbe403584a9e",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/robust-private-vdaf-defs",
-      "headRefOid": "d997a1b01523a5b2d73a3307c6471217fb3156af",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
+      "headRefOid": "f1c8131bdba7f1299896205b4cabb5d739fc0aa9",
+      "closedAt": "2022-09-06T16:51:58Z",
+      "mergedAt": "2022-09-06T16:51:58Z",
+      "mergedBy": "tgeoghegan",
+      "mergeCommit": {
+        "oid": "b999a149faefb573283e137cc7cbaa1112c0fa21"
+      },
+      "comments": [
+        {
+          "author": "cjpatton",
+          "authorAssociation": "COLLABORATOR",
+          "body": "@tgeoghegan let's squash-then-merge this change.",
+          "createdAt": "2022-09-06T16:23:10Z",
+          "updatedAt": "2022-09-06T16:23:10Z"
+        }
+      ],
       "reviews": [
         {
           "id": "PRR_kwDOFEJYQs5A7g00",
@@ -39447,7 +39611,7 @@
       "id": "PR_kwDOFEJYQs4-Ok5G",
       "title": "Update HPKE info strings for dap-02",
       "url": "https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/312",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "tgeoghegan",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
@@ -39456,17 +39620,19 @@
       ],
       "body": "Fixes #310",
       "createdAt": "2022-09-01T17:09:06Z",
-      "updatedAt": "2022-09-01T19:55:14Z",
+      "updatedAt": "2022-09-06T16:23:28Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "8d845c030f9ef3929b00484cdd9ae4e591dd7108",
       "headRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "headRefName": "timg/hpke-info-dap-02",
       "headRefOid": "c60e8a21d47b72ad557e5a04fe4f867645bc8a28",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "closedAt": "2022-09-06T16:23:28Z",
+      "mergedAt": "2022-09-06T16:23:28Z",
+      "mergedBy": "cjpatton",
+      "mergeCommit": {
+        "oid": "0ea091f3e7d36528c79fe2e7a8b795e08b7bc69d"
+      },
       "comments": [],
       "reviews": [
         {
@@ -39506,16 +39672,18 @@
       "author": "branlwyd",
       "authorAssociation": "COLLABORATOR",
       "assignees": [],
-      "labels": [],
+      "labels": [
+        "draft-02"
+      ],
       "body": "This is implemented via a new `current-batch` query type for fixed-size\r\ntasks, which allows the Leader to select a batch to return to the\r\nCollector.\r\n\r\nThis is stacked on https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap/pull/308. (Unfortunately, I don't know how to use that PR as a base without merging into\r\na branch on my personal fork of the DAP specification repository, which is\r\nprobably not desirable.)",
       "createdAt": "2022-09-02T00:03:57Z",
-      "updatedAt": "2022-09-05T15:34:15Z",
+      "updatedAt": "2022-09-07T20:42:19Z",
       "baseRepository": "ietf-wg-ppm/draft-ietf-ppm-dap",
       "baseRefName": "main",
       "baseRefOid": "60178323ac998e89ccd85235f9c9f7fd08a15613",
       "headRepository": "branlwyd/draft-ietf-ppm-dap",
       "headRefName": "bran/current-batch",
-      "headRefOid": "9b7dcef4ca2b726d1c30234d6d151524b5eec9f5",
+      "headRefOid": "3230ea6e6f26ade6230557b22af8f3a5e67de086",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
@@ -39734,6 +39902,106 @@
               "body": "nit: \"in its\" is redundant",
               "createdAt": "2022-09-05T15:34:15Z",
               "updatedAt": "2022-09-05T15:34:15Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BcGb_",
+          "commit": {
+            "abbreviatedOid": "9b7dcef"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-06T16:08:44Z",
+          "updatedAt": "2022-09-06T16:08:44Z",
+          "comments": [
+            {
+              "originalPosition": 134,
+              "body": "Removed, thanks.",
+              "createdAt": "2022-09-06T16:08:44Z",
+              "updatedAt": "2022-09-06T16:08:44Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BcHvS",
+          "commit": {
+            "abbreviatedOid": "9b7dcef"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-06T16:13:11Z",
+          "updatedAt": "2022-09-06T16:13:11Z",
+          "comments": [
+            {
+              "originalPosition": 63,
+              "body": "Typically yes, I expect that the Collector would use `current-batch` first (outside of OOB agreement you mention), and then possibly use one or more `by-batch-id` queries for that batch, depending on the VDAF.\r\n\r\nI was writing this text as an explanation of available functionality/expectations for the `fixed-size` query type, rather than a step-by-step guide to how the query types are expected to be used. I can change if folks like?",
+              "createdAt": "2022-09-06T16:13:11Z",
+              "updatedAt": "2022-09-06T16:13:11Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BcQWX",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "divergentdave",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-06T16:38:47Z",
+          "updatedAt": "2022-09-06T16:38:47Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "I think the main reason we need a map from aggregation job IDs to collect batches is for enforcing collect-time privacy requirements (the aggregators will need to examine all collect batches that each aggregation job was previously a part of, given the candidate list of aggregation jobs for the current collect batch).\r\n\r\nThe reverse map may also be used during handling of AggregateContinueRequest, to look up state relating to the collect batch and incrementally incorporate output shares into an aggregate share, but that's an implementation decision. Aggregators could just as well store output shares indexed by aggregation job, and then only fetch output shares and combine them all at once when handling a CollectRequest or AggregateShareRequest.",
+              "createdAt": "2022-09-06T16:38:47Z",
+              "updatedAt": "2022-09-06T16:38:48Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5Bh5q5",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "MichaelScaria",
+          "authorAssociation": "CONTRIBUTOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-07T15:33:41Z",
+          "updatedAt": "2022-09-07T15:33:41Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "@branlwyd Wouldn't the simplest thing be to send both batchID and jobID on init and continue? On continue, if those two parameters don't uniquely resolve to a set of transitions, then we send back some error. On aggregate share, the Leader only sends the batchID, then the Helper finds all jobs for that batchID and can enforce the collect-time privacy requirements on the output shares for those jobs.\r\n\r\nFrom an implementation perspective, you could use any distributed key value store that additionally supports a prefix query (S3 and Redis should be good candidates for this).\r\n\r\nIdeally we can find a solution that uses a single data structure.",
+              "createdAt": "2022-09-07T15:33:41Z",
+              "updatedAt": "2022-09-07T15:33:41Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOFEJYQs5BjXM4",
+          "commit": {
+            "abbreviatedOid": "2e7de42"
+          },
+          "author": "branlwyd",
+          "authorAssociation": "COLLABORATOR",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2022-09-07T20:42:18Z",
+          "updatedAt": "2022-09-07T20:42:19Z",
+          "comments": [
+            {
+              "originalPosition": 88,
+              "body": "IMO, your suggestion is actually more complicated, in the sense that it sends more data over the wire & creates an additional possible error case (i.e. aggregate continue req contains a mismatched aggregation job ID/batch ID) for implementations to potentially mishandle. (Resending the data does ensure that the two aggregators don't have different conceptions of the aggregation job<->batch mapping; but this would be a pretty nasty bug, and would be caught at collection time even without resending the data.)\r\n\r\nFor that reason, I'd prefer to keep the current text as written.\r\n\r\n===\r\n\r\nre: single data structure\r\n\r\nI'd be amenable to a single data structure somehow merging the concept of an aggregation job & a batch; however, I don't believe the suggestion to send both batch ID & aggregation job ID moves us towards that goal. More generally, I think we'd need to somehow overcome/sidestep the practical issues I mention upthread from this comment:\r\n\r\n> One reason that the concept of \"batch\" is separate from \"aggregation job\" is that it may be practically infeasible to group together enough reports at a time to meet the batch requirements (e.g. min_batch_size). Also, in many scenarios Aggregators can begin the aggregation process before the collection process can start; this is aided by allowing aggregation jobs to be created even before e.g. enough reports have arrived to fill a batch. That is, the concept of aggregation jobs allows aggregating already-received reports for a batch concurrently with additional reports arriving.\r\n\r\n(To add a few more words to this: I like the ability to \"unhitch\" the privacy parameters, like `min_batch_size`, from the technical parameters, such as \"how many client reports will we batch into a single unit of aggregation\" -- I wouldn't be too happy if we ended up with a design which required trading off privacy to reach desired performance/reliability properties. And I consider the ability to commonly begin the aggregation process before the batch is full to be an important performance property of the current design.)\r\n\r\nFWIW, I think implementations may practically already be in the world where only one data structure is required: it is possible to arrange an implementation such that \"aggregation jobs\" are a real/reified data structure, and \"batches\" exist only as a collection of aggregation jobs -- the mapping being stored with the aggregation job data structure. (In this implementation strategy, collection information is also attached to aggregation jobs, which may be surprising but also assists in ensuring that the same aggregation job is not aggregated/collected too many times.) Since in this strategy batches are represented entirely as an indexed identifier associated with an aggregation job, in this implementation strategy batches are implicit.",
+              "createdAt": "2022-09-07T20:42:19Z",
+              "updatedAt": "2022-09-07T20:42:19Z"
             }
           ]
         }
